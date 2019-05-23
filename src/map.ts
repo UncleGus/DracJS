@@ -1,30 +1,30 @@
 import * as _ from 'lodash';
 
 export class GameMap {
-  locations: location[];
+  locations: Location[];
 
   constructor() {
     this.locations = [
-      new smallCityWest('Galway')
+      new SmallCityWest('Galway')
         .byRoad('Dublin')
         .bySea('Atlantic Ocean')
         .done(),
-      new smallCityWest('Dublin')
+      new SmallCityWest('Dublin')
         .byRoad('Galway')
         .bySea('Irish Sea')
         .done(),
-      new largeCityWest('Liverpool')
+      new LargeCityWest('Liverpool')
         .byRoad('Manchester')
         .byRoad('Swansea')
         .byTrain('Manchester')
         .bySea('Irish Sea')
         .done(),
-      new largeCityWest('Edinburgh')
+      new LargeCityWest('Edinburgh')
         .byRoad('Manchester')
         .byTrain('Manchester')
         .bySea('North Sea')
         .done(),
-      new largeCityWest('Manchester')
+      new LargeCityWest('Manchester')
         .byRoad('Edinburgh')
         .byRoad('Liverpool')
         .byRoad('London')
@@ -32,31 +32,31 @@ export class GameMap {
         .byTrain('Liverpool')
         .byTrain('London')
         .done(),
-      new smallCityWest('Swansea')
+      new SmallCityWest('Swansea')
         .byRoad('Liverpool')
         .byRoad('London')
         .byTrain('London')
         .bySea('Irish Sea')
         .done(),
-      new smallCityWest('Plymouth')
+      new SmallCityWest('Plymouth')
         .byRoad('London')
         .bySea('English Channel')
         .done(),
-      new largeCityWest('Nantes')
+      new LargeCityWest('Nantes')
         .byRoad('Le Havre')
         .byRoad('Paris')
         .byRoad('Clermont Ferrand')
         .byRoad('Bordeaux')
         .bySea('Bay of Biscay')
         .done(),
-      new smallCityWest('Le Havre')
+      new SmallCityWest('Le Havre')
         .byRoad('Nantes')
         .byRoad('Paris')
         .byRoad('Brussels')
         .byTrain('Paris')
         .bySea('English Channel')
         .done(),
-      new largeCityWest('London')
+      new LargeCityWest('London')
         .byRoad('Manchester')
         .byRoad('Swansea')
         .byRoad('Plymouth')
@@ -64,7 +64,7 @@ export class GameMap {
         .byTrain('Swansea')
         .bySea('English Channel')
         .done(),
-      new largeCityWest('Paris')
+      new LargeCityWest('Paris')
         .byRoad('Nantes')
         .byRoad('Le Havre')
         .byRoad('Brussels')
@@ -76,7 +76,7 @@ export class GameMap {
         .byTrain('Marseilles')
         .byTrain('Bordeaux')
         .done(),
-      new largeCityWest('Brussels')
+      new LargeCityWest('Brussels')
         .byRoad('Le Havre')
         .byRoad('Amsterdam')
         .byRoad('Cologne')
@@ -85,12 +85,12 @@ export class GameMap {
         .byTrain('Cologne')
         .byTrain('Paris')
         .done(),
-      new largeCityWest('Amsterdam')
+      new LargeCityWest('Amsterdam')
         .byRoad('Brussels')
         .byRoad('Cologne')
         .bySea('North Sea')
         .done(),
-      new smallCityWest('Strasbourg')
+      new SmallCityWest('Strasbourg')
         .byRoad('Paris')
         .byRoad('Brussels')
         .byRoad('Cologne')
@@ -102,7 +102,7 @@ export class GameMap {
         .byTrain('Frankfurt')
         .byTrain('Zurich')
         .done(),
-      new largeCityWest('Cologne')
+      new LargeCityWest('Cologne')
         .byRoad('Brussels')
         .byRoad('Amsterdam')
         .byRoad('Hamburg')
@@ -112,14 +112,14 @@ export class GameMap {
         .byTrain('Brussels')
         .byTrain('Frankfurt')
         .done(),
-      new largeCityWest('Hamburg')
+      new LargeCityWest('Hamburg')
         .byRoad('Cologne')
         .byRoad('Berlin')
         .byRoad('Leipzig')
         .byTrain('Berlin')
         .bySea('North Sea')
         .done(),
-      new smallCityWest('Frankfurt')
+      new SmallCityWest('Frankfurt')
         .byRoad('Strasbourg')
         .byRoad('Cologne')
         .byRoad('Leipzig')
@@ -128,7 +128,7 @@ export class GameMap {
         .byTrain('Cologne')
         .byTrain('Leipzig')
         .done(),
-      new smallCityWest('Nuremburg')
+      new SmallCityWest('Nuremburg')
         .byRoad('Strasbourg')
         .byRoad('Frankfurt')
         .byRoad('Leipzig')
@@ -137,7 +137,7 @@ export class GameMap {
         .byTrain('Leipzig')
         .byTrain('Munich')
         .done(),
-      new largeCityWest('Leipzig')
+      new LargeCityWest('Leipzig')
         .byRoad('Cologne')
         .byRoad('Hamburg')
         .byRoad('Berlin')
@@ -147,7 +147,7 @@ export class GameMap {
         .byTrain('Berlin')
         .byTrain('Nuremburg')
         .done(),
-      new largeCityWest('Berlin')
+      new LargeCityWest('Berlin')
         .byRoad('Hamburg')
         .byRoad('Prague')
         .byRoad('Leipzig')
@@ -155,7 +155,7 @@ export class GameMap {
         .byTrain('Prague')
         .byTrain('Leipzig')
         .done(),
-      new largeCityEast('Prague')
+      new LargeCityEast('Prague')
         .byRoad('Berlin')
         .byRoad('Vienna')
         .byRoad('Nuremburg')
@@ -164,20 +164,20 @@ export class GameMap {
         .done(),
       {
         name: 'Castle Dracula',
-        domain: locationDomain.east,
+        domain: LocationDomain.east,
         roadConnections: ['Klausenburg', 'Galatz'],
         seaConnections: [],
         trainConnections: [],
-        type: locationType.castle
+        type: LocationType.castle
       },
-      new smallCityWest('Santander')
+      new SmallCityWest('Santander')
         .byRoad('Lisbon')
         .byRoad('Madrid')
         .byRoad('Saragossa')
         .byTrain('Madrid')
         .bySea('Bay of Biscay')
         .done(),
-      new smallCityWest('Saragossa')
+      new SmallCityWest('Saragossa')
         .byRoad('Madrid')
         .byRoad('Santander')
         .byRoad('Bordeaux')
@@ -188,7 +188,7 @@ export class GameMap {
         .byTrain('Bordeaux')
         .byTrain('Barcelona')
         .done(),
-      new largeCityWest('Bordeaux')
+      new LargeCityWest('Bordeaux')
         .byRoad('Saragossa')
         .byRoad('Nantes')
         .byRoad('Clermont Ferrand')
@@ -197,21 +197,21 @@ export class GameMap {
         .byTrain('Saragossa')
         .bySea('Bay of Biscay')
         .done(),
-      new smallCityWest('Toulouse')
+      new SmallCityWest('Toulouse')
         .byRoad('Saragossa')
         .byRoad('Bordeaux')
         .byRoad('Clermont Ferrand')
         .byRoad('Marseilles')
         .byRoad('Barcelona')
         .done(),
-      new largeCityWest('Barcelona')
+      new LargeCityWest('Barcelona')
         .byRoad('Saragossa')
         .byRoad('Toulouse')
         .byTrain('Saragossa')
         .byTrain('Alicante')
         .bySea('Mediterranean Sea')
         .done(),
-      new smallCityWest('Clermont Ferrand')
+      new SmallCityWest('Clermont Ferrand')
         .byRoad('Bordeaux')
         .byRoad('Nantes')
         .byRoad('Paris')
@@ -219,7 +219,7 @@ export class GameMap {
         .byRoad('Marseilles')
         .byRoad('Toulouse')
         .done(),
-      new largeCityWest('Marseilles')
+      new LargeCityWest('Marseilles')
         .byRoad('Toulouse')
         .byRoad('Clermont Ferrand')
         .byRoad('Geneva')
@@ -229,7 +229,7 @@ export class GameMap {
         .byTrain('Paris')
         .bySea('Mediterranean Sea')
         .done(),
-      new smallCityWest('Geneva')
+      new SmallCityWest('Geneva')
         .byRoad('Marseilles')
         .byRoad('Clermont Ferrand')
         .byRoad('Paris')
@@ -237,7 +237,7 @@ export class GameMap {
         .byRoad('Zurich')
         .byTrain('Milan')
         .done(),
-      new largeCityEast('Genoa')
+      new LargeCityEast('Genoa')
         .byRoad('Marseilles')
         .byRoad('Milan')
         .byRoad('Venice')
@@ -245,7 +245,7 @@ export class GameMap {
         .byTrain('Milan')
         .bySea('Tyrrhenian Sea')
         .done(),
-      new largeCityEast('Milan')
+      new LargeCityEast('Milan')
         .byRoad('Marseilles')
         .byRoad('Zurich')
         .byRoad('Munich')
@@ -256,7 +256,7 @@ export class GameMap {
         .byTrain('Florence')
         .byTrain('Genoa')
         .done(),
-      new smallCityWest('Zurich')
+      new SmallCityWest('Zurich')
         .byRoad('Marseilles')
         .byRoad('Geneva')
         .byRoad('Strasbourg')
@@ -265,14 +265,14 @@ export class GameMap {
         .byTrain('Strasbourg')
         .byTrain('Milan')
         .done(),
-      new smallCityEast('Florence')
+      new SmallCityEast('Florence')
         .byRoad('Genoa')
         .byRoad('Venice')
         .byRoad('Rome')
         .byTrain('Milan')
         .byTrain('Rome')
         .done(),
-      new smallCityEast('Venice')
+      new SmallCityEast('Venice')
         .byRoad('Florence')
         .byRoad('Genoa')
         .byRoad('Milan')
@@ -280,7 +280,7 @@ export class GameMap {
         .byTrain('Vienna')
         .bySea('Adriatic Sea')
         .done(),
-      new largeCityWest('Munich')
+      new LargeCityWest('Munich')
         .byRoad('Milan')
         .byRoad('Zurich')
         .byRoad('Strasbourg')
@@ -290,7 +290,7 @@ export class GameMap {
         .byRoad('Venice')
         .byTrain('Nuremburg')
         .done(),
-      new smallCityEast('Zagreb')
+      new SmallCityEast('Zagreb')
         .byRoad('Munich')
         .byRoad('Vienna')
         .byRoad('Budapest')
@@ -298,7 +298,7 @@ export class GameMap {
         .byRoad('St. Joseph and St. Mary')
         .byRoad('Sarajevo')
         .done(),
-      new largeCityEast('Vienna')
+      new LargeCityEast('Vienna')
         .byRoad('Munich')
         .byRoad('Prague')
         .byRoad('Budapest')
@@ -309,20 +309,20 @@ export class GameMap {
         .done(),
       {
         name: 'St. Joseph and St. Mary',
-        domain: locationDomain.east,
+        domain: LocationDomain.east,
         roadConnections: ['Zagreb', 'Szeged', 'Belgrade', 'Sarajevo'],
         seaConnections: [],
         trainConnections: [],
-        type: locationType.hospital
+        type: LocationType.hospital
       },
-      new smallCityEast('Sarajevo')
+      new SmallCityEast('Sarajevo')
         .byRoad('Zagreb')
         .byRoad('St. Joseph and St. Mary')
         .byRoad('Belgrade')
         .byRoad('Sofia')
         .byRoad('Valona')
         .done(),
-      new smallCityEast('Szeged')
+      new SmallCityEast('Szeged')
         .byRoad('Zagreb')
         .byRoad('Budapest')
         .byRoad('Klausenburg')
@@ -332,7 +332,7 @@ export class GameMap {
         .byTrain('Bucharest')
         .byTrain('Belgrade')
         .done(),
-      new smallCityEast('Budapest')
+      new SmallCityEast('Budapest')
         .byRoad('Vienna')
         .byRoad('Klausenburg')
         .byRoad('Szeged')
@@ -340,7 +340,7 @@ export class GameMap {
         .byTrain('Vienna')
         .byTrain('Szeged')
         .done(),
-      new smallCityEast('Belgrade')
+      new SmallCityEast('Belgrade')
         .byRoad('St. Joseph and St. Mary')
         .byRoad('Szeged')
         .byRoad('Klausenburg')
@@ -350,7 +350,7 @@ export class GameMap {
         .byTrain('Szeged')
         .byTrain('Sofia')
         .done(),
-      new smallCityEast('Klausenburg')
+      new SmallCityEast('Klausenburg')
         .byRoad('Budapest')
         .byRoad('Castle Dracula')
         .byRoad('Galatz')
@@ -358,7 +358,7 @@ export class GameMap {
         .byRoad('Belgrade')
         .byRoad('Szeged')
         .done(),
-      new smallCityEast('Sofia')
+      new SmallCityEast('Sofia')
         .byRoad('Sarajevo')
         .byRoad('Belgrade')
         .byRoad('Bucharest')
@@ -369,7 +369,7 @@ export class GameMap {
         .byTrain('Salonica')
         .byTrain('Varna')
         .done(),
-      new largeCityEast('Bucharest')
+      new LargeCityEast('Bucharest')
         .byRoad('Belgrade')
         .byRoad('Klausenburg')
         .byRoad('Galatz')
@@ -379,40 +379,40 @@ export class GameMap {
         .byTrain('Galatz')
         .byTrain('Constanta')
         .done(),
-      new smallCityEast('Galatz')
+      new SmallCityEast('Galatz')
         .byRoad('Klausenburg')
         .byRoad('Castle Dracula')
         .byRoad('Constanta')
         .byRoad('Bucharest')
         .byTrain('Bucharest')
         .done(),
-      new largeCityEast('Varna')
+      new LargeCityEast('Varna')
         .byRoad('Sofia')
         .byRoad('Constanta')
         .byTrain('Sofia')
         .bySea('Black Sea')
         .done(),
-      new largeCityEast('Constanta')
+      new LargeCityEast('Constanta')
         .byRoad('Galatz')
         .byRoad('Varna')
         .byRoad('Bucharest')
         .byTrain('Bucharest')
         .bySea('Black Sea')
         .done(),
-      new largeCityWest('Lisbon')
+      new LargeCityWest('Lisbon')
         .byRoad('Santander')
         .byRoad('Madrid')
         .byRoad('Cadiz')
         .byTrain('Madrid')
         .bySea('Atlantic Ocean')
         .done(),
-      new largeCityWest('Cadiz')
+      new LargeCityWest('Cadiz')
         .byRoad('Lisbon')
         .byRoad('Madrid')
         .byRoad('Granada')
         .bySea('Atlantic Ocean')
         .done(),
-      new largeCityWest('Madrid')
+      new LargeCityWest('Madrid')
         .byRoad('Lisbon')
         .byRoad('Santander')
         .byRoad('Saragossa')
@@ -424,12 +424,12 @@ export class GameMap {
         .byTrain('Saragossa')
         .byTrain('Alicante')
         .done(),
-      new smallCityWest('Granada')
+      new SmallCityWest('Granada')
         .byRoad('Cadiz')
         .byRoad('Madrid')
         .byRoad('Alicante')
         .done(),
-      new smallCityWest('Alicante')
+      new SmallCityWest('Alicante')
         .byRoad('Granada')
         .byRoad('Madrid')
         .byRoad('Saragossa')
@@ -437,11 +437,11 @@ export class GameMap {
         .byTrain('Barcelona')
         .bySea('Mediterranean Sea')
         .done(),
-      new smallCityEast('Cagliari')
+      new SmallCityEast('Cagliari')
         .bySea('Mediterranean Sea')
         .bySea('Tyrrhenian Sea')
         .done(),
-      new largeCityEast('Rome')
+      new LargeCityEast('Rome')
         .byRoad('Florence')
         .byRoad('Bari')
         .byRoad('Naples')
@@ -449,33 +449,33 @@ export class GameMap {
         .byTrain('Naples')
         .bySea('Tyrrhenian Sea')
         .done(),
-      new largeCityEast('Naples')
+      new LargeCityEast('Naples')
         .byRoad('Rome')
         .byRoad('Bari')
         .byTrain('Rome')
         .byTrain('Bari')
         .bySea('Tyrrhenian Sea')
         .done(),
-      new smallCityEast('Bari')
+      new SmallCityEast('Bari')
         .byRoad('Naples')
         .byRoad('Rome')
         .byTrain('Naples')
         .bySea('Adriatic Sea')
         .done(),
-      new smallCityEast('Valona')
+      new SmallCityEast('Valona')
         .byRoad('Sarajevo')
         .byRoad('Sofia')
         .byRoad('Salonica')
         .byRoad('Athens')
         .bySea('Ionian Sea')
         .done(),
-      new smallCityEast('Salonica')
+      new SmallCityEast('Salonica')
         .byRoad('Valona')
         .byRoad('Sofia')
         .byTrain('Sofia')
         .bySea('Ionian Sea')
         .done(),
-      new largeCityEast('Athens')
+      new LargeCityEast('Athens')
         .byRoad('Valona')
         .bySea('Ionian Sea')
         .done(),
@@ -538,10 +538,10 @@ export class GameMap {
     let castleCount = 0;
     let problems = [];
     this.locations.forEach(location => {
-      if (location.type === locationType.hospital) {
+      if (location.type === LocationType.hospital) {
         hospitalCount +=1;
       }
-      if (location.type === locationType.castle) {
+      if (location.type === LocationType.castle) {
         castleCount +=1;
       }
       if (!location.name) {
@@ -556,8 +556,8 @@ export class GameMap {
         problems.push(`${location.name} has no domain`);
         return;
       }
-      if (location.domain === locationDomain.sea && location.type !== locationType.sea ||
-        location.domain !== locationDomain.sea  && location.type === locationType.sea) {
+      if (location.domain === LocationDomain.sea && location.type !== LocationType.sea ||
+        location.domain !== LocationDomain.sea  && location.type === LocationType.sea) {
         problems.push(`${location.name} has type ${location.type} and domain ${location.domain}`);
         return;
       }
@@ -582,13 +582,13 @@ export class GameMap {
         if (!destination) {
           problems.push(`${location.name} has a road going to missing location ${road}`);
         } else {
-          if (destination.type === locationType.sea) {
+          if (destination.type === LocationType.sea) {
             problems.push(`${location.name} has a road going to sea location ${road}`);
           }
           if (!destination.roadConnections.find(loc => loc === location.name)) {
             problems.push(`${location.name} has a road to ${road} with no road back`);
           }
-          if (location.type === locationType.sea) {
+          if (location.type === LocationType.sea) {
             problems.push(`Sea location ${location.name} has a road to ${destination.name}`);
           }
         }
@@ -599,13 +599,13 @@ export class GameMap {
         if (!destination) {
           problems.push(`${location.name} has a train going to missing location ${train}`);
         } else {
-          if (destination.type === locationType.sea) {
+          if (destination.type === LocationType.sea) {
             problems.push(`${location.name} has a train going to sea location ${train}`);
           }
           if (!destination.trainConnections.find(loc => loc === location.name)) {
             problems.push(`${location.name} has a train to ${train} with no train back`);
           }
-          if (location.type === locationType.sea) {
+          if (location.type === LocationType.sea) {
             problems.push(`Sea location ${location.name} has a train to location ${destination.name}`);
           }
         }
@@ -619,7 +619,7 @@ export class GameMap {
           if (!destination.seaConnections.find(loc => loc === location.name)) {
             problems.push(`${location.name} has a sea connection to ${sea} with no sea connection back`);
           }
-          if (location.type !== locationType.sea && destination.type !== locationType.sea) {
+          if (location.type !== LocationType.sea && destination.type !== LocationType.sea) {
             problems.push(`Land location ${location.name} has a sea connection to land location ${destination.name}`);
           }
         }
@@ -654,9 +654,9 @@ export class GameMap {
     return this.locations.find(location => location.name === name);
   }
 
-  distanceBetweenLocations(origin: location, destination: location,
+  distanceBetweenLocations(origin: Location, destination: Location,
     methods: string[] = ['road', 'train', 'sea'],
-    examinedLocations: location[] = [], locationsAtCurrentDistance: location[] = [], distance: number = 0): number {
+    examinedLocations: Location[] = [], locationsAtCurrentDistance: Location[] = [], distance: number = 0): number {
 
     if (origin) {
       return this.distanceBetweenLocations(null, destination, methods, [], [origin], 0);
@@ -666,7 +666,7 @@ export class GameMap {
       return distance;
     }
     examinedLocations = _.union(examinedLocations, locationsAtCurrentDistance);
-    let nextLayerOfConnectedLocations: location[] = [];
+    let nextLayerOfConnectedLocations: Location[] = [];
     locationsAtCurrentDistance.forEach(location => {
       if (methods.find(method => method == 'road')) {
         const roadConnections = location.roadConnections.map(road => this.getLocationByName(road));
@@ -688,21 +688,21 @@ export class GameMap {
     return this.distanceBetweenLocations(null, destination, methods, examinedLocations, newLocationsToExamine, distance + 1);
   }
 
-  printFirstLocation(locations: location[]) {
+  printFirstLocation(locations: Location[]) {
     console.log(locations[0]);
   }
 }
 
-export interface location {
+export interface Location {
   name: string;
-  type: locationType;
-  domain: locationDomain;
+  type: LocationType;
+  domain: LocationDomain;
   roadConnections: string[];
   trainConnections: string[];
   seaConnections: string[];
 }
 
-export enum locationType {
+export enum LocationType {
   largeCity = 'Large City',
   smallCity = 'Small City',
   hospital = 'Hospital',
@@ -710,14 +710,14 @@ export enum locationType {
   sea = 'Sea'
 }
 
-export enum locationDomain {
+export enum LocationDomain {
   west = 'West',
   east = 'East',
   sea = 'Sea'
 }
 
-class genericLocationBuilder {
-  location: location;
+class GenericLocationBuilder {
+  location: Location;
 
   constructor(name: string) {
     this.location = {
@@ -745,52 +745,52 @@ class genericLocationBuilder {
     return this;
   }
 
-  done(): location {
+  done(): Location {
     return this.location;
   }
 }
 
-class smallCityWest extends genericLocationBuilder{
-  location: location;
+class SmallCityWest extends GenericLocationBuilder{
+  location: Location;
   constructor(name: string) {
     super(name);
-    this.location.type = locationType.smallCity;
-    this.location.domain = locationDomain.west;
+    this.location.type = LocationType.smallCity;
+    this.location.domain = LocationDomain.west;
   }
 }
 
-class largeCityWest extends genericLocationBuilder{
-  location: location;
+class LargeCityWest extends GenericLocationBuilder{
+  location: Location;
   constructor(name: string) {
     super(name);
-    this.location.type = locationType.largeCity;
-    this.location.domain = locationDomain.west;
+    this.location.type = LocationType.largeCity;
+    this.location.domain = LocationDomain.west;
   }
 }
 
-class smallCityEast extends genericLocationBuilder{
-  location: location;
+class SmallCityEast extends GenericLocationBuilder{
+  location: Location;
   constructor(name: string) {
     super(name);
-    this.location.type = locationType.smallCity;
-    this.location.domain = locationDomain.east;
+    this.location.type = LocationType.smallCity;
+    this.location.domain = LocationDomain.east;
   }
 }
 
-class largeCityEast extends genericLocationBuilder{
-  location: location;
+class LargeCityEast extends GenericLocationBuilder{
+  location: Location;
   constructor(name: string) {
     super(name);
-    this.location.type = locationType.largeCity;
-    this.location.domain = locationDomain.east;
+    this.location.type = LocationType.largeCity;
+    this.location.domain = LocationDomain.east;
   }
 }
 
-const sea: location = {
+const sea: Location = {
   name: null,
-  domain: locationDomain.sea,
+  domain: LocationDomain.sea,
   roadConnections: [],
   trainConnections: [],
   seaConnections: [],
-  type: locationType.sea
+  type: LocationType.sea
 }
