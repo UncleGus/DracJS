@@ -1,46 +1,60 @@
-import { GameMap, Location } from "./map";
+import { GameMap } from "./map";
+import { Dracula } from "./dracula";
+import { Mina, Godalming, Seward, VanHelsing } from "./hunter";
 
-export class Game { 
+export class Game {
+  map: GameMap;
+  dracula: Dracula;
+  godalming: Godalming;
+  seward: Seward;
+  vanHelsing: VanHelsing;
+  mina: Mina;
+  draculaBlood: HTMLInputElement;
+  draculaLocation: HTMLInputElement;
+  godalmingHealth: HTMLInputElement;
+  sewardHealth: HTMLInputElement;
+  vanHelsingHealth: HTMLInputElement;
+  minaHealth: HTMLInputElement;
 
   constructor() {
-    const map = new GameMap();
+    this.map = new GameMap();
+    this.dracula = new Dracula(this.map);
+    this.godalming = new Godalming;
+    this.seward = new Seward();
+    this.vanHelsing = new VanHelsing();
+    this.mina = new Mina();
+    this.draculaBlood = document.getElementById('draculaBlood') as HTMLInputElement;
+    this.draculaLocation = document.getElementById('draculaLocation') as HTMLInputElement;
+    this.godalmingHealth = document.getElementById('godalmingHealth') as HTMLInputElement;
+    this.sewardHealth = document.getElementById('sewardHealth') as HTMLInputElement;
+    this.vanHelsingHealth = document.getElementById('vanHelsingHealth') as HTMLInputElement;
+    this.minaHealth = document.getElementById('minaHealth') as HTMLInputElement;
     
-    document.getElementById('verifyMapData').addEventListener('click', () => {map.verifyMapData();});
-
-    const originSelector = document.getElementById('originLocation') as HTMLSelectElement;
-    const destinationSelector = document.getElementById('destinationLocation') as HTMLSelectElement;
-    map.locations.map(location => {
-      originSelector.options.add( new Option(location.name));
-      destinationSelector.options.add( new Option(location.name));
+    this.map.verifyMapData();
+    this.updateAllFields();
+    
+    this.draculaBlood.addEventListener('change', () => this.dracula.blood = parseInt(this.draculaBlood.value));
+    (document.getElementById('draculaDie') as HTMLInputElement).addEventListener('click', () => {
+      this.dracula.die();
+      this.updateAllFields();
     });
-
-    const button = document.createElement('button');
-    button.appendChild(document.createTextNode('Select'));
-    button.addEventListener('click', () => {
-      this.outputDistance(map, map.getLocationByName(originSelector.value), map.getLocationByName(destinationSelector.value), this.getTravelMethods());
+    (document.getElementById('draculaChooseLocation') as HTMLInputElement).addEventListener('click', () => {
+      this.dracula.chooseStartLocation(this.map);
+      this.updateAllFields();
     });
-    document.getElementById('selectLocation').appendChild(button);
+    Array.from(document.getElementsByClassName('locationSelector')).forEach(selector => {
+      this.map.locations.forEach(location => {
+        (selector as HTMLSelectElement).options.add(new Option(location.name));
+      });
+    });
   }
 
-  outputDistance(gameMap: GameMap, originLocation: Location, destinationLocation: Location, methods: string[]) {
-    const distance = gameMap.distanceBetweenLocations(originLocation, destinationLocation, methods);
-    console.log(`The distance from ${originLocation.name} to ${destinationLocation.name} is ${distance}`);;
-  }
-
-  getTravelMethods() {
-    let methods: string[] = [];
-    if ((document.getElementById('road') as HTMLInputElement).checked) {
-      methods.push('road');
-    }
-    if ((document.getElementById('train') as HTMLInputElement).checked) {
-      methods.push('train');
-    }
-    if ((document.getElementById('boat') as HTMLInputElement).checked) {
-      methods.push('sea');
-    }
-    if (methods.length === 0) {
-      return undefined;
-    }
-    return methods;
-  }
+  updateAllFields() {
+    this.draculaBlood.value = this.dracula.blood.toString();
+    this.draculaLocation.value = this.dracula.currentLocation.name;
+    this.godalmingHealth.value = this.godalming.health.toString();
+    this.sewardHealth.value = this.seward.health.toString();
+    this.vanHelsingHealth.value = this.vanHelsing.health.toString();
+    this.minaHealth.value = this.mina.health.toString();
+ }
 }
