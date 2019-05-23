@@ -1,14 +1,8 @@
-// import * as fs from 'fs';
-// import * as path from 'path';
 import * as _ from 'lodash';
 
 export class GameMap {
   locations: location[];
 
-  // constructor(mapFileName?: string) {
-  //   if (mapFileName) {
-  //     this.loadMapData(mapFileName);
-  //   } else {
   constructor() {
     this.locations = [
       new smallCityWest('Galway')
@@ -538,14 +532,6 @@ export class GameMap {
     ];
   }
 
-  // saveMapData(mapFileName: string) {
-  //   fs.writeFileSync(mapFileName, JSON.stringify(this.locations), { encoding: 'utf-8' });
-  // }
-
-  // loadMapData(mapFileName: string) {
-  //   this.locations = JSON.parse(fs.readFileSync(path.join(mapFileName), { encoding: 'utf-8'}));
-  // }
-
   verifyMapData() {
     console.log('Verifying map data');
     let hospitalCount = 0;
@@ -700,6 +686,10 @@ export class GameMap {
       return -1;
     }
     return this.distanceBetweenLocations(null, destination, methods, examinedLocations, newLocationsToExamine, distance + 1);
+  }
+
+  printFirstLocation(locations: location[]) {
+    console.log(locations[0]);
   }
 }
 
