@@ -22,6 +22,9 @@ export class Dracula {
   setLocation(newLocation: Location): string {
     this.revealed = false;
     this.currentLocation = newLocation;
+    if (this.currentLocation.type == LocationType.castle) {
+      this.revealed = true;
+    }
     return this.revealed ? `Dracula moved to ${this.currentLocation.name}` : 'Dracula moved to a hidden location';
   }
   
@@ -51,7 +54,7 @@ export class Dracula {
     const connectedLocationNames = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
     const connectedLocations = connectedLocationNames.map(name => gameState.map.getLocationByName(name));
     const invalidLocations = this.trail.map(trail => trail.location);
-    const validLocations = _.without(connectedLocations, ...invalidLocations);
+    const validLocations = _.without(connectedLocations, ...invalidLocations, gameState.map.locations.find(location => location.type == LocationType.hospital));
     const randomChoice = Math.floor(Math.random()*validLocations.length);
     return validLocations[randomChoice];
   }

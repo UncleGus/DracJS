@@ -32,15 +32,22 @@ const encounter = [
   document.getElementById('encounter5') as HTMLInputElement,
   document.getElementById('encounter6') as HTMLInputElement
 ];
+const timePhase = document.getElementById('timePhase') as HTMLInputElement;
+const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
+const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
 const startButton = document.getElementById('startButton');
 const godalmingSearch = document.getElementById('godalmingSearch');
 const sewardSearch = document.getElementById('sewardSearch');
 const vanHelsingSearch = document.getElementById('vanHelsingSearch');
 const minaSearch = document.getElementById('minaSearch');
+const timeKeepingButton = document.getElementById('timeKeepingButton');
+const draculaMovementButton = document.getElementById('draculaMovementButton');
+
+const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
     
 // wire up webpage components
 draculaBlood.addEventListener('change', () => {
-  log(game.dracula.setBlood(parseInt(draculaBlood.value)));
+  game.setDraculaBlood(parseInt(draculaBlood.value));
   updateAllFields();
 });
 Array.from(document.getElementsByClassName('locationSelector')).forEach(selector => {
@@ -49,71 +56,80 @@ Array.from(document.getElementsByClassName('locationSelector')).forEach(selector
   });
 });
 godalmingHealth.addEventListener('change', () => {
-  log(game.godalming.setHealth(parseInt(godalmingHealth.value)));
+  game.setHunterHealth(game.godalming, parseInt(godalmingHealth.value));
   updateAllFields();
 });
 sewardHealth.addEventListener('change', () => {
-  log(game.seward.setHealth(parseInt(sewardHealth.value)));
+  game.setHunterHealth(game.seward, parseInt(sewardHealth.value));
   updateAllFields();
 });
 vanHelsingHealth.addEventListener('change', () => {
-  log(game.vanHelsing.setHealth(parseInt(vanHelsingHealth.value)));
+  game.setHunterHealth(game.vanHelsing, parseInt(vanHelsingHealth.value));
   updateAllFields();
 });
 minaHealth.addEventListener('change', () => {
-  log(game.mina.setHealth(parseInt(minaHealth.value)));
+  game.setHunterHealth(game.mina, parseInt(minaHealth.value));
   updateAllFields();
 });
 godalmingLocation.addEventListener('change', () => {
-  log(game.godalming.setLocation(game.map.getLocationByName(godalmingLocation.value)));
+  game.setHunterLocation(game.godalming, game.map.getLocationByName(godalmingLocation.value));
   updateAllFields();
 });
 sewardLocation.addEventListener('change', () => {
-  log(game.seward.setLocation(game.map.getLocationByName(sewardLocation.value)));
+  game.setHunterLocation(game.seward, game.map.getLocationByName(sewardLocation.value));
   updateAllFields();
 });
 vanHelsingLocation.addEventListener('change', () => {
-  log(game.vanHelsing.setLocation(game.map.getLocationByName(vanHelsingLocation.value)));
+  game.setHunterLocation(game.vanHelsing, game.map.getLocationByName(vanHelsingLocation.value));
   updateAllFields();
 });
 minaLocation.addEventListener('change', () => {
-  log(game.mina.setLocation(game.map.getLocationByName(minaLocation.value)));
+  game.setHunterLocation(game.mina, game.map.getLocationByName(minaLocation.value));
   updateAllFields();
 });
 startButton.addEventListener('click', () => {
   startButton.parentNode.removeChild(startButton);
-  log(game.startGame());
+  game.startGame();
+  timeKeepingButton.style.visibility = null;
   updateAllFields();
 });
 godalmingSearch.addEventListener('click', () => {
-  log(game.searchWithHunter(game.godalming));
+  game.searchWithHunter(game.godalming);
   updateAllFields();
 });
 sewardSearch.addEventListener('click', () => {
-  log(game.searchWithHunter(game.seward));
+  game.searchWithHunter(game.seward);
   updateAllFields();
 });
 vanHelsingSearch.addEventListener('click', () => {
-  log(game.searchWithHunter(game.vanHelsing));
+  game.searchWithHunter(game.vanHelsing);
   updateAllFields();
 });
 minaSearch.addEventListener('click', () => {
-  log(game.searchWithHunter(game.mina));
+  game.searchWithHunter(game.mina);
+  updateAllFields();
+});
+timeKeepingButton.addEventListener('click', () => {
+  game.performTimeKeepingPhase();
+  timeKeepingButton.style.visibility = 'hidden';
+  draculaMovementButton.style.visibility = null;
+  updateAllFields();
+});
+draculaMovementButton.addEventListener('click', () => {
+  game.performDraculaMovementPhase();
+  draculaMovementButton.style.visibility = 'hidden';
+  timeKeepingButton.style.visibility = null;
   updateAllFields();
 });
 
 // set fields to game start state
-log(game.initialiseGameState());
+game.initialiseGameState();
+game.log('Hunters set starting locations then press Start button');
 updateAllFields();
-log('Hunters set starting locations then press Start button');
-
-function log(message: string) {
-  console.log(message);
-  logBox.value += `${message}\n`;
-  logBox.scrollTop = logBox.scrollHeight;
-}
 
 function updateAllFields() {
+  logBox.value = game.logText;
+  logBox.scrollTop = logBox.scrollHeight;
   draculaBlood.value = game.dracula.blood.toString();
   draculaLocation.value = game.dracula.revealed ? game.dracula.currentLocation.name : 'Hidden';
   godalmingHealth.value = game.godalming.health.toString();
@@ -121,6 +137,9 @@ function updateAllFields() {
   vanHelsingHealth.value = game.vanHelsing.health.toString();
   minaHealth.value = game.mina.health.toString();
   encounterCount.value = game.dracula.encounterHand.length.toString();
+  timePhase.value = timePhaseDescriptions[game.timePhase] || '';
+  vampireTrack.value = game.vampireTrack.toString();
+  resolveTrack.value = game.resolveTrack.toString();
 
   for (let i = 0; i < 6; i++) {
     if (game.dracula.trail[i]) {
@@ -130,7 +149,7 @@ function updateAllFields() {
         trail[i].value = game.dracula.trail[i].location.type == LocationType.sea ? 'Sea' : 'Land';
       }
       if (game.dracula.trail[i].encounter) {
-        encounter[i].value = 'Encounter';
+        encounter[i].value = game.dracula.trail[i].encounter.revealed ? game.dracula.trail[i].encounter.name : 'Encounter';
       }
     }
   }

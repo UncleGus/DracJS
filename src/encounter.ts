@@ -1,8 +1,10 @@
 export class Encounter {
   name: string;
+  revealed: boolean;
 
   constructor(name: string) {
     this.name = name;
+    this.revealed = false;
   }
 }
 

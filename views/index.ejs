@@ -9,7 +9,7 @@
   <div class="container-fluid bg-3 text-center">
     <div class="row">
       <h3>Dracula Details</h3>
-      <div class="col-sm-3" id="draculaDetails">
+      <div class="col-sm-2" id="draculaDetails">
         <p>
           <LABEL for="draculaBlood">Blood: </LABEL>
           <input type="number" id="draculaBlood">
@@ -77,6 +77,22 @@
           <input type="text" id="encounter6" readonly>
         </p>
       </div>
+      <div class="col-sm-1">
+      </div>
+      <div class="col-sm-1">
+        <p>Time phase</p>
+        <input type="text" id="timePhase" readonly>
+      </div>
+      <div class="col-sm-2">
+        <p>
+          <LABEL for="vampireTrack">Vampires: </LABEL>
+          <input type="text" id="vampireTrack" readonly>
+        </p>
+        <p>
+          <LABEL for="resolveTrack">Resolve: </LABEL>
+          <input type="text" id="resolveTrack" readonly>
+        </p>
+      </div>
     </div>
     <div class="row">
       <h3>Hunter Details</h3>
@@ -131,11 +147,14 @@
     </div>
     <div class="row">
       <div class="col-sm-12" id="log">
-        <textarea id="logBox" style="height: 0px; width: 100pc; min-height: 295px; max-height: 370px; resize: none;" readonly></textarea>
+        <textarea id="logBox" style="height: 0px; width: 100pc; min-height: 295px; max-height: 370px; resize: none;"
+          readonly></textarea>
       </div>
     </div>
     <div class="row">
       <button id="startButton">Start</button>
+      <button id="timeKeepingButton" style="visibility: hidden">Perform Timekeeping</button>
+      <button id="draculaMovementButton" style="visibility: hidden">Perform Movement</button>
     </div>
   </div>
 </body>
