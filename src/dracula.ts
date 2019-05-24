@@ -1,6 +1,7 @@
 import { Location, LocationType } from "./map";
 import { Game } from "./game";
 import { Encounter } from "./encounter";
+import * as _ from 'lodash';
 
 export class Dracula {
   blood: number;
@@ -19,9 +20,8 @@ export class Dracula {
   }
 
   setLocation(newLocation: Location): string {
-    this.revealed = true;
+    this.revealed = false;
     this.currentLocation = newLocation;
-    this.pushToTrail({ revealed: false, location: newLocation, encounter: this.selectEncounterFromHand()});
     return this.revealed ? `Dracula moved to ${this.currentLocation.name}` : 'Dracula moved to a hidden location';
   }
   
@@ -47,6 +47,20 @@ export class Dracula {
     return validLocations[randomIndex];
   }
 
+  chooseNextLocation(gameState: Game): Location {
+    const connectedLocationNames = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
+    const connectedLocations = connectedLocationNames.map(name => gameState.map.getLocationByName(name));
+    const invalidLocations = this.trail.map(trail => trail.location);
+    const validLocations = _.without(connectedLocations, ...invalidLocations);
+    const randomChoice = Math.floor(Math.random()*validLocations.length);
+    return validLocations[randomChoice];
+  }
+
+  chooseEncounter(): Encounter {
+    const randomChoice = Math.floor(Math.random()*this.encounterHand.length);
+    return this.encounterHand.splice(randomChoice, 1)[0];
+  }
+
   die(): string {
     return `Dracula was dealt a mortal blow\n${this.setBlood(Math.floor((this.blood - 1) / 5) * 5)}`;
   }
@@ -56,9 +70,9 @@ export class Dracula {
     return `Dracula is now on ${this.blood} blood`;
   }
 
-  pushToTrail(newTrailCard: TrailCard): TrailCard {
-    this.trail = [newTrailCard].concat(this.trail)
-    return this.trail.length == 7 ? this.trail.splice(-1)[0] : null;
+  pushToTrail(newTrailCard: TrailCard): string {
+    this.trail.unshift(newTrailCard);
+    return 'Dracula added a card to the trail' + (newTrailCard.encounter ? ' with an encounter' : '');
   }
 
   drawUpEncounters(encounterPool: Encounter[]): string {
