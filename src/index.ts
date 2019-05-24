@@ -1,3 +1,4 @@
 import { Game } from "./game";
 
-(window as any).game = new Game();
+const game = new Game();
+(window as any).game = game;

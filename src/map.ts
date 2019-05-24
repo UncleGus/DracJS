@@ -638,16 +638,16 @@ export class GameMap {
       }
     }
     if (hospitalCount !== 1) {
-      problems.push(`Map data invalid. Expected exactly 1 hospital location, found ${hospitalCount}.`);
+      problems.push(`Expected exactly 1 hospital location, found ${hospitalCount}.`);
     }
     if (castleCount !== 1) {
-      problems.push(`Map data invalid. Expected exactly 1 castle location, found ${castleCount}.`);
+      problems.push(`Expected exactly 1 castle location, found ${castleCount}.`);
     }
     problems.forEach(problem => console.log(problem));
     if (problems.length > 0) {
-      throw new Error(`Map data invalid. ${problems.length} problems`);
+      return `Map data invalid. ${problems.length} problems:\n${problems.join('\n')}`;
     }
-    console.log('All map data valid');
+    return 'All map data valid';
   }
 
   getLocationByName(name: string) {
@@ -686,11 +686,7 @@ export class GameMap {
       return -1;
     }
     return this.distanceBetweenLocations(null, destination, methods, examinedLocations, newLocationsToExamine, distance + 1);
-  }
-
-  printFirstLocation(locations: Location[]) {
-    console.log(locations[0]);
-  }
+  }  
 }
 
 export interface Location {

@@ -2,38 +2,49 @@ import { Location } from "./map";
 
 export class Hunter {
   name: string;
+  maxHealth: number;
   health: number;
   currentLocation: Location;
 
   constructor(newName: string) {
     this.name = newName;
   }
+
+  setHealth(newHealth: number): string {
+    this.health = Math.min(this.maxHealth, Math.max(0, newHealth));
+    return `${this.name} is now on ${this.health} health`;
+  }
+
+  setLocation(newLocation: Location): string {
+    this.currentLocation = newLocation;
+    return `${this.name} moved to ${this.currentLocation.name}`;
+  }
 }
 
 export class Godalming extends Hunter {
   constructor() {
     super('Lord Godalming');
-    this.health = 12;
+    this.health = this.maxHealth = 12;
   }
 }
 
 export class Seward extends Hunter {
   constructor() {
     super('Dr. Seward');
-    this.health = 10;
+    this.health = this.maxHealth = 10;
   }
 }
 
 export class VanHelsing extends Hunter {
   constructor() {
     super('Van Helsing');
-    this.health = 8;
+    this.health = this.maxHealth = 8;
   }
 }
 
 export class Mina extends Hunter {
   constructor() {
     super('Mina Harker');
-    this.health = 8;
+    this.health = this.maxHealth = 8;
   }
 }
