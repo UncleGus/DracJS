@@ -530,6 +530,15 @@ export class GameMap {
         seaConnections: ['Ionian Sea', 'Varna', 'Constanta']
       },
     ];
+    this.locations.sort((first, second) => {
+      if (first.name.toLowerCase() < second.name.toLowerCase()) {
+        return -1;
+      } else if (first.name.toLowerCase() > second.name.toLowerCase()) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
   }
 
   verifyMapData() {

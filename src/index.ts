@@ -42,6 +42,7 @@ const vanHelsingSearch = document.getElementById('vanHelsingSearch');
 const minaSearch = document.getElementById('minaSearch');
 const timeKeepingButton = document.getElementById('timeKeepingButton');
 const draculaMovementButton = document.getElementById('draculaMovementButton');
+const draculaActionButton = document.getElementById('draculaActionButton');
 
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
     
@@ -118,6 +119,12 @@ timeKeepingButton.addEventListener('click', () => {
 draculaMovementButton.addEventListener('click', () => {
   game.performDraculaMovementPhase();
   draculaMovementButton.style.visibility = 'hidden';
+  draculaActionButton.style.visibility = null;
+  updateAllFields();
+});
+draculaActionButton.addEventListener('click', () => {
+  game.performDraculaActionPhase();
+  draculaActionButton.style.visibility = 'hidden';
   timeKeepingButton.style.visibility = null;
   updateAllFields();
 });
@@ -148,8 +155,10 @@ function updateAllFields() {
       } else {
         trail[i].value = game.dracula.trail[i].location.type == LocationType.sea ? 'Sea' : 'Land';
       }
-      if (game.dracula.trail[i].encounter) {
-        encounter[i].value = game.dracula.trail[i].encounter.revealed ? game.dracula.trail[i].encounter.name : 'Encounter';
+      if (game.dracula.trail[i].encounters[0]) {
+        encounter[i].value = game.dracula.trail[i].encounters[0].revealed ? game.dracula.trail[i].encounters[0].name : 'Encounter';
+      } else {
+        encounter[i].value = '';
       }
     }
   }
