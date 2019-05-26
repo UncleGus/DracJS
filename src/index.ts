@@ -35,6 +35,7 @@ const encounter = [
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
 const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
+const catacombs = document.getElementById('catacombs') as HTMLInputElement;
 const startButton = document.getElementById('startButton');
 const godalmingSearch = document.getElementById('godalmingSearch');
 const sewardSearch = document.getElementById('sewardSearch');
@@ -147,6 +148,7 @@ function updateAllFields() {
   timePhase.value = timePhaseDescriptions[game.timePhase] || '';
   vampireTrack.value = game.vampireTrack.toString();
   resolveTrack.value = game.resolveTrack.toString();
+  catacombs.value = game.catacombs.length.toString();
 
   for (let i = 0; i < 6; i++) {
     if (game.dracula.trail[i]) {
@@ -155,11 +157,14 @@ function updateAllFields() {
       } else {
         trail[i].value = game.dracula.trail[i].location.type == LocationType.sea ? 'Sea' : 'Land';
       }
-      if (game.dracula.trail[i].encounters[0]) {
-        encounter[i].value = game.dracula.trail[i].encounters[0].revealed ? game.dracula.trail[i].encounters[0].name : 'Encounter';
+      if (game.dracula.trail[i].encounter) {
+        encounter[i].value = game.dracula.trail[i].encounter.revealed ? game.dracula.trail[i].encounter.name : 'Encounter';
       } else {
         encounter[i].value = '';
       }
+    } else {
+      trail[i].value = '';
+      encounter[i].value = '';
     }
   }
 }

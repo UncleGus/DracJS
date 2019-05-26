@@ -16,19 +16,21 @@ export class Game {
   vampireTrack: number;
   resolveTrack: number;
   catacombs: TrailCard[];
+  catacombEncounters: Encounter[];
 
   constructor() {
     // construct game components
     this.map = new GameMap();
     this.encounterPool = initialiseEncounterPool();
     this.catacombs = [];
+    this.catacombEncounters = [];
     this.dracula = new Dracula();
     this.godalming = new Godalming;
     this.seward = new Seward();
     this.vanHelsing = new VanHelsing();
     this.mina = new Mina();
     
-    // set initial loations to avoid null references
+    // set initial locations to avoid null references
     this.dracula.setLocation(this.map.locations[0]);
     this.godalming.setLocation(this.map.locations[0]);
     this.seward.setLocation(this.map.locations[0]);
@@ -37,7 +39,7 @@ export class Game {
   }
 
   log(message: string) {
-    this.logText += `\n${message}`;
+    this.logText += message ? `\n${message}` : '';
   }
   
   initialiseGameState() {
@@ -54,13 +56,13 @@ export class Game {
   startGame() {
     const startLocation = this.dracula.chooseStartLocation(this);
     this.log(this.dracula.setLocation(startLocation));
-    this.log(this.dracula.pushToTrail({ location: startLocation, revealed: false, encounters: [] }));
+    this.log(this.dracula.pushToTrail({ location: startLocation, revealed: false, encounter: null }));
     this.log('It is now Dracula\'s turn');
   }
 
   searchWithHunter(hunter: Hunter) {
     // TODO: resolve encounters, attack Dracula
-    // TODO: search for catacombs as well
+    // TODO: resolve catacombs as well
     // TODO: handle finding Hide location (two encounters)
     let foundSomething = false;
     this.dracula.trail.forEach(trailCard => {
@@ -68,12 +70,32 @@ export class Game {
         foundSomething = true;
         trailCard.revealed = true;
         this.log(`${hunter.name} has found Dracula's trail at ${hunter.currentLocation.name}`);
-        if (trailCard.encounters) {
-          trailCard.encounters[0].revealed = true;
-          this.log(`${hunter.name} has encountered ${trailCard.encounters[0].name} at ${hunter.currentLocation.name}`);
+        if (trailCard.encounter) {
+          trailCard.encounter.revealed = true;
+          this.log(`${hunter.name} has encountered ${trailCard.encounter.name} at ${hunter.currentLocation.name}`);
         }
-      }
+      }      
     });
+    for (let i = 0; i < this.catacombs.length; i++) {
+      const catacomb = this.catacombs[i];
+      if (hunter.currentLocation == catacomb.location) {
+        foundSomething = true;
+        catacomb.revealed = true;
+        this.log(`${hunter.name} has found Dracula's catacomb at ${hunter.currentLocation.name}`);
+        if (catacomb.encounter) {
+          catacomb.encounter.revealed = true;
+          this.log(`${hunter.name} has encountered ${catacomb.encounter.name} at ${hunter.currentLocation.name}`);
+          this.encounterPool.push(catacomb.encounter);
+        }
+        this.catacombEncounters[i].revealed = true;
+        this.log(`${hunter.name} has encountered ${this.catacombEncounters[i].name} at ${hunter.currentLocation.name}`);
+        this.encounterPool.push(this.catacombEncounters[i]);
+      }
+      this.catacombs.splice(i, 1);
+      this.catacombEncounters.splice(i, 1);
+      this.log(this.shuffleEncounters());
+      break;
+    }
     if (hunter.currentLocation == this.dracula.currentLocation) {
       foundSomething = true;
       this.dracula.revealed = true;
@@ -97,10 +119,12 @@ export class Game {
   }
 
   performTimeKeepingPhase() {
-    // TODO: decide what to do with catacomb cards
+    this.log('Performing Timekeeping phase');
+    
+    // evaluate catacombs
+    this.log(this.dracula.evaluateCatacombs(this));
     
     // perform timekeeping
-    this.log('Performing Timekeeping phase');
     if (this.dracula.currentLocation.type !== LocationType.sea) {
       this.log('Time advancing...');
       this.timePhase += 1;
@@ -119,8 +143,15 @@ export class Game {
 
   performDraculaMovementPhase() {
     // TODO: choose next location or power
-    // TODO: handle no valid move case
-    const nextLocation = this.dracula.chooseNextLocation(this);
+    let nextLocation = this.dracula.chooseNextLocation(this);
+    if (!nextLocation) {
+      this.log('Dracula has no valid moves');
+      this.log(this.dracula.die());
+      this.log(this.dracula.clearTrail(this, 1));
+      this.dracula.revealed = true;
+      this.dracula.trail[0].revealed = true;
+      nextLocation = this.dracula.chooseNextLocation(this);
+    }
     
     // check if new location causes Dracula to be revealed (special case for Hide power)
     if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
@@ -142,7 +173,7 @@ export class Game {
     }
 
     // add card to trail
-    this.log(this.dracula.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, encounters: [] }));
+    this.log(this.dracula.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, encounter: null }));
     
     if (this.dracula.trail.length == 7) {
       this.log('A card has dropped off the end of the trail');
@@ -156,7 +187,7 @@ export class Game {
       this.dracula.currentLocation == this.vanHelsing.currentLocation || this.dracula.currentLocation == this.mina.currentLocation)) {
       this.log('Dracula attacks!');
     } else if (this.dracula.currentLocation.type !== LocationType.castle && this.dracula.currentLocation.type !== LocationType.sea) {
-      this.dracula.trail[0].encounters.push(this.dracula.chooseEncounter());
+      this.dracula.trail[0].encounter = this.dracula.chooseEncounter();
       this.log('Dracula placed an encounter');
     }
     
@@ -172,10 +203,11 @@ export class Game {
     this.log(this.dracula.drawUpEncounters(this.encounterPool));
   }
 
-  private shuffleEncounters(): string {
+  shuffleEncounters(): string {
     const shuffledEncounters = [];
     while (this.encounterPool.length > 0) {
       const randomIndex = Math.floor(Math.random()*this.encounterPool.length);
+      this.encounterPool[randomIndex].revealed = false;
       shuffledEncounters.push(this.encounterPool.splice(randomIndex, 1)[0]);
     }
     this.encounterPool = shuffledEncounters;
