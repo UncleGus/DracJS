@@ -70,6 +70,7 @@ export class Game {
         foundSomething = true;
         trailCard.revealed = true;
         this.log(`${hunter.name} has found Dracula's trail at ${hunter.currentLocation.name}`);
+
         if (trailCard.encounter) {
           trailCard.encounter.revealed = true;
           this.log(`${hunter.name} has encountered ${trailCard.encounter.name} at ${hunter.currentLocation.name}`);
@@ -203,6 +204,7 @@ export class Game {
           break;
         case PowerName.hide:
           this.log('Dracula moved to a hidden location');
+          this.dracula.hideLocation = this.dracula.currentLocation;
           this.dracula.revealed = false;
           break;
         case PowerName.wolfForm:
@@ -220,7 +222,7 @@ export class Game {
     let nextLocation: Location;
     if (this.dracula.nextMove.location) {
       nextLocation = this.dracula.nextMove.location;
-      // check if new location causes Dracula to be revealed (special case for Hide power)
+      // check if new location causes Dracula to be revealed
       if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
         nextLocation == this.vanHelsing.currentLocation || nextLocation == this.mina.currentLocation))) {
           this.dracula.revealed = true;
@@ -249,7 +251,34 @@ export class Game {
     }
     if (this.dracula.trail.length == 7) {
       this.log('A card has dropped off the end of the trail');
-      this.log(this.dracula.decideFateOfDroppedOffCard(this));
+      const droppedOffCard = this.dracula.trail.pop();
+      if (droppedOffCard.location) {
+        if (droppedOffCard.location == this.dracula.hideLocation) {
+          this.log('Dracula hid at this location');
+          let hideIndex = 0;
+          for (hideIndex; hideIndex < this.dracula.trail.length; hideIndex++) {
+            if (this.dracula.trail[hideIndex].power) {
+              if (this.dracula.trail[hideIndex].power.name == PowerName.hide) {
+                break;
+              }
+            }
+          }
+          this.log(`The Hide power card was removed from position ${hideIndex + 1} in the trail`);
+          if (this.dracula.trail[hideIndex].encounter) {
+            this.log('The encounter on the Hide card was discarded')
+            this.encounterPool.push(this.dracula.trail[hideIndex].encounter);
+            this.log(this.shuffleEncounters());
+          }
+          this.dracula.hideLocation = null;
+          this.dracula.trail.splice(hideIndex, 1);
+        }
+      }
+      if (droppedOffCard.power) {
+        if (droppedOffCard.power.name == PowerName.hide) {
+          this.dracula.hideLocation = null;
+        }
+      }
+      this.log(this.dracula.decideFateOfDroppedOffCard(droppedOffCard, this));
     }
   }
 

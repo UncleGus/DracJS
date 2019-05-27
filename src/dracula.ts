@@ -15,6 +15,7 @@ export class Dracula {
   debugMode: boolean;
   nextMove: PossibleMove;
   powers: Power[];
+  hideLocation: Location;
 
   constructor() {
     this.blood = 15;
@@ -259,23 +260,21 @@ export class Dracula {
     }
   }
 
-  decideFateOfDroppedOffCard(gameState: Game): string {
+  decideFateOfDroppedOffCard(droppedOffCard: TrailCard, gameState: Game): string {
     // TODO: make logical decision
-    // TODO: handle Hide location dropping off the trail
-    if (this.trail[6].location) {
-      if (Math.random() < 0.2 && gameState.catacombs.length < 3 && this.trail[6].location.type !== LocationType.sea) {
+    if (droppedOffCard.location) {
+      if (Math.random() < 0.2 && gameState.catacombs.length < 3 && droppedOffCard.location.type !== LocationType.sea) {
         gameState.catacombEncounters.push(this.chooseEncounter());
-        this.debug(`Card added to catacombs: ${this.trail[6].location.name} with ${this.trail[6].encounter ? this.trail[6].encounter.name: '__'} and ${gameState.catacombEncounters[gameState.catacombEncounters.length -1].name}`);
-        gameState.catacombs.push(this.trail.pop());
+        this.debug(`Card added to catacombs: ${droppedOffCard.location.name} with ${droppedOffCard.encounter ? droppedOffCard.encounter.name: '__'} and ${gameState.catacombEncounters[gameState.catacombEncounters.length -1].name}`);
+        gameState.catacombs.push(droppedOffCard);
         return 'Dracula moved the card to the catacombs with an additional encounter on it'
       }
-      this.debug(`Card returned to deck: ${this.trail[6].location.name}`);
-      this.droppedOffEncounter = this.trail[6].encounter;
+      this.debug(`Card returned to deck: ${droppedOffCard.location.name}`);
+      this.droppedOffEncounter = droppedOffCard.encounter;
       if (this.droppedOffEncounter) {
         this.debug(`Encounter ${this.droppedOffEncounter.name} to be dealt with later`);
       }
     }
-    this.trail.pop();
     return 'Dracula returned the dropped off card to the Location deck';
   }
 
