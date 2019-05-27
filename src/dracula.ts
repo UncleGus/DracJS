@@ -13,6 +13,8 @@ export class Dracula {
   droppedOffEncounter: Encounter;
   seaBloodPaid: boolean;
   debugMode: boolean;
+  nextMove: PossibleMove;
+  powers: Power[];
 
   constructor() {
     this.blood = 15;
@@ -21,6 +23,43 @@ export class Dracula {
     this.encounterHandSize = 5;
     this.encounterHand = [];
     this.seaBloodPaid = false;
+    this.powers = [
+      {
+        name: PowerName.darkCall,
+        nightOnly: true,
+        cost: 2
+      },
+      {
+        name: PowerName.doubleBack,
+        nightOnly: false,
+        cost: 0
+      },
+      {
+        name: PowerName.feed,
+        nightOnly: true,
+        cost: -1
+      },
+      {
+        name: PowerName.hide,
+        nightOnly: false,
+        cost: 0
+      },
+      {
+        name: PowerName.wolfForm,
+        nightOnly: true,
+        cost: 1
+      },
+      {
+        name: PowerName.wolfFormAndDoubleBack,
+        nightOnly: true,
+        cost: 1
+      },
+      {
+        name: PowerName.wolfFormAndHide,
+        nightOnly: true,
+        cost: 1
+      },
+    ];
     this.debugMode = true;
   }
 
@@ -33,7 +72,7 @@ export class Dracula {
   chooseStartLocation(gameState: Game): Location {
     // TODO: improve logic
     const validLocations = gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
-    this.debug(`Valid locations are: ${validLocations.map(location => location.name)}`);
+    // this.debug(`Valid locations are: ${validLocations.map(location => location.name)}`);
     const distances = validLocations.map(location => {
       return Math.min(
         gameState.map.distanceBetweenLocations(location, gameState.godalming.currentLocation),
@@ -42,41 +81,132 @@ export class Dracula {
         gameState.map.distanceBetweenLocations(location, gameState.mina.currentLocation)
       );      
     });
-    this.debug(`Distances are: ${distances.toString()}`);
+    // this.debug(`Distances are: ${distances.toString()}`);
     const furthestDistance = distances.reduce((prev, curr) => curr > prev ? curr : prev, 0);
-    this.debug(`Furthest distance is ${furthestDistance}`);
+    // this.debug(`Furthest distance is ${furthestDistance}`);
     const furthestDistanceIndices = [];
     for (let i = 0; i < distances.length; i++) {
       if (distances[i] == furthestDistance) {
         furthestDistanceIndices.push(i);
       }
     }
-    this.debug(`Locations at furthest distance are at indices; ${furthestDistanceIndices.toString()}`);
+    // this.debug(`Locations at furthest distance are at indices; ${furthestDistanceIndices.toString()}`);
     const randomChoice = Math.floor(Math.random()*furthestDistanceIndices.length);
     const randomIndex = furthestDistanceIndices[randomChoice];
-    this.debug(`Choosing ${validLocations[randomIndex].name}`);
+    // this.debug(`Choosing ${validLocations[randomIndex].name}`);
     return validLocations[randomIndex];
   }
 
-  chooseNextLocation(gameState: Game): Location {
-    // TODO: make logical decision 
+  
+  chooseNextMove(gameState: Game): string {
+    // TODO: make logical decision
+    // TODO: handle discarding catacombs to allow movement there if not using double back
+    this.nextMove = null;
+    const possibleMoves: PossibleMove[] = [];
     const connectedLocationNames = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
-    this.debug(`Connected locations are: ${connectedLocationNames.toString()}`);
+    // this.debug(`Connected locations are: ${connectedLocationNames.toString()}`);
     const connectedLocations = connectedLocationNames.map(name => gameState.map.getLocationByName(name));
-    const invalidLocations = this.trail.map(trail => trail.location).concat(gameState.catacombs.map(catacomb => catacomb.location));
-
+    const invalidLocations = this.trail.filter(trail => trail.location).map(trail => trail.location);
     if (this.blood == 1 && (this.currentLocation.type !== LocationType.sea || (this.currentLocation.type == LocationType.sea && !this.seaBloodPaid))) {
       invalidLocations.concat(connectedLocations.filter(location => location.type == LocationType.sea));
     }
-    this.debug(`Invalid locations are: ${invalidLocations.map(location => location.name).toString()}`);
+    // this.debug(`Invalid locations are: ${invalidLocations.map(location => location.name).toString()}`);
     const validLocations = _.without(connectedLocations, ...invalidLocations, gameState.map.locations.find(location => location.type == LocationType.hospital));
-    this.debug(`Valid locations are: ${validLocations.map(location => location.name).toString()}`);
-    if (validLocations.length == 0) {
-      return null;
+    // this.debug(`Valid locations are: ${validLocations.map(location => location.name).toString()}`);
+    validLocations.map(location => possibleMoves.push({ location, value: 1}));
+
+    const possiblePowers = this.powers.slice(0, 5).filter(power => (power.nightOnly == false || gameState.timePhase > 2) && power.cost < this.blood && this.currentLocation.type !== LocationType.sea);
+    // this.debug(`Possible powers are ${possiblePowers.map(power => power.name)}`);
+    const invalidPowers: Power[] = [];
+    this.trail.forEach(trailCard => {
+      if (trailCard.power) {
+        invalidPowers.push(trailCard.power);
+        if (trailCard.power.name == PowerName.wolfFormAndDoubleBack) {
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.wolfForm));
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.doubleBack));
+        }
+        if (trailCard.power.name == PowerName.wolfFormAndHide) {
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.wolfForm));
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.hide));
+        }
+      }
+    });
+
+    // this.debug(`Invalid powers are ${invalidPowers.map(power => power.name)}`);
+    const validPowers = _.without(possiblePowers, ...invalidPowers);
+    if (validPowers.find(power => power.name == PowerName.wolfForm)) {
+      if (validPowers.find(power => power.name == PowerName.doubleBack)) {
+        validPowers.push(this.powers.find(power => power.name == PowerName.wolfFormAndDoubleBack));
+      }
+      if (validPowers.find(power => power.name == PowerName.hide)) {
+        validPowers.push(this.powers.find(power => power.name == PowerName.wolfFormAndHide));
+      }
     }
-    const randomChoice = Math.floor(Math.random()*validLocations.length);
-    this.debug(`Choosing ${validLocations[randomChoice].name}`);
-    return validLocations[randomChoice];
+    // this.debug(`Valid powers are ${validPowers.map(power => power.name)}`);
+    validPowers.forEach(validPower => {
+      let potentialDestinations: Location[] = [];
+      let secondLayerDestination: Location[] = [];
+      switch(validPower.name) {
+        case PowerName.darkCall:
+          possibleMoves.push({ power: validPower, value: 1 });
+          break;
+        case PowerName.doubleBack:
+          this.trail.concat(gameState.catacombs).forEach(trailCard => {
+            if (gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, ['road', 'sea']) == 1) {
+              possibleMoves.push({ location: trailCard.location, power: validPower, value: 1 });
+            }
+          });
+          break;
+        case PowerName.feed:
+          possibleMoves.push({ power: validPower, value: 1 });
+          break;
+        case PowerName.hide:
+          possibleMoves.push({ power: validPower, value: 1 });
+          break;
+        case PowerName.wolfForm:
+          potentialDestinations = this.currentLocation.roadConnections.map(conn => gameState.map.getLocationByName(conn));
+          potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections.map(conn => gameState.map.getLocationByName(conn))));
+          potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
+          potentialDestinations = _.uniq(potentialDestinations);
+          potentialDestinations = potentialDestinations.filter(dest => !this.trail.find(trailCard => trailCard.location == dest) && !gameState.catacombs.find(trailCard => trailCard.location == dest));
+          potentialDestinations = _.without(potentialDestinations, this.currentLocation);
+          potentialDestinations.forEach(dest => possibleMoves.push({ power: validPower, location: dest, value: 1}));
+          break;
+        case PowerName.wolfFormAndDoubleBack:
+          potentialDestinations = this.currentLocation.roadConnections.map(conn => gameState.map.getLocationByName(conn));
+          potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections.map(conn => gameState.map.getLocationByName(conn))));
+          potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
+          potentialDestinations = _.uniq(potentialDestinations);
+          potentialDestinations = potentialDestinations.filter(dest => this.trail.find(trailCard => trailCard.location == dest) || gameState.catacombs.find(trailCard => trailCard.location == dest));
+          potentialDestinations.forEach(dest => possibleMoves.push({ power: validPower, location: dest, value: 1}));
+        break;
+        case PowerName.wolfFormAndHide:
+          possibleMoves.push({ power: validPower, value: 1});
+          break;
+      }
+    });
+    this.debug(`Possible moves are to: ${possibleMoves.filter(move => !move.power).map(move => move.location.name)}`);
+    this.debug(`Possible powers are: ${possibleMoves.filter(move => move.power && !move.location).map(move => move.power.name)}`);
+    this.debug(`Possible power moves are: ${possibleMoves.filter(move => move.power && move.location).map(move => `${move.power.name} to ${move.location.name}`)}`);
+    if (possibleMoves.length > 0) {
+      const valueSum = possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
+      // this.debug(`Total moves value sum is ${valueSum}`);
+      const randomChoice = Math.floor(Math.random()*valueSum);
+      // this.debug(`Random choice is ${randomChoice}`);
+      let index = 0;
+      let cumulativeValue = 0;
+      while (cumulativeValue < randomChoice) {
+        cumulativeValue += possibleMoves[index].value;
+        index++;
+        // this.debug(`Random choice not reached yet, moving to next possible move. Cumulative value is now ${cumulativeValue} and index is now ${index}`);
+      }
+      // this.debug(`Reached random choice at possible move index ${index}`);
+      this.nextMove = possibleMoves[index];
+      this.debug((this.nextMove.power ? this.nextMove.power.name : 'Move') + (this.nextMove.location ? ` to ${this.nextMove.location.name}` : ''));
+    } else {
+      this.debug('No possible moves');
+    }
+    return 'Dracula has decided what to do this turn';
   }
 
   chooseEncounter(): Encounter {
@@ -102,6 +232,11 @@ export class Dracula {
     return 'Dracula added a card to the trail';
   }
 
+  executeDarkCall(gameState: Game): string {
+    // TODO: actually draw encounters and discard them logically
+    return 'Dracula has chosen his encounters';
+  }
+
   drawUpEncounters(encounterPool: Encounter[]): string {
     let drawCount = 0;
     while (this.encounterHand.length < this.encounterHandSize) {
@@ -109,22 +244,36 @@ export class Dracula {
       this.debug(`Dracula drew encounter ${this.encounterHand[this.encounterHand.length -1].name}`);
       drawCount++;
     }
-    return `Dracula drew ${drawCount} encounters`;
+    return drawCount > 0 ? `Dracula drew ${drawCount} encounters` : '';
+  }
+
+  decideWhichEncounterToKeep(encounterA: Encounter, encounterB: Encounter): Encounter {
+    // TODO: make logical decision
+    if (!encounterA) {
+      return encounterB;
+    }
+    if (Math.floor(Math.random()) < 0.5) {
+      return encounterA;
+    } else {
+      return encounterB;
+    }
   }
 
   decideFateOfDroppedOffCard(gameState: Game): string {
     // TODO: make logical decision
-    // TODO: consider power cards, catacombs only applies to locations
-    if (Math.random() < 0.2 && gameState.catacombs.length < 3 && this.trail[6].location.type !== LocationType.sea) {
-      gameState.catacombEncounters.push(this.chooseEncounter());
-      this.debug(`Card added to catacombs: ${this.trail[6].location.name} with ${this.trail[6].encounter ? this.trail[6].encounter.name: '__'} and ${gameState.catacombEncounters[gameState.catacombEncounters.length -1].name}`);
-      gameState.catacombs.push(this.trail.pop());
-      return 'Dracula moved the card to the catacombs with an additional encounter on it'
-    }
-    this.debug(`Card returned to deck: ${this.trail[6].location.name}`);
-    this.droppedOffEncounter = this.trail[6].encounter;
-    if (this.droppedOffEncounter) {
-      this.debug(`Encounter ${this.droppedOffEncounter.name} to be dealt with later`);
+    // TODO: handle Hide location dropping off the trail
+    if (this.trail[6].location) {
+      if (Math.random() < 0.2 && gameState.catacombs.length < 3 && this.trail[6].location.type !== LocationType.sea) {
+        gameState.catacombEncounters.push(this.chooseEncounter());
+        this.debug(`Card added to catacombs: ${this.trail[6].location.name} with ${this.trail[6].encounter ? this.trail[6].encounter.name: '__'} and ${gameState.catacombEncounters[gameState.catacombEncounters.length -1].name}`);
+        gameState.catacombs.push(this.trail.pop());
+        return 'Dracula moved the card to the catacombs with an additional encounter on it'
+      }
+      this.debug(`Card returned to deck: ${this.trail[6].location.name}`);
+      this.droppedOffEncounter = this.trail[6].encounter;
+      if (this.droppedOffEncounter) {
+        this.debug(`Encounter ${this.droppedOffEncounter.name} to be dealt with later`);
+      }
     }
     this.trail.pop();
     return 'Dracula returned the dropped off card to the Location deck';
@@ -155,7 +304,13 @@ export class Dracula {
     while (this.trail.length > remainingCards) {
       const cardToClear = this.trail.pop();
       cardsCleared++;
-      this.debug(`Returning ${cardToClear.location.name} to the Location deck`);
+      if (cardToClear.location) {
+        this.debug(`Returning ${cardToClear.location.name} to the Location deck`);
+      }
+      if (cardToClear.power) {
+        cardsCleared++;
+        this.debug(`Returning ${cardToClear.power.name} to the Location deck`);
+      }
       if (cardToClear.encounter) {
         this.debug(`Returning ${cardToClear.encounter.name} to the encounter pool`);
         encountersCleared++;
@@ -175,6 +330,29 @@ export class Dracula {
 
 export interface TrailCard {
   revealed: boolean;
-  location: Location;
-  encounter: Encounter;
+  location?: Location;
+  encounter?: Encounter;
+  power?: Power;
+}
+
+interface PossibleMove {
+  location?: Location;
+  power?: Power;
+  value: number;
+}
+
+interface Power {
+  name: PowerName;
+  nightOnly: boolean;
+  cost: number;
+}
+
+export enum PowerName {
+  darkCall = 'Dark Call',
+  doubleBack = 'Double Back',
+  feed = 'Feed',
+  hide = 'Hide',
+  wolfForm = 'Wolf Form',
+  wolfFormAndDoubleBack = 'Wolf Form and Double Back',
+  wolfFormAndHide = 'Wolf Form and Hide'
 }

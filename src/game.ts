@@ -1,5 +1,5 @@
 import { GameMap, LocationType, Location } from "./map";
-import { Dracula, TrailCard } from "./dracula";
+import { Dracula, TrailCard, PowerName } from "./dracula";
 import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
 import { Encounter, initialiseEncounterPool } from "./encounter";
 
@@ -56,7 +56,7 @@ export class Game {
   startGame() {
     const startLocation = this.dracula.chooseStartLocation(this);
     this.log(this.dracula.setLocation(startLocation));
-    this.log(this.dracula.pushToTrail({ location: startLocation, revealed: false, encounter: null }));
+    this.log(this.dracula.pushToTrail({ location: startLocation, revealed: false }));
     this.log('It is now Dracula\'s turn');
   }
 
@@ -120,6 +120,7 @@ export class Game {
 
   performTimeKeepingPhase() {
     this.log('Performing Timekeeping phase');
+    this.log(this.dracula.chooseNextMove(this));
     
     // evaluate catacombs
     this.log(this.dracula.evaluateCatacombs(this));
@@ -142,39 +143,110 @@ export class Game {
   }
 
   performDraculaMovementPhase() {
-    // TODO: choose next location or power
-    let nextLocation = this.dracula.chooseNextLocation(this);
-    if (!nextLocation) {
+    if (!this.dracula.nextMove) {
       this.log('Dracula has no valid moves');
       this.log(this.dracula.die());
       this.log(this.dracula.clearTrail(this, 1));
       this.dracula.revealed = true;
       this.dracula.trail[0].revealed = true;
-      nextLocation = this.dracula.chooseNextLocation(this);
+      this.log(this.dracula.chooseNextMove(this));
     }
     
-    // check if new location causes Dracula to be revealed (special case for Hide power)
-    if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
-      nextLocation == this.vanHelsing.currentLocation || nextLocation == this.mina.currentLocation))) {
-        this.dracula.revealed = true;
-      } else {
-        this.dracula.revealed = false;
+    let doubleBackTrailIndex: number;
+    let doubleBackCatacombIndex: number;
+    let doubleBackedCard: TrailCard;
+    if (this.dracula.nextMove.power) {
+      switch (this.dracula.nextMove.power.name) {
+        case PowerName.darkCall:
+          this.log('Dracula played power Dark Call');
+          this.log(this.dracula.executeDarkCall(this));
+          this.log(this.shuffleEncounters());
+          break;
+        case PowerName.doubleBack:
+        case PowerName.wolfFormAndDoubleBack:
+          this.log(`Dracula played power ${this.dracula.nextMove.power.name}`);
+          for (let i = 0; i < this.dracula.trail.length; i++) {
+            if (this.dracula.trail[i].location) {
+              if (this.dracula.trail[i].location == this.dracula.nextMove.location) {
+                doubleBackTrailIndex = i;
+              }
+            }
+          }
+          for (let i = 0; i < this.catacombs.length; i++) {
+            if (this.catacombs[i].location == this.dracula.nextMove.location) {
+              doubleBackCatacombIndex = i;
+            }
+          }
+          if (doubleBackTrailIndex) {
+            this.log(`Dracula Doubled Back to the location in position ${doubleBackTrailIndex + 1} of the trail`);
+            doubleBackedCard = this.dracula.trail.splice(doubleBackTrailIndex, 1)[0];
+          }
+          if (doubleBackCatacombIndex) {
+            this.log(`Dracula Doubled Back to the location in position ${doubleBackCatacombIndex + 1} of the trail`);
+            const doubleBackedCard = this.catacombs.splice(doubleBackCatacombIndex, 1)[0];
+            this.dracula.pushToTrail(doubleBackedCard);
+            const encounterToKeep = this.dracula.decideWhichEncounterToKeep(this.dracula.trail[0].encounter, this.catacombEncounters[doubleBackCatacombIndex]);
+            if (encounterToKeep == this.dracula.trail[0].encounter) {
+              this.encounterPool.push(this.catacombEncounters.splice(doubleBackCatacombIndex, 1)[0]);
+              this.log(this.shuffleEncounters());
+            } else {
+              if (this.dracula.trail[0].encounter) {
+                this.encounterPool.push(this.dracula.trail[0].encounter);
+                delete this.dracula.trail[0].encounter;
+              }
+              this.dracula.trail[0].encounter = this.catacombEncounters.splice(doubleBackCatacombIndex, 1)[0];
+            }
+          }          
+          break;
+        case PowerName.feed:
+          this.log('Dracula played power Feed');
+          break;
+        case PowerName.hide:
+          this.log('Dracula moved to a hidden location');
+          this.dracula.revealed = false;
+          break;
+        case PowerName.wolfForm:
+          this.log('Dracula played power Wolf Form');
+          break;
+        case PowerName.wolfFormAndHide:
+          this.log('Dracula played power Wolf Form');
+          break;
       }
-      
-    // move to new location
-    this.log(this.dracula.setLocation(nextLocation));
-
-    // pay blood for sea travel
-    if (nextLocation.type == LocationType.sea && !this.dracula.seaBloodPaid) {
-      this.log(this.dracula.setBlood(this.dracula.blood -1));
-      this.dracula.seaBloodPaid = true;
-    } else {
-      this.dracula.seaBloodPaid = false;
+      if (this.dracula.nextMove.power.cost !== 0) {
+        // pay blood for power
+        this.log(this.dracula.setBlood(this.dracula.blood - this.dracula.nextMove.power.cost));
+      }
     }
+    let nextLocation: Location;
+    if (this.dracula.nextMove.location) {
+      nextLocation = this.dracula.nextMove.location;
+      // check if new location causes Dracula to be revealed (special case for Hide power)
+      if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
+        nextLocation == this.vanHelsing.currentLocation || nextLocation == this.mina.currentLocation))) {
+          this.dracula.revealed = true;
+        } else {
+          this.dracula.revealed = false;
+        }
+        
+      // move to new location
+      this.log(this.dracula.setLocation(nextLocation));
 
+      // pay blood for sea travel
+      if (nextLocation.type == LocationType.sea && !this.dracula.seaBloodPaid) {
+        this.log(this.dracula.setBlood(this.dracula.blood -1));
+        this.dracula.seaBloodPaid = true;
+      } else {
+        this.dracula.seaBloodPaid = false;
+      }
+    }
     // add card to trail
-    this.log(this.dracula.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, encounter: null }));
-    
+    if (doubleBackedCard) {
+      doubleBackedCard.power = this.dracula.nextMove.power;
+      this.log(this.dracula.pushToTrail(doubleBackedCard));
+      this.dracula.revealed = doubleBackedCard.revealed;
+    } else {
+      this.log(this.dracula.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, power: this.dracula.nextMove.power}));
+    }
     if (this.dracula.trail.length == 7) {
       this.log('A card has dropped off the end of the trail');
       this.log(this.dracula.decideFateOfDroppedOffCard(this));
@@ -186,7 +258,8 @@ export class Game {
     if (this.dracula.currentLocation.type !== LocationType.sea && (this.dracula.currentLocation == this.godalming.currentLocation || this.dracula.currentLocation == this.seward.currentLocation ||
       this.dracula.currentLocation == this.vanHelsing.currentLocation || this.dracula.currentLocation == this.mina.currentLocation)) {
       this.log('Dracula attacks!');
-    } else if (this.dracula.currentLocation.type !== LocationType.castle && this.dracula.currentLocation.type !== LocationType.sea) {
+    } else if (this.dracula.currentLocation.type !== LocationType.castle && this.dracula.currentLocation.type !== LocationType.sea &&
+        (!this.dracula.nextMove.power || this.dracula.nextMove.power.name == 'Hide' || this.dracula.nextMove.power.name == 'Wolf Form' || this.dracula.nextMove.power.name == 'Wolf Form and Hide')) {
       this.dracula.trail[0].encounter = this.dracula.chooseEncounter();
       this.log('Dracula placed an encounter');
     }

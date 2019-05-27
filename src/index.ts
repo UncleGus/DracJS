@@ -1,5 +1,7 @@
 import { Game } from "./game";
-import { LocationType } from "./map";
+import { LocationType, Location } from "./map";
+import { TrailCard, PowerName } from "./dracula";
+import { Encounter } from "./encounter";
 
 const game = new Game();
 
@@ -16,7 +18,7 @@ const godalmingLocation = document.getElementById('godalmingLocation') as HTMLIn
 const sewardLocation = document.getElementById('sewardLocation') as HTMLInputElement;
 const vanHelsingLocation = document.getElementById('vanHelsingLocation') as HTMLInputElement;
 const minaLocation = document.getElementById('minaLocation') as HTMLInputElement;
-const trail = [
+const trailLocation = [
   document.getElementById('trail1') as HTMLInputElement,
   document.getElementById('trail2') as HTMLInputElement,
   document.getElementById('trail3') as HTMLInputElement,
@@ -24,13 +26,21 @@ const trail = [
   document.getElementById('trail5') as HTMLInputElement,
   document.getElementById('trail6') as HTMLInputElement
 ];
-const encounter = [
+const trailEncounter = [
   document.getElementById('encounter1') as HTMLInputElement,
   document.getElementById('encounter2') as HTMLInputElement,
   document.getElementById('encounter3') as HTMLInputElement,
   document.getElementById('encounter4') as HTMLInputElement,
   document.getElementById('encounter5') as HTMLInputElement,
   document.getElementById('encounter6') as HTMLInputElement
+];
+const trailPower = [
+  document.getElementById('power1') as HTMLInputElement,
+  document.getElementById('power2') as HTMLInputElement,
+  document.getElementById('power3') as HTMLInputElement,
+  document.getElementById('power4') as HTMLInputElement,
+  document.getElementById('power5') as HTMLInputElement,
+  document.getElementById('power6') as HTMLInputElement
 ];
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
@@ -113,8 +123,13 @@ minaSearch.addEventListener('click', () => {
 });
 timeKeepingButton.addEventListener('click', () => {
   game.performTimeKeepingPhase();
-  timeKeepingButton.style.visibility = 'hidden';
-  draculaMovementButton.style.visibility = null;
+  updateAllFields();
+  // timeKeepingButton.style.visibility = 'hidden';
+  // draculaMovementButton.style.visibility = null;
+  updateAllFields();
+  game.performDraculaMovementPhase();
+  updateAllFields();
+  game.performDraculaActionPhase();
   updateAllFields();
 });
 draculaMovementButton.addEventListener('click', () => {
@@ -151,20 +166,77 @@ function updateAllFields() {
   catacombs.value = game.catacombs.length.toString();
 
   for (let i = 0; i < 6; i++) {
-    if (game.dracula.trail[i]) {
-      if (game.dracula.trail[i].revealed) {
-        trail[i].value = game.dracula.trail[i].location.name;
-      } else {
-        trail[i].value = game.dracula.trail[i].location.type == LocationType.sea ? 'Sea' : 'Land';
-      }
-      if (game.dracula.trail[i].encounter) {
-        encounter[i].value = game.dracula.trail[i].encounter.revealed ? game.dracula.trail[i].encounter.name : 'Encounter';
-      } else {
-        encounter[i].value = '';
-      }
+    if (!game.dracula.trail[i]) {
+      // no trail card, blank all fields
+      blank(trailLocation[i]);
+      blank(trailEncounter[i]);
+      blank(trailPower[i]);
     } else {
-      trail[i].value = '';
-      encounter[i].value = '';
+      // if there is a location card here, show it
+      if (game.dracula.trail[i].location) {
+        showLocation(i, game.dracula.trail[i]);
+      } else {
+        blank(trailLocation[i]);
+      }
+      // if there is an encounter here, show it
+      if (game.dracula.trail[i].encounter) {
+        showEncounter(i, game.dracula.trail[i]);
+      } else {
+        blank(trailEncounter[i]);
+      }
+      // Hide complicates what to show
+      if (game.dracula.trail[i].power) {
+        // if this is a combined move with Hide, show the other power on its own
+        if (game.dracula.trail[i].power.name.match(/and Hide/)) {
+          trailLocation[i].value = 'Land';
+          trailPower[i].value = game.dracula.trail[i].power.name.slice(0, game.dracula.trail[i].power.name.indexOf(' and Hide'));
+          // if this is Hide on its own, don't show the power
+        } else if (game.dracula.trail[i].power.name == PowerName.hide) {
+          trailLocation[i].value = 'Land';
+          blank(trailPower[i]);
+          // all other powers are displayed as usual
+        } else {
+          trailPower[i].value = game.dracula.trail[i].power.name;
+        }
+      } else {
+        blank(trailPower[i]);
+      }
     }
   }
+}
+
+function showLocation(index: number, trailCard: TrailCard) {
+  if (trailCard.revealed) {
+    showLocationFace(index, trailCard.location);
+  } else {
+    showLocationBack(index, trailCard.location);
+  }
+}
+
+function showEncounter(index: number, trailCard: TrailCard) {
+  if (trailCard.encounter.revealed) {
+    showEncounterFace(index, trailCard.encounter);
+  } else {
+    showEncounterBack(index);
+  }
+}
+
+function showLocationFace(index: number, location: Location) {
+  trailLocation[index].value = location.name;
+}
+
+function showLocationBack(index: number, location: Location) {
+  trailLocation[index].value = location.type == LocationType.sea ? 'Sea' : 'Land';
+}
+
+function showEncounterFace(index: number, encounter: Encounter) {
+  trailEncounter[index].value = encounter.name;
+}
+
+function showEncounterBack(index: number) {
+  trailEncounter[index].value = 'Encounter';
+}
+
+function blank(element: HTMLInputElement) {
+  element.value = '';
 }
