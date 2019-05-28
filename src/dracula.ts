@@ -107,9 +107,18 @@ export class Dracula {
     this.possibleMoves = [];
     const connectedLocationNames = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
     const connectedLocations = connectedLocationNames.map(name => gameState.map.getLocationByName(name));
-    const invalidLocations = gameState.trail.filter(trail => trail.location).map(trail => trail.location);
-    if (this.blood == 1 && (this.currentLocation.type !== LocationType.sea || (this.currentLocation.type == LocationType.sea && !this.seaBloodPaid))) {
-      invalidLocations.concat(connectedLocations.filter(location => location.type == LocationType.sea));
+    let invalidLocations = gameState.trail.filter(trail => trail.location).map(trail => trail.location);
+    let seaIsInvalid = false;
+    if (this.blood == 1) {
+      if (this.currentLocation.type !== LocationType.sea) {
+        seaIsInvalid = true;
+      }
+      if (!this.seaBloodPaid) {
+        seaIsInvalid = true;
+      }
+    }
+    if (seaIsInvalid) {
+      invalidLocations = invalidLocations.concat(connectedLocations.filter(location => location.type == LocationType.sea));
     }
     const validLocations = _.without(connectedLocations, ...invalidLocations, gameState.map.locations.find(location => location.type == LocationType.hospital));
     validLocations.map(location => {
@@ -229,8 +238,10 @@ export class Dracula {
    * @param newBlood The value to which to set Dracula's blood
    */
   setBlood(newBlood: number): string {
-    // TODO: handle Dracula loss condition
     this.blood = Math.max(0, Math.min(newBlood, 15));
+    if (this.blood == 0) {
+      return 'Dracula is dead. The Hunters win!';
+    }
     return `Dracula is now on ${this.blood} blood`;
   }
 
@@ -239,7 +250,11 @@ export class Dracula {
    * @param gameState The state of the game
    */
   executeDarkCall(gameState: Game): string {
-    // TODO: actually draw encounters and discard them logically
+    this.encounterHandSize += 10;
+    gameState.log(this.drawUpEncounters(gameState.encounterPool));
+    this.encounterHandSize -= 10;
+    gameState.log(this.discardDownEncounters(gameState.encounterPool));
+    gameState.log(gameState.shuffleEncounters());
     return 'Dracula has chosen his encounters';
   }
 
@@ -257,19 +272,46 @@ export class Dracula {
   }
 
   /**
-   * Decides which of the two Encounters to keep when a Catacomb location is Doubled Back to
-   * @param encounterA The first Encounter
-   * @param encounterB The second Encounter
+   * Discards Encounters down to Dracula's hand limit
+   * @param encounters The pool of Encounter to which to discard
    */
-  decideWhichEncounterToKeep(encounterA: Encounter, encounterB: Encounter): Encounter {
+  discardDownEncounters(encounters: Encounter[]): string {
+    // TODO: Make logical decision
+    let discardCount = 0;
+    while (this.encounterHand.length > this.encounterHandSize) {
+      const choice = Math.floor(Math.random()*this.encounterHand.length);
+      encounters.push(this.encounterHand.splice(choice, 1)[0]);
+      discardCount++;
+    }
+    return discardCount > 0 ? `Dracula discarded ${discardCount} encounters` : '';
+  }
+
+  /**
+   * Decides which Encounter to keep on a Catacomb card to which Dracula has Doubled Back
+   * @param card The catacomb card
+   * @param gameState The state of the game
+   */
+  decideWhichEncounterToKeep(card: TrailCard, gameState: Game): string {
     // TODO: make logical decision
-    if (!encounterA) {
-      return encounterB;
+    if (!card.catacombEncounter) {
+      return;
+    }
+    if (card.catacombEncounter && !card.encounter) {
+      card.encounter = card.catacombEncounter;
+      delete card.catacombEncounter;
+      return;
     }
     if (Math.floor(Math.random()) < 0.5) {
-      return encounterA;
+      gameState.encounterPool.push(card.encounter);
+      card.encounter = card.catacombEncounter;
+      delete card.catacombEncounter;
+      gameState.shuffleEncounters();
+      return 'Dracula kept the second encounter from the catacomb card';
     } else {
-      return encounterB;
+      gameState.encounterPool.push(card.catacombEncounter);
+      delete card.catacombEncounter;
+      gameState.shuffleEncounters();
+      return 'Dracula kept the first encounter from the catacomb card';
     }
   }
 
@@ -282,11 +324,13 @@ export class Dracula {
     // TODO: make logical decision
     if (droppedOffCard.location) {
       if (Math.random() < 0.2 && gameState.catacombs.length < 3 && droppedOffCard.location.type !== LocationType.sea) {
-        gameState.catacombEncounters.push(this.chooseEncounter());
+        droppedOffCard.catacombEncounter = this.chooseEncounter();
         gameState.catacombs.push(droppedOffCard);
+        delete droppedOffCard.power;
         return 'Dracula moved the card to the catacombs with an additional encounter on it'
+      } else {
+        this.droppedOffEncounter = droppedOffCard.encounter;
       }
-      this.droppedOffEncounter = droppedOffCard.encounter;
     }
     return 'Dracula returned the dropped off card to the Location deck';
   }
@@ -300,11 +344,13 @@ export class Dracula {
     const catacombToDiscard = this.nextMove.catacombToDiscard || -1;
     let logMessage = '';
     for (let i = gameState.catacombs.length -1; i >= 0 ; i--) {
-      if (Math.random() < 0.2 || i == catacombToDiscard) {
+      if (Math.random() < 0.2 || i == catacombToDiscard || (!gameState.catacombs[i].encounter && !gameState.catacombs[i].catacombEncounter)) {
         logMessage += logMessage ? ` and position ${i + 1}` : `Dracula discarded catacomb card from position ${i + 1}`;
-        gameState.encounterPool.push(gameState.catacombEncounters.splice(i, 1)[0]);
         if (gameState.catacombs[i].encounter) {
           gameState.encounterPool.push(gameState.catacombs[i].encounter);
+        }
+        if (gameState.catacombs[i].catacombEncounter) {
+          gameState.encounterPool.push(gameState.catacombs[i].catacombEncounter);
         }
         gameState.catacombs.splice(i, 1);
         gameState.shuffleEncounters();
@@ -337,12 +383,36 @@ export class Dracula {
     }
     return `Returned ${cardsCleared} cards and ${encountersCleared} encounters`;
   }
+
+  /**
+   * Decides what to do with an Encounter that has dropped off the end of the trail
+   * @param gameState The state of the game
+   */
+  decideFateOfDroppedOffEncounter(gameState: Game): string {
+    // TODO: Make logical decision
+    let discardEncounter = true;
+    switch(this.droppedOffEncounter.name) {
+      case 'Ambush':
+        break;
+      case 'Desecrated Soil':
+        break;
+      case 'New Vampire':
+        break;
+    }
+    if (discardEncounter) {
+      gameState.encounterPool.push(this.droppedOffEncounter);
+      gameState.log(gameState.shuffleEncounters());
+      this.droppedOffEncounter = null;
+      return 'Dracula returned the dropped off encounter to the encounter pool';
+    }
+  }
 }
 
 export interface TrailCard {
   revealed: boolean;
   location?: Location;
   encounter?: Encounter;
+  catacombEncounter?: Encounter;
   power?: Power;
 }
 

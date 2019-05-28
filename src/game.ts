@@ -17,14 +17,12 @@ export class Game {
   resolveTrack: number;
   trail: TrailCard[];
   catacombs: TrailCard[];
-  catacombEncounters: Encounter[];
 
   constructor() {
     // construct game components
     this.map = new GameMap();
     this.encounterPool = initialiseEncounterPool();
     this.catacombs = [];
-    this.catacombEncounters = [];
     this.dracula = new Dracula();
     this.godalming = new Godalming;
     this.seward = new Seward();
@@ -106,6 +104,7 @@ export class Game {
             this.log(`${hunter.name} has encountered ${this.trail[hideIndex].encounter.name} at ${hunter.currentLocation.name}`);
             this.encounterPool.push(this.trail[hideIndex].encounter);
             delete this.trail[hideIndex].encounter;
+            this.log(this.shuffleEncounters());
           }
         }
         if (trailCard.encounter) {
@@ -113,6 +112,7 @@ export class Game {
           this.log(`${hunter.name} has encountered ${trailCard.encounter.name} at ${hunter.currentLocation.name}`);
           this.encounterPool.push(trailCard.encounter);
           delete trailCard.encounter;
+          this.log(this.shuffleEncounters());
         }
       }      
     });
@@ -126,14 +126,17 @@ export class Game {
           catacomb.encounter.revealed = true;
           this.log(`${hunter.name} has encountered ${catacomb.encounter.name} at ${hunter.currentLocation.name}`);
           this.encounterPool.push(catacomb.encounter);
+          delete catacomb.encounter;
+          this.log(this.shuffleEncounters());
         }
-        this.catacombEncounters[i].revealed = true;
-        this.log(`${hunter.name} has encountered ${this.catacombEncounters[i].name} at ${hunter.currentLocation.name}`);
-        this.encounterPool.push(this.catacombEncounters[i]);
+        if (catacomb.catacombEncounter) {
+          catacomb.catacombEncounter.revealed = true;
+          this.log(`${hunter.name} has encountered ${catacomb.catacombEncounter.name} at ${hunter.currentLocation.name}`);
+          this.encounterPool.push(catacomb.catacombEncounter);
+          delete catacomb.catacombEncounter;
+          this.log(this.shuffleEncounters());
+        }
       }
-      this.catacombs.splice(i, 1);
-      this.catacombEncounters.splice(i, 1);
-      this.log(this.shuffleEncounters());
       break;
     }
     if (!foundSomething) {
@@ -190,7 +193,9 @@ export class Game {
         this.resolveTrack += 1;
         this.timePhase = 0;
 
-        // TODO: handle Dracula win condition
+        if (this.vampireTrack >= 6) {
+          this.log('Dracula has spread his Vampires across Europe. The Hunters lose!');
+        }
       }
     }
   }
@@ -241,24 +246,13 @@ export class Game {
             this.log(`Dracula Doubled Back to the location in position ${doubleBackCatacombIndex + 1} of the trail`);
             const doubleBackedCard = this.catacombs.splice(doubleBackCatacombIndex, 1)[0];
             this.pushToTrail(doubleBackedCard);
-            const encounterToKeep = this.dracula.decideWhichEncounterToKeep(this.trail[0].encounter, this.catacombEncounters[doubleBackCatacombIndex]);
-            if (encounterToKeep == this.trail[0].encounter) {
-              this.encounterPool.push(this.catacombEncounters.splice(doubleBackCatacombIndex, 1)[0]);
-              this.log(this.shuffleEncounters());
-            } else {
-              if (this.trail[0].encounter) {
-                this.encounterPool.push(this.trail[0].encounter);
-                delete this.trail[0].encounter;
-              }
-              this.trail[0].encounter = this.catacombEncounters.splice(doubleBackCatacombIndex, 1)[0];
-            }
+            this.log(this.dracula.decideWhichEncounterToKeep(this.trail[0], this));
           }          
           break;
         case PowerName.feed:
           this.log('Dracula played power Feed');
           break;
         case PowerName.hide:
-          // TODO: handle Hiding at a Hunter's location
           this.dracula.hideLocation = this.dracula.currentLocation;
           if (this.dracula.currentLocation == this.godalming.currentLocation ||
             this.dracula.currentLocation == this.seward.currentLocation ||
@@ -360,12 +354,8 @@ export class Game {
       this.log('Dracula placed an encounter');
     }
     
-    // TODO: decide whether to mature the dropped off encounter
     if (this.dracula.droppedOffEncounter) {
-      this.log('Dracula returned the dropped off encounter to the encounter pool');
-      this.encounterPool.push(this.dracula.droppedOffEncounter);
-      this.log(this.shuffleEncounters());
-      this.dracula.droppedOffEncounter = null;
+      this.log(this.dracula.decideFateOfDroppedOffEncounter(this));
     }
     
     // Refill encounter hand

@@ -42,6 +42,22 @@ const trailPower = [
   document.getElementById('power5') as HTMLInputElement,
   document.getElementById('power6') as HTMLInputElement
 ];
+const catacombLocation = [
+  document.getElementById('catacombLocation1') as HTMLInputElement,
+  document.getElementById('catacombLocation2') as HTMLInputElement,
+  document.getElementById('catacombLocation3') as HTMLInputElement,
+];
+const catacombEncounterA = [
+  document.getElementById('catacombEncounter1A') as HTMLInputElement,
+  document.getElementById('catacombEncounter2A') as HTMLInputElement,
+  document.getElementById('catacombEncounter3A') as HTMLInputElement,
+];
+const catacombEncounterB = [
+  document.getElementById('catacombEncounter1B') as HTMLInputElement,
+  document.getElementById('catacombEncounter2B') as HTMLInputElement,
+  document.getElementById('catacombEncounter3B') as HTMLInputElement,
+];
+
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
 const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
@@ -164,13 +180,13 @@ function updateAllFields() {
     } else {
       // if there is a location card here, show it
       if (game.trail[i].location) {
-        showLocation(i, game.trail[i]);
+        showTrailLocation(i, game.trail[i]);
       } else {
         blank(trailLocation[i]);
       }
       // if there is an encounter here, show it
       if (game.trail[i].encounter) {
-        showEncounter(i, game.trail[i]);
+        showTrailEncounter(i, game.trail[i]);
       } else {
         blank(trailEncounter[i]);
       }
@@ -195,6 +211,30 @@ function updateAllFields() {
       }
     }
   }
+
+  for (let i = 0; i < 3; i++) {
+    if (!game.catacombs[i]) {
+      blank(catacombLocation[i]);
+      blank(catacombEncounterA[i]);
+      blank(catacombEncounterB[i]);
+    } else {
+      if (game.catacombs[i].location) {
+        showCatacombLocation(i, game.catacombs[i]);
+      } else {
+        blank(catacombLocation[i]);
+      }
+      if (game.catacombs[i].encounter) {
+        showCatacombEncounter(i, game.catacombs[i], 0);
+      } else {
+        blank(catacombEncounterA[i]);
+      }
+      if (game.catacombs[i].catacombEncounter) {
+        showCatacombEncounter(i, game.catacombs[i], 1);
+      } else {
+        blank(catacombEncounterB[i]);
+      }
+    }
+  }
 }
 
 /**
@@ -202,24 +242,24 @@ function updateAllFields() {
  * @param index The position of the trail card
  * @param trailCard The trail card to show
  */
-function showLocation(index: number, trailCard: TrailCard) {
+function showTrailLocation(index: number, trailCard: TrailCard) {
   if (trailCard.revealed) {
-    showLocationFace(index, trailCard.location);
+    showTrailLocationFace(index, trailCard.location);
   } else {
-    showLocationBack(index, trailCard.location);
+    showTrailLocationBack(index, trailCard.location);
   }
 }
 
 /**
- * Shows either the face or the back of an Encounter tile
+ * Shows either the face or the back of an Encounter tile on a trail card
  * @param index The position of the Encounter
  * @param trailCard The trail card which holds the Encounter
  */
-function showEncounter(index: number, trailCard: TrailCard) {
+function showTrailEncounter(index: number, trailCard: TrailCard) {
   if (trailCard.encounter.revealed) {
-    showEncounterFace(index, trailCard.encounter);
+    showTrailEncounterFace(index, trailCard.encounter);
   } else {
-    showEncounterBack(index);
+    showTrailEncounterBack(index);
   }
 }
 
@@ -228,7 +268,7 @@ function showEncounter(index: number, trailCard: TrailCard) {
  * @param index The position of the trail card
  * @param location The Location to show
  */
-function showLocationFace(index: number, location: Location) {
+function showTrailLocationFace(index: number, location: Location) {
   trailLocation[index].value = location.name;
 }
 
@@ -237,25 +277,104 @@ function showLocationFace(index: number, location: Location) {
  * @param index The position of the trail card
  * @param location The Location to show
  */
-function showLocationBack(index: number, location: Location) {
+function showTrailLocationBack(index: number, location: Location) {
   trailLocation[index].value = location.type == LocationType.sea ? 'Sea' : 'Land';
 }
 
 /**
- * Shows the face of an Encounter tile
+ * Shows the face of an Encounter tile in the trail
  * @param index The position of the trail card
  * @param encounter The Encounter to show
  */
-function showEncounterFace(index: number, encounter: Encounter) {
+function showTrailEncounterFace(index: number, encounter: Encounter) {
   trailEncounter[index].value = encounter.name;
 }
 
 /**
- * Shows the back of an Encounter tile
+ * Shows the back of an Encounter tile in the trail
  * @param index The Position of the trail card
  */
-function showEncounterBack(index: number) {
+function showTrailEncounterBack(index: number) {
   trailEncounter[index].value = 'Encounter';
+}
+
+/**
+ * Shows either the face or back of a catacomb card
+ * @param index The position of the catacomb card
+ * @param catacombCard The catacomb card to show
+ */
+function showCatacombLocation(index: number, catacombCard: TrailCard) {
+  if (catacombCard.revealed) {
+    showCatacombLocationFace(index, catacombCard.location);
+  } else {
+    showCatacombLocationBack(index);
+  }
+}
+
+/**
+ * Shows either the face or the back of an Encounter tile on a catacomb card
+ * @param index The position of the Encounter
+ * @param catacombCard The catacomb card which holds the Encounter
+ * @param position The position of the catacomb Encounter, 0 is the normal encounter position, 1 is the catacomb encounter position
+ */
+function showCatacombEncounter(index: number, catacombCard: TrailCard, position: number) {
+  if (position == 0) {
+    if (catacombCard.encounter.revealed) {
+      showCatacombEncounterFace(index, catacombCard.encounter, position);
+    } else {
+      showCatacombEncounterBack(index, position);
+    }
+  } else {
+    if (catacombCard.catacombEncounter.revealed) {
+      showCatacombEncounterFace(index, catacombCard.catacombEncounter, position);
+    } else {
+      showCatacombEncounterBack(index, position);
+    }
+  }
+}
+
+/**
+ * Shows the face of a catacomb card
+ * @param index The position of the catacomb card
+ * @param location The Location to show
+ */
+function showCatacombLocationFace(index: number, location: Location) {
+  catacombLocation[index].value = location.name;
+}
+
+/**
+ * Shows the back of a catacomb card
+ * @param index The position of the catacomb card
+ */
+function showCatacombLocationBack(index: number) {
+  catacombLocation[index].value = 'Land';
+}
+
+/**
+ * Shows the face of an Encounter tile on a catacomb card
+ * @param index The position of the trail card
+ * @param encounter The Encounter to show
+ * @param position The position of the catacomb Encounter, 0 is the normal encounter position, 1 is the catacomb encounter position
+ */
+function showCatacombEncounterFace(index: number, encounter: Encounter, position: number) {
+  if (position == 0) {
+    catacombEncounterA[index].value = encounter.name;
+  } else {
+    catacombEncounterB[index].value = encounter.name;
+  }
+}
+
+/**
+ * Shows the back of an Encounter tile in the trail
+ * @param index The Position of the trail card
+ * @param position The position of the catacomb Encounter, 0 is the normal encounter position, 1 is the catacomb encounter position
+ */
+function showCatacombEncounterBack(index: number, position: number) {
+  if (position == 0) {
+    catacombEncounterA[index].value = 'Encounter';
+  } else {
+    catacombEncounterB[index].value = 'Encounter';
+  }
 }
 
 /**
