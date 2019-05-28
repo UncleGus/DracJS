@@ -60,16 +60,3 @@ export function initialiseEncounterPool(): Encounter[] {
     new Encounter('Wolves')
   ];
 }
-
-/**
- * Shuffles the Encounters
- * @param encounters The Encounters to shuffle
- */
-export function shuffleEncounters(encounters: Encounter[]) {
-  const shuffledEncounters = [];
-  while (encounters.length > 0) {
-    const randomIndex = Math.floor(Math.random()*encounters.length);
-    shuffledEncounters.push(encounters.splice(randomIndex, 1)[0]);
-  }
-  return shuffledEncounters;
-}
