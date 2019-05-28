@@ -61,11 +61,19 @@ export class Dracula {
     ];
   }
 
+  /**
+   * Sets Dracula's currentLocation
+   * @param newLocation The Location to which to move Dracula
+   */
   setLocation(newLocation: Location): string {
     this.currentLocation = newLocation;
     return this.revealed ? `Dracula moved to ${this.currentLocation.name}` : 'Dracula moved to a hidden location';
   }
   
+  /**
+   * Selects Dracula's first Location at the state of the game
+   * @param gameState The state of the game
+   */
   chooseStartLocation(gameState: Game): Location {
     // TODO: improve logic
     const validLocations = gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
@@ -89,7 +97,10 @@ export class Dracula {
     return validLocations[randomIndex];
   }
 
-  
+  /**
+   * Decides Dracula's next move based on the current state of the game
+   * @param gameState The state of the game
+   */
   chooseNextMove(gameState: Game): string {
     // TODO: make logical decision
     this.nextMove = null;
@@ -196,6 +207,9 @@ export class Dracula {
     return 'Dracula has decided what to do this turn';
   }
 
+  /**
+   * Chooses which Encounter to place on a trail card
+   */
   chooseEncounter(): Encounter {
     // TODO: make logical decision
     // TODO: either include logic for catacombs choice here or make a second function for that case
@@ -203,21 +217,36 @@ export class Dracula {
     return this.encounterHand.splice(randomChoice, 1)[0];
   }
 
+  /**
+   * Updates Dracula's blood after he has received a "death" combat strike or run out of possible moves
+   */
   die(): string {
     return `Dracula was dealt a mortal blow\n${this.setBlood(Math.floor((this.blood - 1) / 5) * 5)}`;
   }
 
+  /**
+   * Sets Dracula's blood
+   * @param newBlood The value to which to set Dracula's blood
+   */
   setBlood(newBlood: number): string {
     // TODO: handle Dracula loss condition
     this.blood = Math.max(0, Math.min(newBlood, 15));
     return `Dracula is now on ${this.blood} blood`;
   }
 
+  /**
+   * Executes Dark Call power
+   * @param gameState The state of the game
+   */
   executeDarkCall(gameState: Game): string {
     // TODO: actually draw encounters and discard them logically
     return 'Dracula has chosen his encounters';
   }
 
+  /**
+   * Draws Encounters up to Dracula's hand limit
+   * @param encounterPool The pool of Encounters from which to draw
+   */
   drawUpEncounters(encounterPool: Encounter[]): string {
     let drawCount = 0;
     while (this.encounterHand.length < this.encounterHandSize) {
@@ -227,6 +256,11 @@ export class Dracula {
     return drawCount > 0 ? `Dracula drew ${drawCount} encounters` : '';
   }
 
+  /**
+   * Decides which of the two Encounters to keep when a Catacomb location is Doubled Back to
+   * @param encounterA The first Encounter
+   * @param encounterB The second Encounter
+   */
   decideWhichEncounterToKeep(encounterA: Encounter, encounterB: Encounter): Encounter {
     // TODO: make logical decision
     if (!encounterA) {
@@ -239,6 +273,11 @@ export class Dracula {
     }
   }
 
+  /**
+   * Decides what to do with a card that has dropped off the end of the trail
+   * @param droppedOffCard The card that has dropped off
+   * @param gameState The state of the game
+   */
   decideFateOfDroppedOffCard(droppedOffCard: TrailCard, gameState: Game): string {
     // TODO: make logical decision
     if (droppedOffCard.location) {
@@ -252,6 +291,10 @@ export class Dracula {
     return 'Dracula returned the dropped off card to the Location deck';
   }
 
+  /**
+   * Checks the locations in the catacombs and decides what to do with them
+   * @param gameState The state of the game
+   */
   evaluateCatacombs(gameState: Game): string {
     // TODO: make logical decision
     const catacombToDiscard = this.nextMove.catacombToDiscard || -1;
@@ -270,6 +313,11 @@ export class Dracula {
     return logMessage;
   }
 
+  /**
+   * Clears cards out of the trail
+   * @param gameState The state of the game
+   * @param remainingCards The number of cards to leave behind in the trail
+   */
   clearTrail(gameState: Game, remainingCards: number): string {
     let cardsCleared = 0;
     let encountersCleared = 0;

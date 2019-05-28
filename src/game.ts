@@ -39,10 +39,17 @@ export class Game {
     this.mina.setLocation(this.map.locations[0]);
   }
 
+  /**
+   * Adds a message to the console text boc in a new line
+   * @param message the message to display
+   */
   log(message: string) {
     this.logText += message ? `\n${message}` : '';
   }
   
+  /**
+   * Sets up the initial state of the game
+   */
   initialiseGameState() {
     this.logText = 'INITIALISING GAME STATE';
     this.log(this.map.verifyMapData());
@@ -55,6 +62,9 @@ export class Game {
     this.log('GAME STATE INITIALISED');
   }
 
+  /**
+   * Makes Dracula's first turn (selects his start location)
+   */
   startGame() {
     const startLocation = this.dracula.chooseStartLocation(this);
     this.log(this.dracula.setLocation(startLocation));
@@ -62,6 +72,10 @@ export class Game {
     this.log('It is now Dracula\'s turn');
   }
 
+  /**
+   * Searches at a Hunter's current location for Dracula, his trail and his catacombs
+   * @param hunter the Hunter searching
+   */
   searchWithHunter(hunter: Hunter) {
     // TODO: resolve encounters, attack Dracula
     // TODO: resolve catacombs as well
@@ -127,18 +141,36 @@ export class Game {
     }
   }
 
+  /**
+   * Sets a Hunter's currentLocation
+   * @param hunter The Hunter to move
+   * @param location The Location to which to move the Hunter
+   */
   setHunterLocation(hunter: Hunter, location: Location) {
     this.log(hunter.setLocation(location));
   }
 
+  /**
+   * Sets a Hunter's health
+   * @param hunter The Hunter to update
+   * @param health The value to which to set the Hunter's health
+   */
   setHunterHealth(hunter: Hunter, health: number) {
     this.log(hunter.setHealth(health));
   }
 
+  /**
+   * Sets Dracula's blood
+   * @param blood The value to which to set Dracula's blood
+   */
   setDraculaBlood(blood: number) {
     this.log(this.dracula.setBlood(blood));
   }
 
+  /**
+   * Performs the Timekeeping phase of Dracula's turn, including selecting his next move
+   * This needs to be done at this point as it affects what he does with the catacombs
+   */
   performTimeKeepingPhase() {
     this.log('Performing Timekeeping phase');
     this.log(this.dracula.chooseNextMove(this));
@@ -163,6 +195,9 @@ export class Game {
     }
   }
 
+  /**
+   * This performs Dracula's movement phase, which can be a basic movement or a power
+   */
   performDraculaMovementPhase() {
     if (!this.dracula.nextMove) {
       this.log('Dracula has no valid moves');
@@ -311,6 +346,9 @@ export class Game {
     }
   }
 
+  /**
+   * Performs Dracula's action phase
+   */
   performDraculaActionPhase() {
     // TODO: attack the hunter(s) at this location or choose an encounter to place on the card
     if (this.dracula.currentLocation.type !== LocationType.sea && (this.dracula.currentLocation == this.godalming.currentLocation || this.dracula.currentLocation == this.seward.currentLocation ||
@@ -334,6 +372,9 @@ export class Game {
     this.log(this.dracula.drawUpEncounters(this.encounterPool));
   }
 
+  /**
+   * Shuffles the encounters in the deck
+   */
   shuffleEncounters(): string {
     const shuffledEncounters = [];
     while (this.encounterPool.length > 0) {
@@ -345,9 +386,12 @@ export class Game {
     return `Shuffled ${this.encounterPool.length} encounters in encounter pool`;
   }
 
+  /**
+   * Adds a card to the head of the trail
+   * @param newTrailCard The card to add to the head of the trail
+   */
   pushToTrail(newTrailCard: TrailCard): string {
     this.trail.unshift(newTrailCard);
     return 'Dracula added a card to the trail';
   }
-
 }

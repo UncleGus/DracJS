@@ -10,11 +10,19 @@ export class Hunter {
     this.name = newName;
   }
 
+  /**
+   * Sets a Hunter's health
+   * @param newHealth The value to which to set the Hunter's health
+   */
   setHealth(newHealth: number): string {
     this.health = Math.min(this.maxHealth, Math.max(0, newHealth));
     return `${this.name} is now on ${this.health} health`;
   }
 
+  /**
+   * Sets a Hunter's Location
+   * @param newLocation The Location to which to move the Hunter
+   */
   setLocation(newLocation: Location): string {
     this.currentLocation = newLocation;
     return `${this.name} moved to ${this.currentLocation.name}`;

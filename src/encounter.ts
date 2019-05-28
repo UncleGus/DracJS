@@ -8,6 +8,9 @@ export class Encounter {
   }
 }
 
+/**
+ * Creates the set of Encounters to use in the game
+ */
 export function initialiseEncounterPool(): Encounter[] {
   return [
     new Encounter('Ambush'),
@@ -58,6 +61,10 @@ export function initialiseEncounterPool(): Encounter[] {
   ];
 }
 
+/**
+ * Shuffles the Encounters
+ * @param encounters The Encounters to shuffle
+ */
 export function shuffleEncounters(encounters: Encounter[]) {
   const shuffledEncounters = [];
   while (encounters.length > 0) {

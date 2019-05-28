@@ -137,6 +137,9 @@ game.initialiseGameState();
 game.log('Hunters set starting locations then press Start button');
 updateAllFields();
 
+/**
+ * Updates all the fields on the web page
+ */
 function updateAllFields() {
   logBox.value = game.logText;
   logBox.scrollTop = logBox.scrollHeight;
@@ -194,6 +197,11 @@ function updateAllFields() {
   }
 }
 
+/**
+ * Shows either the face or back of a Location type trail card
+ * @param index The position of the trail card
+ * @param trailCard The trail card to show
+ */
 function showLocation(index: number, trailCard: TrailCard) {
   if (trailCard.revealed) {
     showLocationFace(index, trailCard.location);
@@ -202,6 +210,11 @@ function showLocation(index: number, trailCard: TrailCard) {
   }
 }
 
+/**
+ * Shows either the face or the back of an Encounter tile
+ * @param index The position of the Encounter
+ * @param trailCard The trail card which holds the Encounter
+ */
 function showEncounter(index: number, trailCard: TrailCard) {
   if (trailCard.encounter.revealed) {
     showEncounterFace(index, trailCard.encounter);
@@ -210,22 +223,45 @@ function showEncounter(index: number, trailCard: TrailCard) {
   }
 }
 
+/**
+ * Shows the face of a Location type trail card
+ * @param index The position of the trail card
+ * @param location The Location to show
+ */
 function showLocationFace(index: number, location: Location) {
   trailLocation[index].value = location.name;
 }
 
+/**
+ * Shows the back of a Location type trail card
+ * @param index The position of the trail card
+ * @param location The Location to show
+ */
 function showLocationBack(index: number, location: Location) {
   trailLocation[index].value = location.type == LocationType.sea ? 'Sea' : 'Land';
 }
 
+/**
+ * Shows the face of an Encounter tile
+ * @param index The position of the trail card
+ * @param encounter The Encounter to show
+ */
 function showEncounterFace(index: number, encounter: Encounter) {
   trailEncounter[index].value = encounter.name;
 }
 
+/**
+ * Shows the back of an Encounter tile
+ * @param index The Position of the trail card
+ */
 function showEncounterBack(index: number) {
   trailEncounter[index].value = 'Encounter';
 }
 
+/**
+ * Clears the value of an element
+ * @param element The element to clear
+ */
 function blank(element: HTMLInputElement) {
   element.value = '';
 }

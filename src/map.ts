@@ -541,6 +541,21 @@ export class GameMap {
     });
   }
 
+  /**
+   * Checks the integrity of the map data, including:
+   * - all locations exist with name
+   * - all locations exist with type
+   * - all locations exist with domain
+   * - all locations exist with road connection definitions, which may be empty
+   * - all locations exist with train connection definitions, which may be empty
+   * - all locations exist with sea connection definitions, which may be empty
+   * - all locations exist with at least one actual connection
+   * - all referenced locations exist
+   * - all connections are dual-direction
+   * - all locations are accessible from any other location
+   * - there is exactly one hospital
+   * - there is exactly one castle
+   */
   verifyMapData() {
     console.log('Verifying map data');
     let hospitalCount = 0;
@@ -659,10 +674,23 @@ export class GameMap {
     return 'All map data valid';
   }
 
+  /**
+   * Finds the Location object based on a name string
+   * @param name The name of the Location
+   */
   getLocationByName(name: string) {
     return this.locations.find(location => location.name === name);
   }
 
+  /**
+   * Finds the distance in moves from one Location to another
+   * @param origin The starting Location
+   * @param destination The end Location
+   * @param methods (optional) The methods of transport to include: 'road', 'train', 'sea'; Defaults to all
+   * @param examinedLocations Only used for recursive calls
+   * @param locationsAtCurrentDistance Only used for recursive calls
+   * @param distance Only used for recursive calls
+   */
   distanceBetweenLocations(origin: Location, destination: Location,
     methods: string[] = ['road', 'train', 'sea'],
     examinedLocations: Location[] = [], locationsAtCurrentDistance: Location[] = [], distance: number = 0): number {
@@ -735,21 +763,36 @@ class GenericLocationBuilder {
     };
   }
 
+  /**
+   * Adds a Location name to the roadConnections
+   * @param roadConnection The name of the Location to add
+   */
   byRoad(roadConnection: string): any {
     this.location.roadConnections.push(roadConnection);
     return this;
   }
 
+  /**
+   * Adds a Location name to the seaConnections
+   * @param seaConnection The name of the Location to add
+   */
   bySea(seaConnection: string): any {
     this.location.seaConnections.push(seaConnection)
     return this;
   }
 
+  /**
+   * Adds a Location name to the trainConnections
+   * @param trainConnection The name of the Location to add
+   */
   byTrain(trainConnection: string): any {
     this.location.trainConnections.push(trainConnection)
     return this;
   }
 
+  /**
+   * Completes the "build" process
+   */
   done(): Location {
     return this.location;
   }
