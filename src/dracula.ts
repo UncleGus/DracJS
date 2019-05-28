@@ -1,6 +1,6 @@
 import { Location, LocationType } from "./map";
 import { Game } from "./game";
-import { Encounter } from "./encounter";
+import { Encounter, EncounterName } from "./encounter";
 import * as _ from 'lodash';
 
 export class Dracula {
@@ -24,37 +24,37 @@ export class Dracula {
     this.seaBloodPaid = false;
     this.powers = [
       {
-        name: PowerName.darkCall,
+        name: PowerName.DarkCall,
         nightOnly: true,
         cost: 2
       },
       {
-        name: PowerName.doubleBack,
+        name: PowerName.DoubleBack,
         nightOnly: false,
         cost: 0
       },
       {
-        name: PowerName.feed,
+        name: PowerName.Feed,
         nightOnly: true,
         cost: -1
       },
       {
-        name: PowerName.hide,
+        name: PowerName.Hide,
         nightOnly: false,
         cost: 0
       },
       {
-        name: PowerName.wolfForm,
+        name: PowerName.WolfForm,
         nightOnly: true,
         cost: 1
       },
       {
-        name: PowerName.wolfFormAndDoubleBack,
+        name: PowerName.WolfFormAndDoubleBack,
         nightOnly: true,
         cost: 1
       },
       {
-        name: PowerName.wolfFormAndHide,
+        name: PowerName.WolfFormAndHide,
         nightOnly: true,
         cost: 1
       },
@@ -140,47 +140,47 @@ export class Dracula {
     gameState.trail.forEach(trailCard => {
       if (trailCard.power) {
         invalidPowers.push(trailCard.power);
-        if (trailCard.power.name == PowerName.wolfFormAndDoubleBack) {
-          invalidPowers.push(this.powers.find(power => power.name == PowerName.wolfForm));
-          invalidPowers.push(this.powers.find(power => power.name == PowerName.doubleBack));
+        if (trailCard.power.name == PowerName.WolfFormAndDoubleBack) {
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.WolfForm));
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.DoubleBack));
         }
-        if (trailCard.power.name == PowerName.wolfFormAndHide) {
-          invalidPowers.push(this.powers.find(power => power.name == PowerName.wolfForm));
-          invalidPowers.push(this.powers.find(power => power.name == PowerName.hide));
+        if (trailCard.power.name == PowerName.WolfFormAndHide) {
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.WolfForm));
+          invalidPowers.push(this.powers.find(power => power.name == PowerName.Hide));
         }
       }
     });
 
     const validPowers = _.without(possiblePowers, ...invalidPowers);
-    if (validPowers.find(power => power.name == PowerName.wolfForm)) {
-      if (validPowers.find(power => power.name == PowerName.doubleBack)) {
-        validPowers.push(this.powers.find(power => power.name == PowerName.wolfFormAndDoubleBack));
+    if (validPowers.find(power => power.name == PowerName.WolfForm)) {
+      if (validPowers.find(power => power.name == PowerName.DoubleBack)) {
+        validPowers.push(this.powers.find(power => power.name == PowerName.WolfFormAndDoubleBack));
       }
-      if (validPowers.find(power => power.name == PowerName.hide)) {
-        validPowers.push(this.powers.find(power => power.name == PowerName.wolfFormAndHide));
+      if (validPowers.find(power => power.name == PowerName.Hide)) {
+        validPowers.push(this.powers.find(power => power.name == PowerName.WolfFormAndHide));
       }
     }
     validPowers.forEach(validPower => {
       let potentialDestinations: Location[] = [];
       let secondLayerDestination: Location[] = [];
       switch(validPower.name) {
-        case PowerName.darkCall:
+        case PowerName.DarkCall:
           this.possibleMoves.push({ power: validPower, value: 1 });
           break;
-        case PowerName.doubleBack:
+        case PowerName.DoubleBack:
             gameState.trail.concat(gameState.catacombs).forEach(trailCard => {
             if (gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, ['road', 'sea']) == 1) {
               this.possibleMoves.push({ location: trailCard.location, power: validPower, value: 1 });
             }
           });
           break;
-        case PowerName.feed:
+        case PowerName.Feed:
             this.possibleMoves.push({ power: validPower, value: 1 });
           break;
-        case PowerName.hide:
+        case PowerName.Hide:
             this.possibleMoves.push({ power: validPower, value: 1 });
           break;
-        case PowerName.wolfForm:
+        case PowerName.WolfForm:
           potentialDestinations = this.currentLocation.roadConnections.map(conn => gameState.map.getLocationByName(conn));
           potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections.map(conn => gameState.map.getLocationByName(conn))));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
@@ -189,7 +189,7 @@ export class Dracula {
           potentialDestinations = _.without(potentialDestinations, this.currentLocation);
           potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1}));
           break;
-        case PowerName.wolfFormAndDoubleBack:
+        case PowerName.WolfFormAndDoubleBack:
           potentialDestinations = this.currentLocation.roadConnections.map(conn => gameState.map.getLocationByName(conn));
           potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections.map(conn => gameState.map.getLocationByName(conn))));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
@@ -197,7 +197,7 @@ export class Dracula {
           potentialDestinations = potentialDestinations.filter(dest => gameState.trail.find(trailCard => trailCard.location == dest) || gameState.catacombs.find(trailCard => trailCard.location == dest));
           potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1}));
           break;
-        case PowerName.wolfFormAndHide:
+        case PowerName.WolfFormAndHide:
           this.possibleMoves.push({ power: validPower, value: 1});
           break;
       }
@@ -306,13 +306,12 @@ export class Dracula {
       card.encounter = card.catacombEncounter;
       delete card.catacombEncounter;
       gameState.shuffleEncounters();
-      return 'Dracula kept the one encounter from the catacomb card and discarded the other';
     } else {
       gameState.encounterPool.push(card.catacombEncounter);
       delete card.catacombEncounter;
       gameState.shuffleEncounters();
-      return 'Dracula kept the one encounter from the catacomb card and discarded the other';
     }    
+    return 'Dracula kept the one encounter from the catacomb card and discarded the other';
   }
 
   /**
@@ -395,11 +394,11 @@ export class Dracula {
     // TODO: Make logical decision
     let discardEncounter = true;
     switch(this.droppedOffEncounter.name) {
-      case 'Ambush':
+      case EncounterName.Ambush:
         break;
-      case 'Desecrated Soil':
+      case EncounterName.DesecratedSoil:
         break;
-      case 'New Vampire':
+      case EncounterName.NewVampire:
         break;
     }
     if (discardEncounter) {
@@ -433,11 +432,11 @@ interface Power {
 }
 
 export enum PowerName {
-  darkCall = 'Dark Call',
-  doubleBack = 'Double Back',
-  feed = 'Feed',
-  hide = 'Hide',
-  wolfForm = 'Wolf Form',
-  wolfFormAndDoubleBack = 'Wolf Form and Double Back',
-  wolfFormAndHide = 'Wolf Form and Hide'
+  DarkCall = 'Dark Call',
+  DoubleBack = 'Double Back',
+  Feed = 'Feed',
+  Hide = 'Hide',
+  WolfForm = 'Wolf Form',
+  WolfFormAndDoubleBack = 'Wolf Form and Double Back',
+  WolfFormAndHide = 'Wolf Form and Hide'
 }

@@ -93,7 +93,7 @@ export class Game {
           let hideIndex = 0;
           for (hideIndex; hideIndex < this.trail.length; hideIndex++) {
             if (this.trail[hideIndex].power) {
-              if (this.trail[hideIndex].power.name == PowerName.hide) {
+              if (this.trail[hideIndex].power.name == PowerName.Hide) {
                 break;
               }
             }
@@ -218,13 +218,13 @@ export class Game {
     let doubleBackedCard: TrailCard;
     if (this.dracula.nextMove.power) {
       switch (this.dracula.nextMove.power.name) {
-        case PowerName.darkCall:
+        case PowerName.DarkCall:
           this.log('Dracula played power Dark Call');
           this.log(this.dracula.executeDarkCall(this));
           this.log(this.shuffleEncounters());
           break;
-        case PowerName.doubleBack:
-        case PowerName.wolfFormAndDoubleBack:
+        case PowerName.DoubleBack:
+        case PowerName.WolfFormAndDoubleBack:
           this.log(`Dracula played power ${this.dracula.nextMove.power.name}`);
           for (let i = 0; i < this.trail.length; i++) {
             if (this.trail[i].location) {
@@ -249,10 +249,10 @@ export class Game {
             this.log(this.dracula.decideWhichEncounterToKeep(this.trail[0], this));
           }          
           break;
-        case PowerName.feed:
+        case PowerName.Feed:
           this.log('Dracula played power Feed');
           break;
-        case PowerName.hide:
+        case PowerName.Hide:
           this.dracula.hideLocation = this.dracula.currentLocation;
           if (this.dracula.currentLocation == this.godalming.currentLocation ||
             this.dracula.currentLocation == this.seward.currentLocation ||
@@ -265,10 +265,10 @@ export class Game {
               this.dracula.revealed = false;
             }
           break;
-        case PowerName.wolfForm:
+        case PowerName.WolfForm:
           this.log('Dracula played power Wolf Form');
           break;
-        case PowerName.wolfFormAndHide:
+        case PowerName.WolfFormAndHide:
           this.log('Dracula played power Wolf Form');
           break;
       }
@@ -316,7 +316,7 @@ export class Game {
           let hideIndex = 0;
           for (hideIndex; hideIndex < this.trail.length; hideIndex++) {
             if (this.trail[hideIndex].power) {
-              if (this.trail[hideIndex].power.name == PowerName.hide) {
+              if (this.trail[hideIndex].power.name == PowerName.Hide) {
                 break;
               }
             }
@@ -332,7 +332,7 @@ export class Game {
         }
       }
       if (droppedOffCard.power) {
-        if (droppedOffCard.power.name == PowerName.hide) {
+        if (droppedOffCard.power.name == PowerName.Hide) {
           this.dracula.hideLocation = null;
         }
       }

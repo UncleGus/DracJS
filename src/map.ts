@@ -5,529 +5,529 @@ export class GameMap {
 
   constructor() {
     this.locations = [
-      new SmallCityWest('Galway')
-        .byRoad('Dublin')
-        .bySea('Atlantic Ocean')
+      new SmallCityWest(LocationName.Galway)
+        .byRoad(LocationName.Dublin)
+        .bySea(LocationName.AtlanticOcean)
         .done(),
-      new SmallCityWest('Dublin')
-        .byRoad('Galway')
-        .bySea('Irish Sea')
+      new SmallCityWest(LocationName.Dublin)
+        .byRoad(LocationName.Galway)
+        .bySea(LocationName.IrishSea)
         .done(),
-      new LargeCityWest('Liverpool')
-        .byRoad('Manchester')
-        .byRoad('Swansea')
-        .byTrain('Manchester')
-        .bySea('Irish Sea')
+      new LargeCityWest(LocationName.Liverpool)
+        .byRoad(LocationName.Manchester)
+        .byRoad(LocationName.Swansea)
+        .byTrain(LocationName.Manchester)
+        .bySea(LocationName.IrishSea)
         .done(),
-      new LargeCityWest('Edinburgh')
-        .byRoad('Manchester')
-        .byTrain('Manchester')
-        .bySea('North Sea')
+      new LargeCityWest(LocationName.Edinburgh)
+        .byRoad(LocationName.Manchester)
+        .byTrain(LocationName.Manchester)
+        .bySea(LocationName.NorthSea)
         .done(),
-      new LargeCityWest('Manchester')
-        .byRoad('Edinburgh')
-        .byRoad('Liverpool')
-        .byRoad('London')
-        .byTrain('Edinburgh')
-        .byTrain('Liverpool')
-        .byTrain('London')
+      new LargeCityWest(LocationName.Manchester)
+        .byRoad(LocationName.Edinburgh)
+        .byRoad(LocationName.Liverpool)
+        .byRoad(LocationName.London)
+        .byTrain(LocationName.Edinburgh)
+        .byTrain(LocationName.Liverpool)
+        .byTrain(LocationName.London)
         .done(),
-      new SmallCityWest('Swansea')
-        .byRoad('Liverpool')
-        .byRoad('London')
-        .byTrain('London')
-        .bySea('Irish Sea')
+      new SmallCityWest(LocationName.Swansea)
+        .byRoad(LocationName.Liverpool)
+        .byRoad(LocationName.London)
+        .byTrain(LocationName.London)
+        .bySea(LocationName.IrishSea)
         .done(),
-      new SmallCityWest('Plymouth')
-        .byRoad('London')
-        .bySea('English Channel')
+      new SmallCityWest(LocationName.Plymouth)
+        .byRoad(LocationName.London)
+        .bySea(LocationName.EnglishChannel)
         .done(),
-      new LargeCityWest('Nantes')
-        .byRoad('Le Havre')
-        .byRoad('Paris')
-        .byRoad('Clermont Ferrand')
-        .byRoad('Bordeaux')
-        .bySea('Bay of Biscay')
+      new LargeCityWest(LocationName.Nantes)
+        .byRoad(LocationName.LeHavre)
+        .byRoad(LocationName.Paris)
+        .byRoad(LocationName.ClermontFerrand)
+        .byRoad(LocationName.Bordeaux)
+        .bySea(LocationName.BayOfBiscay)
         .done(),
-      new SmallCityWest('Le Havre')
-        .byRoad('Nantes')
-        .byRoad('Paris')
-        .byRoad('Brussels')
-        .byTrain('Paris')
-        .bySea('English Channel')
+      new SmallCityWest(LocationName.LeHavre)
+        .byRoad(LocationName.Nantes)
+        .byRoad(LocationName.Paris)
+        .byRoad(LocationName.Brussels)
+        .byTrain(LocationName.Paris)
+        .bySea(LocationName.EnglishChannel)
         .done(),
-      new LargeCityWest('London')
-        .byRoad('Manchester')
-        .byRoad('Swansea')
-        .byRoad('Plymouth')
-        .byTrain('Manchester')
-        .byTrain('Swansea')
-        .bySea('English Channel')
+      new LargeCityWest(LocationName.London)
+        .byRoad(LocationName.Manchester)
+        .byRoad(LocationName.Swansea)
+        .byRoad(LocationName.Plymouth)
+        .byTrain(LocationName.Manchester)
+        .byTrain(LocationName.Swansea)
+        .bySea(LocationName.EnglishChannel)
         .done(),
-      new LargeCityWest('Paris')
-        .byRoad('Nantes')
-        .byRoad('Le Havre')
-        .byRoad('Brussels')
-        .byRoad('Strasbourg')
-        .byRoad('Geneva')
-        .byRoad('Clermont Ferrand')
-        .byTrain('Le Havre')
-        .byTrain('Brussels')
-        .byTrain('Marseilles')
-        .byTrain('Bordeaux')
+      new LargeCityWest(LocationName.Paris)
+        .byRoad(LocationName.Nantes)
+        .byRoad(LocationName.LeHavre)
+        .byRoad(LocationName.Brussels)
+        .byRoad(LocationName.Strasbourg)
+        .byRoad(LocationName.Geneva)
+        .byRoad(LocationName.ClermontFerrand)
+        .byTrain(LocationName.LeHavre)
+        .byTrain(LocationName.Brussels)
+        .byTrain(LocationName.Marseilles)
+        .byTrain(LocationName.Bordeaux)
         .done(),
-      new LargeCityWest('Brussels')
-        .byRoad('Le Havre')
-        .byRoad('Amsterdam')
-        .byRoad('Cologne')
-        .byRoad('Strasbourg')
-        .byRoad('Paris')
-        .byTrain('Cologne')
-        .byTrain('Paris')
+      new LargeCityWest(LocationName.Brussels)
+        .byRoad(LocationName.LeHavre)
+        .byRoad(LocationName.Amsterdam)
+        .byRoad(LocationName.Cologne)
+        .byRoad(LocationName.Strasbourg)
+        .byRoad(LocationName.Paris)
+        .byTrain(LocationName.Cologne)
+        .byTrain(LocationName.Paris)
         .done(),
-      new LargeCityWest('Amsterdam')
-        .byRoad('Brussels')
-        .byRoad('Cologne')
-        .bySea('North Sea')
+      new LargeCityWest(LocationName.Amsterdam)
+        .byRoad(LocationName.Brussels)
+        .byRoad(LocationName.Cologne)
+        .bySea(LocationName.NorthSea)
         .done(),
-      new SmallCityWest('Strasbourg')
-        .byRoad('Paris')
-        .byRoad('Brussels')
-        .byRoad('Cologne')
-        .byRoad('Frankfurt')
-        .byRoad('Nuremburg')
-        .byRoad('Munich')
-        .byRoad('Zurich')
-        .byRoad('Geneva')
-        .byTrain('Frankfurt')
-        .byTrain('Zurich')
+      new SmallCityWest(LocationName.Strasbourg)
+        .byRoad(LocationName.Paris)
+        .byRoad(LocationName.Brussels)
+        .byRoad(LocationName.Cologne)
+        .byRoad(LocationName.Frankfurt)
+        .byRoad(LocationName.Nuremburg)
+        .byRoad(LocationName.Munich)
+        .byRoad(LocationName.Zurich)
+        .byRoad(LocationName.Geneva)
+        .byTrain(LocationName.Frankfurt)
+        .byTrain(LocationName.Zurich)
         .done(),
-      new LargeCityWest('Cologne')
-        .byRoad('Brussels')
-        .byRoad('Amsterdam')
-        .byRoad('Hamburg')
-        .byRoad('Leipzig')
-        .byRoad('Frankfurt')
-        .byRoad('Strasbourg')
-        .byTrain('Brussels')
-        .byTrain('Frankfurt')
+      new LargeCityWest(LocationName.Cologne)
+        .byRoad(LocationName.Brussels)
+        .byRoad(LocationName.Amsterdam)
+        .byRoad(LocationName.Hamburg)
+        .byRoad(LocationName.Leipzig)
+        .byRoad(LocationName.Frankfurt)
+        .byRoad(LocationName.Strasbourg)
+        .byTrain(LocationName.Brussels)
+        .byTrain(LocationName.Frankfurt)
         .done(),
-      new LargeCityWest('Hamburg')
-        .byRoad('Cologne')
-        .byRoad('Berlin')
-        .byRoad('Leipzig')
-        .byTrain('Berlin')
-        .bySea('North Sea')
+      new LargeCityWest(LocationName.Hamburg)
+        .byRoad(LocationName.Cologne)
+        .byRoad(LocationName.Berlin)
+        .byRoad(LocationName.Leipzig)
+        .byTrain(LocationName.Berlin)
+        .bySea(LocationName.NorthSea)
         .done(),
-      new SmallCityWest('Frankfurt')
-        .byRoad('Strasbourg')
-        .byRoad('Cologne')
-        .byRoad('Leipzig')
-        .byRoad('Nuremburg')
-        .byTrain('Strasbourg')
-        .byTrain('Cologne')
-        .byTrain('Leipzig')
+      new SmallCityWest(LocationName.Frankfurt)
+        .byRoad(LocationName.Strasbourg)
+        .byRoad(LocationName.Cologne)
+        .byRoad(LocationName.Leipzig)
+        .byRoad(LocationName.Nuremburg)
+        .byTrain(LocationName.Strasbourg)
+        .byTrain(LocationName.Cologne)
+        .byTrain(LocationName.Leipzig)
         .done(),
-      new SmallCityWest('Nuremburg')
-        .byRoad('Strasbourg')
-        .byRoad('Frankfurt')
-        .byRoad('Leipzig')
-        .byRoad('Prague')
-        .byRoad('Munich')
-        .byTrain('Leipzig')
-        .byTrain('Munich')
+      new SmallCityWest(LocationName.Nuremburg)
+        .byRoad(LocationName.Strasbourg)
+        .byRoad(LocationName.Frankfurt)
+        .byRoad(LocationName.Leipzig)
+        .byRoad(LocationName.Prague)
+        .byRoad(LocationName.Munich)
+        .byTrain(LocationName.Leipzig)
+        .byTrain(LocationName.Munich)
         .done(),
-      new LargeCityWest('Leipzig')
-        .byRoad('Cologne')
-        .byRoad('Hamburg')
-        .byRoad('Berlin')
-        .byRoad('Nuremburg')
-        .byRoad('Frankfurt')
-        .byTrain('Frankfurt')
-        .byTrain('Berlin')
-        .byTrain('Nuremburg')
+      new LargeCityWest(LocationName.Leipzig)
+        .byRoad(LocationName.Cologne)
+        .byRoad(LocationName.Hamburg)
+        .byRoad(LocationName.Berlin)
+        .byRoad(LocationName.Nuremburg)
+        .byRoad(LocationName.Frankfurt)
+        .byTrain(LocationName.Frankfurt)
+        .byTrain(LocationName.Berlin)
+        .byTrain(LocationName.Nuremburg)
         .done(),
-      new LargeCityWest('Berlin')
-        .byRoad('Hamburg')
-        .byRoad('Prague')
-        .byRoad('Leipzig')
-        .byTrain('Hamburg')
-        .byTrain('Prague')
-        .byTrain('Leipzig')
+      new LargeCityWest(LocationName.Berlin)
+        .byRoad(LocationName.Hamburg)
+        .byRoad(LocationName.Prague)
+        .byRoad(LocationName.Leipzig)
+        .byTrain(LocationName.Hamburg)
+        .byTrain(LocationName.Prague)
+        .byTrain(LocationName.Leipzig)
         .done(),
-      new LargeCityEast('Prague')
-        .byRoad('Berlin')
-        .byRoad('Vienna')
-        .byRoad('Nuremburg')
-        .byTrain('Berlin')
-        .byTrain('Vienna')
+      new LargeCityEast(LocationName.Prague)
+        .byRoad(LocationName.Berlin)
+        .byRoad(LocationName.Vienna)
+        .byRoad(LocationName.Nuremburg)
+        .byTrain(LocationName.Berlin)
+        .byTrain(LocationName.Vienna)
         .done(),
       {
-        name: 'Castle Dracula',
+        name: LocationName.CastleDracula,
         domain: LocationDomain.east,
-        roadConnections: ['Klausenburg', 'Galatz'],
+        roadConnections: [LocationName.Klausenburg, LocationName.Galatz],
         seaConnections: [],
         trainConnections: [],
         type: LocationType.castle
       },
-      new SmallCityWest('Santander')
-        .byRoad('Lisbon')
-        .byRoad('Madrid')
-        .byRoad('Saragossa')
-        .byTrain('Madrid')
-        .bySea('Bay of Biscay')
+      new SmallCityWest(LocationName.Santander)
+        .byRoad(LocationName.Lisbon)
+        .byRoad(LocationName.Madrid)
+        .byRoad(LocationName.Saragossa)
+        .byTrain(LocationName.Madrid)
+        .bySea(LocationName.BayOfBiscay)
         .done(),
-      new SmallCityWest('Saragossa')
-        .byRoad('Madrid')
-        .byRoad('Santander')
-        .byRoad('Bordeaux')
-        .byRoad('Toulouse')
-        .byRoad('Barcelona')
-        .byRoad('Alicante')
-        .byTrain('Madrid')
-        .byTrain('Bordeaux')
-        .byTrain('Barcelona')
+      new SmallCityWest(LocationName.Saragossa)
+        .byRoad(LocationName.Madrid)
+        .byRoad(LocationName.Santander)
+        .byRoad(LocationName.Bordeaux)
+        .byRoad(LocationName.Toulouse)
+        .byRoad(LocationName.Barcelona)
+        .byRoad(LocationName.Alicante)
+        .byTrain(LocationName.Madrid)
+        .byTrain(LocationName.Bordeaux)
+        .byTrain(LocationName.Barcelona)
         .done(),
-      new LargeCityWest('Bordeaux')
-        .byRoad('Saragossa')
-        .byRoad('Nantes')
-        .byRoad('Clermont Ferrand')
-        .byRoad('Toulouse')
-        .byTrain('Paris')
-        .byTrain('Saragossa')
-        .bySea('Bay of Biscay')
+      new LargeCityWest(LocationName.Bordeaux)
+        .byRoad(LocationName.Saragossa)
+        .byRoad(LocationName.Nantes)
+        .byRoad(LocationName.ClermontFerrand)
+        .byRoad(LocationName.Toulouse)
+        .byTrain(LocationName.Paris)
+        .byTrain(LocationName.Saragossa)
+        .bySea(LocationName.BayOfBiscay)
         .done(),
-      new SmallCityWest('Toulouse')
-        .byRoad('Saragossa')
-        .byRoad('Bordeaux')
-        .byRoad('Clermont Ferrand')
-        .byRoad('Marseilles')
-        .byRoad('Barcelona')
+      new SmallCityWest(LocationName.Toulouse)
+        .byRoad(LocationName.Saragossa)
+        .byRoad(LocationName.Bordeaux)
+        .byRoad(LocationName.ClermontFerrand)
+        .byRoad(LocationName.Marseilles)
+        .byRoad(LocationName.Barcelona)
         .done(),
-      new LargeCityWest('Barcelona')
-        .byRoad('Saragossa')
-        .byRoad('Toulouse')
-        .byTrain('Saragossa')
-        .byTrain('Alicante')
-        .bySea('Mediterranean Sea')
+      new LargeCityWest(LocationName.Barcelona)
+        .byRoad(LocationName.Saragossa)
+        .byRoad(LocationName.Toulouse)
+        .byTrain(LocationName.Saragossa)
+        .byTrain(LocationName.Alicante)
+        .bySea(LocationName.MediterraneanSea)
         .done(),
-      new SmallCityWest('Clermont Ferrand')
-        .byRoad('Bordeaux')
-        .byRoad('Nantes')
-        .byRoad('Paris')
-        .byRoad('Geneva')
-        .byRoad('Marseilles')
-        .byRoad('Toulouse')
+      new SmallCityWest(LocationName.ClermontFerrand)
+        .byRoad(LocationName.Bordeaux)
+        .byRoad(LocationName.Nantes)
+        .byRoad(LocationName.Paris)
+        .byRoad(LocationName.Geneva)
+        .byRoad(LocationName.Marseilles)
+        .byRoad(LocationName.Toulouse)
         .done(),
-      new LargeCityWest('Marseilles')
-        .byRoad('Toulouse')
-        .byRoad('Clermont Ferrand')
-        .byRoad('Geneva')
-        .byRoad('Zurich')
-        .byRoad('Milan')
-        .byRoad('Genoa')
-        .byTrain('Paris')
-        .bySea('Mediterranean Sea')
+      new LargeCityWest(LocationName.Marseilles)
+        .byRoad(LocationName.Toulouse)
+        .byRoad(LocationName.ClermontFerrand)
+        .byRoad(LocationName.Geneva)
+        .byRoad(LocationName.Zurich)
+        .byRoad(LocationName.Milan)
+        .byRoad(LocationName.Genoa)
+        .byTrain(LocationName.Paris)
+        .bySea(LocationName.MediterraneanSea)
         .done(),
-      new SmallCityWest('Geneva')
-        .byRoad('Marseilles')
-        .byRoad('Clermont Ferrand')
-        .byRoad('Paris')
-        .byRoad('Strasbourg')
-        .byRoad('Zurich')
-        .byTrain('Milan')
+      new SmallCityWest(LocationName.Geneva)
+        .byRoad(LocationName.Marseilles)
+        .byRoad(LocationName.ClermontFerrand)
+        .byRoad(LocationName.Paris)
+        .byRoad(LocationName.Strasbourg)
+        .byRoad(LocationName.Zurich)
+        .byTrain(LocationName.Milan)
         .done(),
-      new LargeCityEast('Genoa')
-        .byRoad('Marseilles')
-        .byRoad('Milan')
-        .byRoad('Venice')
-        .byRoad('Florence')
-        .byTrain('Milan')
-        .bySea('Tyrrhenian Sea')
+      new LargeCityEast(LocationName.Genoa)
+        .byRoad(LocationName.Marseilles)
+        .byRoad(LocationName.Milan)
+        .byRoad(LocationName.Venice)
+        .byRoad(LocationName.Florence)
+        .byTrain(LocationName.Milan)
+        .bySea(LocationName.TyrrhenianSea)
         .done(),
-      new LargeCityEast('Milan')
-        .byRoad('Marseilles')
-        .byRoad('Zurich')
-        .byRoad('Munich')
-        .byRoad('Venice')
-        .byRoad('Genoa')
-        .byTrain('Geneva')
-        .byTrain('Zurich')
-        .byTrain('Florence')
-        .byTrain('Genoa')
+      new LargeCityEast(LocationName.Milan)
+        .byRoad(LocationName.Marseilles)
+        .byRoad(LocationName.Zurich)
+        .byRoad(LocationName.Munich)
+        .byRoad(LocationName.Venice)
+        .byRoad(LocationName.Genoa)
+        .byTrain(LocationName.Geneva)
+        .byTrain(LocationName.Zurich)
+        .byTrain(LocationName.Florence)
+        .byTrain(LocationName.Genoa)
         .done(),
-      new SmallCityWest('Zurich')
-        .byRoad('Marseilles')
-        .byRoad('Geneva')
-        .byRoad('Strasbourg')
-        .byRoad('Munich')
-        .byRoad('Milan')
-        .byTrain('Strasbourg')
-        .byTrain('Milan')
+      new SmallCityWest(LocationName.Zurich)
+        .byRoad(LocationName.Marseilles)
+        .byRoad(LocationName.Geneva)
+        .byRoad(LocationName.Strasbourg)
+        .byRoad(LocationName.Munich)
+        .byRoad(LocationName.Milan)
+        .byTrain(LocationName.Strasbourg)
+        .byTrain(LocationName.Milan)
         .done(),
-      new SmallCityEast('Florence')
-        .byRoad('Genoa')
-        .byRoad('Venice')
-        .byRoad('Rome')
-        .byTrain('Milan')
-        .byTrain('Rome')
+      new SmallCityEast(LocationName.Florence)
+        .byRoad(LocationName.Genoa)
+        .byRoad(LocationName.Venice)
+        .byRoad(LocationName.Rome)
+        .byTrain(LocationName.Milan)
+        .byTrain(LocationName.Rome)
         .done(),
-      new SmallCityEast('Venice')
-        .byRoad('Florence')
-        .byRoad('Genoa')
-        .byRoad('Milan')
-        .byRoad('Munich')
-        .byTrain('Vienna')
-        .bySea('Adriatic Sea')
+      new SmallCityEast(LocationName.Venice)
+        .byRoad(LocationName.Florence)
+        .byRoad(LocationName.Genoa)
+        .byRoad(LocationName.Milan)
+        .byRoad(LocationName.Munich)
+        .byTrain(LocationName.Vienna)
+        .bySea(LocationName.AdriaticSea)
         .done(),
-      new LargeCityWest('Munich')
-        .byRoad('Milan')
-        .byRoad('Zurich')
-        .byRoad('Strasbourg')
-        .byRoad('Nuremburg')
-        .byRoad('Vienna')
-        .byRoad('Zagreb')
-        .byRoad('Venice')
-        .byTrain('Nuremburg')
+      new LargeCityWest(LocationName.Munich)
+        .byRoad(LocationName.Milan)
+        .byRoad(LocationName.Zurich)
+        .byRoad(LocationName.Strasbourg)
+        .byRoad(LocationName.Nuremburg)
+        .byRoad(LocationName.Vienna)
+        .byRoad(LocationName.Zagreb)
+        .byRoad(LocationName.Venice)
+        .byTrain(LocationName.Nuremburg)
         .done(),
-      new SmallCityEast('Zagreb')
-        .byRoad('Munich')
-        .byRoad('Vienna')
-        .byRoad('Budapest')
-        .byRoad('Szeged')
-        .byRoad('St. Joseph and St. Mary')
-        .byRoad('Sarajevo')
+      new SmallCityEast(LocationName.Zagreb)
+        .byRoad(LocationName.Munich)
+        .byRoad(LocationName.Vienna)
+        .byRoad(LocationName.Budapest)
+        .byRoad(LocationName.Szeged)
+        .byRoad(LocationName.StJosephAndStMary)
+        .byRoad(LocationName.Sarajevo)
         .done(),
-      new LargeCityEast('Vienna')
-        .byRoad('Munich')
-        .byRoad('Prague')
-        .byRoad('Budapest')
-        .byRoad('Zagreb')
-        .byTrain('Venice')
-        .byTrain('Prague')
-        .byTrain('Budapest')
+      new LargeCityEast(LocationName.Vienna)
+        .byRoad(LocationName.Munich)
+        .byRoad(LocationName.Prague)
+        .byRoad(LocationName.Budapest)
+        .byRoad(LocationName.Zagreb)
+        .byTrain(LocationName.Venice)
+        .byTrain(LocationName.Prague)
+        .byTrain(LocationName.Budapest)
         .done(),
       {
-        name: 'St. Joseph and St. Mary',
+        name: LocationName.StJosephAndStMary,
         domain: LocationDomain.east,
-        roadConnections: ['Zagreb', 'Szeged', 'Belgrade', 'Sarajevo'],
+        roadConnections: [LocationName.Zagreb, LocationName.Szeged, LocationName.Belgrade, LocationName.Sarajevo],
         seaConnections: [],
         trainConnections: [],
         type: LocationType.hospital
       },
-      new SmallCityEast('Sarajevo')
-        .byRoad('Zagreb')
-        .byRoad('St. Joseph and St. Mary')
-        .byRoad('Belgrade')
-        .byRoad('Sofia')
-        .byRoad('Valona')
+      new SmallCityEast(LocationName.Sarajevo)
+        .byRoad(LocationName.Zagreb)
+        .byRoad(LocationName.StJosephAndStMary)
+        .byRoad(LocationName.Belgrade)
+        .byRoad(LocationName.Sofia)
+        .byRoad(LocationName.Valona)
         .done(),
-      new SmallCityEast('Szeged')
-        .byRoad('Zagreb')
-        .byRoad('Budapest')
-        .byRoad('Klausenburg')
-        .byRoad('Belgrade')
-        .byRoad('St. Joseph and St. Mary')
-        .byTrain('Budapest')
-        .byTrain('Bucharest')
-        .byTrain('Belgrade')
+      new SmallCityEast(LocationName.Szeged)
+        .byRoad(LocationName.Zagreb)
+        .byRoad(LocationName.Budapest)
+        .byRoad(LocationName.Klausenburg)
+        .byRoad(LocationName.Belgrade)
+        .byRoad(LocationName.StJosephAndStMary)
+        .byTrain(LocationName.Budapest)
+        .byTrain(LocationName.Bucharest)
+        .byTrain(LocationName.Belgrade)
         .done(),
-      new SmallCityEast('Budapest')
-        .byRoad('Vienna')
-        .byRoad('Klausenburg')
-        .byRoad('Szeged')
-        .byRoad('Zagreb')
-        .byTrain('Vienna')
-        .byTrain('Szeged')
+      new SmallCityEast(LocationName.Budapest)
+        .byRoad(LocationName.Vienna)
+        .byRoad(LocationName.Klausenburg)
+        .byRoad(LocationName.Szeged)
+        .byRoad(LocationName.Zagreb)
+        .byTrain(LocationName.Vienna)
+        .byTrain(LocationName.Szeged)
         .done(),
-      new SmallCityEast('Belgrade')
-        .byRoad('St. Joseph and St. Mary')
-        .byRoad('Szeged')
-        .byRoad('Klausenburg')
-        .byRoad('Bucharest')
-        .byRoad('Sofia')
-        .byRoad('Sarajevo')
-        .byTrain('Szeged')
-        .byTrain('Sofia')
+      new SmallCityEast(LocationName.Belgrade)
+        .byRoad(LocationName.StJosephAndStMary)
+        .byRoad(LocationName.Szeged)
+        .byRoad(LocationName.Klausenburg)
+        .byRoad(LocationName.Bucharest)
+        .byRoad(LocationName.Sofia)
+        .byRoad(LocationName.Sarajevo)
+        .byTrain(LocationName.Szeged)
+        .byTrain(LocationName.Sofia)
         .done(),
-      new SmallCityEast('Klausenburg')
-        .byRoad('Budapest')
-        .byRoad('Castle Dracula')
-        .byRoad('Galatz')
-        .byRoad('Bucharest')
-        .byRoad('Belgrade')
-        .byRoad('Szeged')
+      new SmallCityEast(LocationName.Klausenburg)
+        .byRoad(LocationName.Budapest)
+        .byRoad(LocationName.CastleDracula)
+        .byRoad(LocationName.Galatz)
+        .byRoad(LocationName.Bucharest)
+        .byRoad(LocationName.Belgrade)
+        .byRoad(LocationName.Szeged)
         .done(),
-      new SmallCityEast('Sofia')
-        .byRoad('Sarajevo')
-        .byRoad('Belgrade')
-        .byRoad('Bucharest')
-        .byRoad('Varna')
-        .byRoad('Salonica')
-        .byRoad('Valona')
-        .byTrain('Belgrade')
-        .byTrain('Salonica')
-        .byTrain('Varna')
+      new SmallCityEast(LocationName.Sofia)
+        .byRoad(LocationName.Sarajevo)
+        .byRoad(LocationName.Belgrade)
+        .byRoad(LocationName.Bucharest)
+        .byRoad(LocationName.Varna)
+        .byRoad(LocationName.Salonica)
+        .byRoad(LocationName.Valona)
+        .byTrain(LocationName.Belgrade)
+        .byTrain(LocationName.Salonica)
+        .byTrain(LocationName.Varna)
         .done(),
-      new LargeCityEast('Bucharest')
-        .byRoad('Belgrade')
-        .byRoad('Klausenburg')
-        .byRoad('Galatz')
-        .byRoad('Constanta')
-        .byRoad('Sofia')
-        .byTrain('Szeged')
-        .byTrain('Galatz')
-        .byTrain('Constanta')
+      new LargeCityEast(LocationName.Bucharest)
+        .byRoad(LocationName.Belgrade)
+        .byRoad(LocationName.Klausenburg)
+        .byRoad(LocationName.Galatz)
+        .byRoad(LocationName.Constanta)
+        .byRoad(LocationName.Sofia)
+        .byTrain(LocationName.Szeged)
+        .byTrain(LocationName.Galatz)
+        .byTrain(LocationName.Constanta)
         .done(),
-      new SmallCityEast('Galatz')
-        .byRoad('Klausenburg')
-        .byRoad('Castle Dracula')
-        .byRoad('Constanta')
-        .byRoad('Bucharest')
-        .byTrain('Bucharest')
+      new SmallCityEast(LocationName.Galatz)
+        .byRoad(LocationName.Klausenburg)
+        .byRoad(LocationName.CastleDracula)
+        .byRoad(LocationName.Constanta)
+        .byRoad(LocationName.Bucharest)
+        .byTrain(LocationName.Bucharest)
         .done(),
-      new LargeCityEast('Varna')
-        .byRoad('Sofia')
-        .byRoad('Constanta')
-        .byTrain('Sofia')
-        .bySea('Black Sea')
+      new LargeCityEast(LocationName.Varna)
+        .byRoad(LocationName.Sofia)
+        .byRoad(LocationName.Constanta)
+        .byTrain(LocationName.Sofia)
+        .bySea(LocationName.BlackSea)
         .done(),
-      new LargeCityEast('Constanta')
-        .byRoad('Galatz')
-        .byRoad('Varna')
-        .byRoad('Bucharest')
-        .byTrain('Bucharest')
-        .bySea('Black Sea')
+      new LargeCityEast(LocationName.Constanta)
+        .byRoad(LocationName.Galatz)
+        .byRoad(LocationName.Varna)
+        .byRoad(LocationName.Bucharest)
+        .byTrain(LocationName.Bucharest)
+        .bySea(LocationName.BlackSea)
         .done(),
-      new LargeCityWest('Lisbon')
-        .byRoad('Santander')
-        .byRoad('Madrid')
-        .byRoad('Cadiz')
-        .byTrain('Madrid')
-        .bySea('Atlantic Ocean')
+      new LargeCityWest(LocationName.Lisbon)
+        .byRoad(LocationName.Santander)
+        .byRoad(LocationName.Madrid)
+        .byRoad(LocationName.Cadiz)
+        .byTrain(LocationName.Madrid)
+        .bySea(LocationName.AtlanticOcean)
         .done(),
-      new LargeCityWest('Cadiz')
-        .byRoad('Lisbon')
-        .byRoad('Madrid')
-        .byRoad('Granada')
-        .bySea('Atlantic Ocean')
+      new LargeCityWest(LocationName.Cadiz)
+        .byRoad(LocationName.Lisbon)
+        .byRoad(LocationName.Madrid)
+        .byRoad(LocationName.Granada)
+        .bySea(LocationName.AtlanticOcean)
         .done(),
-      new LargeCityWest('Madrid')
-        .byRoad('Lisbon')
-        .byRoad('Santander')
-        .byRoad('Saragossa')
-        .byRoad('Alicante')
-        .byRoad('Granada')
-        .byRoad('Cadiz')
-        .byTrain('Lisbon')
-        .byTrain('Santander')
-        .byTrain('Saragossa')
-        .byTrain('Alicante')
+      new LargeCityWest(LocationName.Madrid)
+        .byRoad(LocationName.Lisbon)
+        .byRoad(LocationName.Santander)
+        .byRoad(LocationName.Saragossa)
+        .byRoad(LocationName.Alicante)
+        .byRoad(LocationName.Granada)
+        .byRoad(LocationName.Cadiz)
+        .byTrain(LocationName.Lisbon)
+        .byTrain(LocationName.Santander)
+        .byTrain(LocationName.Saragossa)
+        .byTrain(LocationName.Alicante)
         .done(),
-      new SmallCityWest('Granada')
-        .byRoad('Cadiz')
-        .byRoad('Madrid')
-        .byRoad('Alicante')
+      new SmallCityWest(LocationName.Granada)
+        .byRoad(LocationName.Cadiz)
+        .byRoad(LocationName.Madrid)
+        .byRoad(LocationName.Alicante)
         .done(),
-      new SmallCityWest('Alicante')
-        .byRoad('Granada')
-        .byRoad('Madrid')
-        .byRoad('Saragossa')
-        .byTrain('Madrid')
-        .byTrain('Barcelona')
-        .bySea('Mediterranean Sea')
+      new SmallCityWest(LocationName.Alicante)
+        .byRoad(LocationName.Granada)
+        .byRoad(LocationName.Madrid)
+        .byRoad(LocationName.Saragossa)
+        .byTrain(LocationName.Madrid)
+        .byTrain(LocationName.Barcelona)
+        .bySea(LocationName.MediterraneanSea)
         .done(),
-      new SmallCityEast('Cagliari')
-        .bySea('Mediterranean Sea')
-        .bySea('Tyrrhenian Sea')
+      new SmallCityEast(LocationName.Cagliari)
+        .bySea(LocationName.MediterraneanSea)
+        .bySea(LocationName.TyrrhenianSea)
         .done(),
-      new LargeCityEast('Rome')
-        .byRoad('Florence')
-        .byRoad('Bari')
-        .byRoad('Naples')
-        .byTrain('Florence')
-        .byTrain('Naples')
-        .bySea('Tyrrhenian Sea')
+      new LargeCityEast(LocationName.Rome)
+        .byRoad(LocationName.Florence)
+        .byRoad(LocationName.Bari)
+        .byRoad(LocationName.Naples)
+        .byTrain(LocationName.Florence)
+        .byTrain(LocationName.Naples)
+        .bySea(LocationName.TyrrhenianSea)
         .done(),
-      new LargeCityEast('Naples')
-        .byRoad('Rome')
-        .byRoad('Bari')
-        .byTrain('Rome')
-        .byTrain('Bari')
-        .bySea('Tyrrhenian Sea')
+      new LargeCityEast(LocationName.Naples)
+        .byRoad(LocationName.Rome)
+        .byRoad(LocationName.Bari)
+        .byTrain(LocationName.Rome)
+        .byTrain(LocationName.Bari)
+        .bySea(LocationName.TyrrhenianSea)
         .done(),
-      new SmallCityEast('Bari')
-        .byRoad('Naples')
-        .byRoad('Rome')
-        .byTrain('Naples')
-        .bySea('Adriatic Sea')
+      new SmallCityEast(LocationName.Bari)
+        .byRoad(LocationName.Naples)
+        .byRoad(LocationName.Rome)
+        .byTrain(LocationName.Naples)
+        .bySea(LocationName.AdriaticSea)
         .done(),
-      new SmallCityEast('Valona')
-        .byRoad('Sarajevo')
-        .byRoad('Sofia')
-        .byRoad('Salonica')
-        .byRoad('Athens')
-        .bySea('Ionian Sea')
+      new SmallCityEast(LocationName.Valona)
+        .byRoad(LocationName.Sarajevo)
+        .byRoad(LocationName.Sofia)
+        .byRoad(LocationName.Salonica)
+        .byRoad(LocationName.Athens)
+        .bySea(LocationName.IonianSea)
         .done(),
-      new SmallCityEast('Salonica')
-        .byRoad('Valona')
-        .byRoad('Sofia')
-        .byTrain('Sofia')
-        .bySea('Ionian Sea')
+      new SmallCityEast(LocationName.Salonica)
+        .byRoad(LocationName.Valona)
+        .byRoad(LocationName.Sofia)
+        .byTrain(LocationName.Sofia)
+        .bySea(LocationName.IonianSea)
         .done(),
-      new LargeCityEast('Athens')
-        .byRoad('Valona')
-        .bySea('Ionian Sea')
+      new LargeCityEast(LocationName.Athens)
+        .byRoad(LocationName.Valona)
+        .bySea(LocationName.IonianSea)
         .done(),
       {
         ...sea,
-        name: 'Atlantic Ocean',
-        seaConnections: ['North Sea', 'Irish Sea', 'English Channel', 'Bay of Biscay', 'Mediterranean Sea', 'Galway', 'Lisbon', 'Cadiz']
+        name: LocationName.AtlanticOcean,
+        seaConnections: [LocationName.NorthSea, LocationName.IrishSea, LocationName.EnglishChannel, LocationName.BayOfBiscay, LocationName.MediterraneanSea, LocationName.Galway, LocationName.Lisbon, LocationName.Cadiz]
       },
       {
         ...sea,
-        name: 'Irish Sea',
-        seaConnections: ['Atlantic Ocean', 'Dublin', 'Liverpool', 'Swansea']
+        name: LocationName.IrishSea,
+        seaConnections: [LocationName.AtlanticOcean, LocationName.Dublin, LocationName.Liverpool, LocationName.Swansea]
       },
       {
         ...sea,
-        name: 'English Channel',
-        seaConnections: ['Atlantic Ocean', 'North Sea', 'Plymouth', 'London', 'Le Havre']
+        name: LocationName.EnglishChannel,
+        seaConnections: [LocationName.AtlanticOcean, LocationName.NorthSea, LocationName.Plymouth, LocationName.London, LocationName.LeHavre]
       },
       {
         ...sea,
-        name: 'North Sea',
-        seaConnections: ['Atlantic Ocean', 'English Channel', 'Edinburgh', 'Amsterdam', 'Hamburg']
+        name: LocationName.NorthSea,
+        seaConnections: [LocationName.AtlanticOcean, LocationName.EnglishChannel, LocationName.Edinburgh, LocationName.Amsterdam, LocationName.Hamburg]
       },
       {
         ...sea,
-        name: 'Bay of Biscay',
-        seaConnections: ['Atlantic Ocean', 'Nantes', 'Bordeaux', 'Santander']
+        name: LocationName.BayOfBiscay,
+        seaConnections: [LocationName.AtlanticOcean, LocationName.Nantes, LocationName.Bordeaux, LocationName.Santander]
       },
       {
         ...sea,
-        name: 'Mediterranean Sea',
-        seaConnections: ['Atlantic Ocean', 'Tyrrhenian Sea', 'Alicante', 'Barcelona', 'Marseilles', 'Cagliari']
+        name: LocationName.MediterraneanSea,
+        seaConnections: [LocationName.AtlanticOcean, LocationName.TyrrhenianSea, LocationName.Alicante, LocationName.Barcelona, LocationName.Marseilles, LocationName.Cagliari]
       },
       {
         ...sea,
-        name: 'Tyrrhenian Sea',
-        seaConnections: ['Mediterranean Sea', 'Ionian Sea', 'Cagliari', 'Genoa', 'Rome', 'Naples']
+        name: LocationName.TyrrhenianSea,
+        seaConnections: [LocationName.MediterraneanSea, LocationName.IonianSea, LocationName.Cagliari, LocationName.Genoa, LocationName.Rome, LocationName.Naples]
       },
       {
         ...sea,
-        name: 'Adriatic Sea',
-        seaConnections: ['Ionian Sea', 'Bari', 'Venice']
+        name: LocationName.AdriaticSea,
+        seaConnections: [LocationName.IonianSea, LocationName.Bari, LocationName.Venice]
       },
       {
         ...sea,
-        name: 'Ionian Sea',
-        seaConnections: ['Adriatic Sea', 'Black Sea', 'Valona', 'Athens', 'Salonica', 'Tyrrhenian Sea']
+        name: LocationName.IonianSea,
+        seaConnections: [LocationName.AdriaticSea, LocationName.BlackSea, LocationName.Valona, LocationName.Athens, LocationName.Salonica, LocationName.TyrrhenianSea]
       },
       {
         ...sea,
-        name: 'Black Sea',
-        seaConnections: ['Ionian Sea', 'Varna', 'Constanta']
+        name: LocationName.BlackSea,
+        seaConnections: [LocationName.IonianSea, LocationName.Varna, LocationName.Constanta]
       },
     ];
     this.locations.sort((first, second) => {
@@ -563,10 +563,10 @@ export class GameMap {
     let problems = [];
     this.locations.forEach(location => {
       if (location.type === LocationType.hospital) {
-        hospitalCount +=1;
+        hospitalCount += 1;
       }
       if (location.type === LocationType.castle) {
-        castleCount +=1;
+        castleCount += 1;
       }
       if (!location.name) {
         problems.push('Location exists with no name');
@@ -581,7 +581,7 @@ export class GameMap {
         return;
       }
       if (location.domain === LocationDomain.sea && location.type !== LocationType.sea ||
-        location.domain !== LocationDomain.sea  && location.type === LocationType.sea) {
+        location.domain !== LocationDomain.sea && location.type === LocationType.sea) {
         problems.push(`${location.name} has type ${location.type} and domain ${location.domain}`);
         return;
       }
@@ -698,7 +698,7 @@ export class GameMap {
     if (origin) {
       return this.distanceBetweenLocations(null, destination, methods, [], [origin], 0);
     }
-    
+
     if (locationsAtCurrentDistance.find(location => location == destination)) {
       return distance;
     }
@@ -723,7 +723,7 @@ export class GameMap {
       return -1;
     }
     return this.distanceBetweenLocations(null, destination, methods, examinedLocations, newLocationsToExamine, distance + 1);
-  }  
+  }
 }
 
 export interface Location {
@@ -798,7 +798,7 @@ class GenericLocationBuilder {
   }
 }
 
-class SmallCityWest extends GenericLocationBuilder{
+class SmallCityWest extends GenericLocationBuilder {
   location: Location;
   constructor(name: string) {
     super(name);
@@ -807,7 +807,7 @@ class SmallCityWest extends GenericLocationBuilder{
   }
 }
 
-class LargeCityWest extends GenericLocationBuilder{
+class LargeCityWest extends GenericLocationBuilder {
   location: Location;
   constructor(name: string) {
     super(name);
@@ -816,7 +816,7 @@ class LargeCityWest extends GenericLocationBuilder{
   }
 }
 
-class SmallCityEast extends GenericLocationBuilder{
+class SmallCityEast extends GenericLocationBuilder {
   location: Location;
   constructor(name: string) {
     super(name);
@@ -825,7 +825,7 @@ class SmallCityEast extends GenericLocationBuilder{
   }
 }
 
-class LargeCityEast extends GenericLocationBuilder{
+class LargeCityEast extends GenericLocationBuilder {
   location: Location;
   constructor(name: string) {
     super(name);
@@ -841,4 +841,78 @@ const sea: Location = {
   trainConnections: [],
   seaConnections: [],
   type: LocationType.sea
+}
+
+export enum LocationName {
+  AdriaticSea = 'Adriatic Sea',
+  Alicante = 'Alicante',
+  Amsterdam = 'Amsterdam',
+  Athens = 'Athens',
+  AtlanticOcean = 'Atlantic Ocean',
+  Barcelona = 'Barcelona',
+  Bari = 'Bari',
+  BayOfBiscay = 'Bay of Biscay',
+  Belgrade = 'Belgrade',
+  Berlin = 'Berlin',
+  BlackSea = 'Black Sea',
+  Bordeaux = 'Bordeaux',
+  Brussels = 'Brussels',
+  Bucharest = 'Bucharest',
+  Budapest = 'Budapest',
+  Cadiz = 'Cadiz',
+  Cagliari = 'Cagliari',
+  CastleDracula = 'Castle Dracula',
+  ClermontFerrand = 'Clermont-Ferranc',
+  Cologne = 'Cologne',
+  Constanta = 'Constanta',
+  Dublin = 'Dublin',
+  Edinburgh = 'Edinburgh',
+  EnglishChannel = 'English Channel',
+  Florence = 'Florence',
+  Frankfurt = 'Frankfurt',
+  Galatz = 'Galatz',
+  Galway = 'Galway',
+  Geneva = 'Geneva',
+  Genoa = 'Genoa',
+  Granada = 'Granada',
+  Hamburg = 'Hamburg',
+  IonianSea = 'Ionian Sea',
+  IrishSea = 'Irish Sea',
+  Klausenburg = 'Klausenburg',
+  LeHavre = 'Le Havre',
+  Leipzig = 'Leipzig',
+  Lisbon = 'Lisbon',
+  Liverpool = 'Liverpool',
+  London = 'London',
+  Madrid = 'Madrid',
+  Manchester = 'Manchester',
+  Marseilles = 'Marseilles',
+  MediterraneanSea = 'Mediterranean Sea',
+  Milan = 'Milan',
+  Munich = 'Munich',
+  Nantes = 'Nantest',
+  Naples = 'Naples',
+  NorthSea = 'North Sea',
+  Nuremburg = 'Nuremburg',
+  Paris = 'Paris',
+  Plymouth = 'Plymouth',
+  Prague = 'Prague',
+  Rome = 'Rome',
+  Salonica = 'Salonica',
+  Santander = 'Santander',
+  Saragossa = 'Saragossa',
+  Sarajevo = 'Sarajevo',
+  Sofia = 'Sofia',
+  StJosephAndStMary = 'Hospital of St. Joseph and St. Mary',
+  Strasbourg = 'Strasbourg',
+  Swansea = 'Swansea',
+  Szeged = 'Szeged',
+  Toulouse = 'Toulouse',
+  TyrrhenianSea = 'Tyrrhenian Sea',
+  Valona = 'Valona',
+  Varna = 'Varna',
+  Venice = 'Venice',
+  Vienna = 'Vienna',
+  Zagreb = 'Zagreb',
+  Zurich = 'Zurich'
 }
