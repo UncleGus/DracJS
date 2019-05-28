@@ -8,194 +8,26 @@
 <body>
   <div class="container-fluid bg-3 text-center">
     <div class="row">
-      <h3>Dracula Details</h3>
-      <div class="col-sm-2" id="draculaDetails">
-        <p>
-          <LABEL for="draculaBlood">Blood: </LABEL>
-          <input type="number" id="draculaBlood">
-        </p>
-        <p>
-          <LABEL for="draculaLocation">Location: </LABEL>
-          <input type="text" id="draculaLocation" readonly>
-        </p>
-        <p>
-          <LABEL for="encounterCount">Encounters: </LABEL>
-          <input type="number" id="encounterCount" readonly>
-        </p>
+      <h3>Trail</h3>
+      <% include partials/trail %>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <h3>Dracula Details</h3>
+        <% include partials/dracula %>
+        <% include partials/track %>
+        <% include partials/time %>
       </div>
-      <div class="col-sm-1">
-        <p>Trail 1</p>
-        <p>
-          <input type="text" id="trail1" readonly>
-        </p>
-        <p>
-          <input type="text" id="encounter1" readonly>
-        </p>
-        <p>
-          <input type="text" id="power1" readonly>
-        </p>
-        <p>Catacomb 1</p>
-        <p>
-          <input type="text" id="catacombLocation1" readonly>
-        </p>
-        <p>
-          <input type="text" id="catacombEncounter1A" readonly>
-        </p>
-        <p>
-          <input type="text" id="catacombEncounter1B" readonly>
-        </p>
-      </div>
-      <div class="col-sm-1">
-        <p>Trail 2</p>
-        <p>
-          <input type="text" id="trail2" readonly>
-        </p>
-        <p>
-          <input type="text" id="encounter2" readonly>
-        </p>
-        <p>
-          <input type="text" id="power2" readonly>
-        </p>
-        <p>Catacomb 2</p>
-        <p>
-          <input type="text" id="catacombLocation2" readonly>
-        </p>
-        <p>
-          <input type="text" id="catacombEncounter2A" readonly>
-        </p>
-        <p>
-          <input type="text" id="catacombEncounter2B" readonly>
-        </p>
-      </div>
-      <div class="col-sm-1">
-        <p>Trail 3</p>
-        <p>
-          <input type="text" id="trail3" readonly>
-        </p>
-        <p>
-          <input type="text" id="encounter3" readonly>
-        </p>
-        <p>
-          <input type="text" id="power3" readonly>
-        </p>
-        <p>Catacomb 3</p>
-        <p>
-          <input type="text" id="catacombLocation3" readonly>
-        </p>
-        <p>
-          <input type="text" id="catacombEncounter3A" readonly>
-        </p>
-        <p>
-          <input type="text" id="catacombEncounter3B" readonly>
-        </p>
-      </div>
-      <div class="col-sm-1">
-        <p>Trail 4</p>
-        <p>
-          <input type="text" id="trail4" readonly>
-        </p>
-        <p>
-          <input type="text" id="encounter4" readonly>
-        </p>
-        <p>
-          <input type="text" id="power4" readonly>
-        </p>
-      </div>
-      <div class="col-sm-1">
-        <p>Trail 5</p>
-        <p>
-          <input type="text" id="trail5" readonly>
-        </p>
-        <p>
-          <input type="text" id="encounter5" readonly>
-        </p>
-        <p>
-          <input type="text" id="power5" readonly>
-        </p>
-      </div>
-      <div class="col-sm-1">
-        <p>Trail 6</p>
-        <p>
-          <input type="text" id="trail6" readonly>
-        </p>
-        <p>
-          <input type="text" id="encounter6" readonly>
-        </p>
-        <p>
-          <input type="text" id="power6" readonly>
-        </p>
-      </div>
-      <div class="col-sm-1">
-      </div>
-      <div class="col-sm-1">
-        <p>Time phase</p>
-        <input type="text" id="timePhase" readonly>
-      </div>
-      <div class="col-sm-2">
-        <p>
-          <LABEL for="vampireTrack">Vampires: </LABEL>
-          <input type="text" id="vampireTrack" readonly>
-        </p>
-        <p>
-          <LABEL for="resolveTrack">Resolve: </LABEL>
-          <input type="text" id="resolveTrack" readonly>
-        </p>
-        <p>
-          <LABEL for="catacombs">Catacombs: </LABEL>
-          <input type="text" id="catacombs" readonly>
-        </p>
+      <div class="col-md-6">
+        <h3>Catacombs</h3>
+        <% include partials/catacombs %>
       </div>
     </div>
     <div class="row">
+    </div>
+    <div class="row">
       <h3>Hunter Details</h3>
-      <div class="col-sm-3" id="godalmingDetails">
-        <p>Lord Godalming</p>
-        <p>
-          <LABEL for="godalmingHealth">Health: </LABEL>
-          <input type="number" id="godalmingHealth">
-        </p>
-        <p>
-          <LABEL for="godalmingLocation">Location: </LABEL>
-          <select class="locationSelector" id="godalmingLocation"></select>
-          <button id="godalmingSearch">Search</button>
-        </p>
-      </div>
-      <div class="col-sm-3" id="sewardDetails">
-        <p>Dr. Seward</p>
-        <p>
-          <LABEL for="sewardHealth">Health: </LABEL>
-          <input type="number" id="sewardHealth">
-        </p>
-        <p>
-          <LABEL for="sewardLocation">Location: </LABEL>
-          <select class="locationSelector" id="sewardLocation"></select>
-          <button id="sewardSearch">Search</button>
-        </p>
-      </div>
-      <div class="col-sm-3" id="vanHelsingDetails">
-        <p>Van Helsing</p>
-        <p>
-          <LABEL for="vanHelsingHealth">Health: </LABEL>
-          <input type="number" id="vanHelsingHealth">
-        </p>
-        <p>
-          <LABEL for="vanHelsingLocation">Location: </LABEL>
-          <select class="locationSelector" id="vanHelsingLocation"></select>
-          <button id="vanHelsingSearch">Search</button>
-        </p>
-      </div>
-      <div class="col-sm-3" id="minaDetails">
-        <p>Mina Harker</p>
-        <p>
-          <LABEL for="minaHealth">Health: </LABEL>
-          <input type="number" id="minaHealth">
-        </p>
-        <p>
-          <LABEL for="minaLocation">Location: </LABEL>
-          <select class="locationSelector" id="minaLocation"></select>
-          <button id="minaSearch">Search</button>
-        </p>
-      </div>
+      <% include partials/hunter %>
     </div>
     <div class="row">
       <div class="col-sm-12" id="log">

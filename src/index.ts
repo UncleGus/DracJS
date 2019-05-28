@@ -61,7 +61,6 @@ const catacombEncounterB = [
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
 const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
-const catacombs = document.getElementById('catacombs') as HTMLInputElement;
 const startButton = document.getElementById('startButton');
 const godalmingSearch = document.getElementById('godalmingSearch');
 const sewardSearch = document.getElementById('sewardSearch');
@@ -169,7 +168,6 @@ function updateAllFields() {
   timePhase.value = timePhaseDescriptions[game.timePhase] || '';
   vampireTrack.value = game.vampireTrack.toString();
   resolveTrack.value = game.resolveTrack.toString();
-  catacombs.value = game.catacombs.length.toString();
 
   for (let i = 0; i < 6; i++) {
     if (!game.trail[i]) {

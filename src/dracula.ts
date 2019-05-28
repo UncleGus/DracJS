@@ -268,7 +268,7 @@ export class Dracula {
       this.encounterHand.push(encounterPool.pop());
       drawCount++;
     }
-    return drawCount > 0 ? `Dracula drew ${drawCount} encounters` : '';
+    return drawCount > 0 ? `Dracula drew ${drawCount} encounter${drawCount > 1 ? 's': ''}` : '';
   }
 
   /**
@@ -283,7 +283,7 @@ export class Dracula {
       encounters.push(this.encounterHand.splice(choice, 1)[0]);
       discardCount++;
     }
-    return discardCount > 0 ? `Dracula discarded ${discardCount} encounters` : '';
+    return discardCount > 0 ? `Dracula discarded ${discardCount} encounter${discardCount > 1 ? 's': ''}` : '';
   }
 
   /**
@@ -306,13 +306,13 @@ export class Dracula {
       card.encounter = card.catacombEncounter;
       delete card.catacombEncounter;
       gameState.shuffleEncounters();
-      return 'Dracula kept the second encounter from the catacomb card';
+      return 'Dracula kept the one encounter from the catacomb card and discarded the other';
     } else {
       gameState.encounterPool.push(card.catacombEncounter);
       delete card.catacombEncounter;
       gameState.shuffleEncounters();
-      return 'Dracula kept the first encounter from the catacomb card';
-    }
+      return 'Dracula kept the one encounter from the catacomb card and discarded the other';
+    }    
   }
 
   /**
@@ -341,7 +341,10 @@ export class Dracula {
    */
   evaluateCatacombs(gameState: Game): string {
     // TODO: make logical decision
-    const catacombToDiscard = this.nextMove.catacombToDiscard || -1;
+    let catacombToDiscard: number;
+    if (this.nextMove) {
+      catacombToDiscard = this.nextMove.catacombToDiscard || -1;
+    }
     let logMessage = '';
     for (let i = gameState.catacombs.length -1; i >= 0 ; i--) {
       if (Math.random() < 0.2 || i == catacombToDiscard || (!gameState.catacombs[i].encounter && !gameState.catacombs[i].catacombEncounter)) {
