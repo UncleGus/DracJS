@@ -51,9 +51,8 @@ const godalmingSearch = document.getElementById('godalmingSearch');
 const sewardSearch = document.getElementById('sewardSearch');
 const vanHelsingSearch = document.getElementById('vanHelsingSearch');
 const minaSearch = document.getElementById('minaSearch');
-const timeKeepingButton = document.getElementById('timeKeepingButton');
-const draculaMovementButton = document.getElementById('draculaMovementButton');
-const draculaActionButton = document.getElementById('draculaActionButton');
+const draculaTurnButton = document.getElementById('draculaTurn');
+const debugGameStateButton = document.getElementById('debugGameState');
 
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
     
@@ -99,12 +98,6 @@ minaLocation.addEventListener('change', () => {
   game.setHunterLocation(game.mina, game.map.getLocationByName(minaLocation.value));
   updateAllFields();
 });
-startButton.addEventListener('click', () => {
-  startButton.parentNode.removeChild(startButton);
-  game.startGame();
-  timeKeepingButton.style.visibility = null;
-  updateAllFields();
-});
 godalmingSearch.addEventListener('click', () => {
   game.searchWithHunter(game.godalming);
   updateAllFields();
@@ -121,28 +114,22 @@ minaSearch.addEventListener('click', () => {
   game.searchWithHunter(game.mina);
   updateAllFields();
 });
-timeKeepingButton.addEventListener('click', () => {
+startButton.addEventListener('click', () => {
+  startButton.parentNode.removeChild(startButton);
+  game.startGame();
+  draculaTurnButton.style.visibility = null;
+  updateAllFields();
+});
+draculaTurnButton.addEventListener('click', () => {
   game.performTimeKeepingPhase();
   updateAllFields();
-  // timeKeepingButton.style.visibility = 'hidden';
-  // draculaMovementButton.style.visibility = null;
-  updateAllFields();
   game.performDraculaMovementPhase();
   updateAllFields();
   game.performDraculaActionPhase();
   updateAllFields();
 });
-draculaMovementButton.addEventListener('click', () => {
-  game.performDraculaMovementPhase();
-  draculaMovementButton.style.visibility = 'hidden';
-  draculaActionButton.style.visibility = null;
-  updateAllFields();
-});
-draculaActionButton.addEventListener('click', () => {
-  game.performDraculaActionPhase();
-  draculaActionButton.style.visibility = 'hidden';
-  timeKeepingButton.style.visibility = null;
-  updateAllFields();
+debugGameStateButton.addEventListener('click', () => {
+  console.log(game);
 });
 
 // set fields to game start state
@@ -166,37 +153,39 @@ function updateAllFields() {
   catacombs.value = game.catacombs.length.toString();
 
   for (let i = 0; i < 6; i++) {
-    if (!game.dracula.trail[i]) {
+    if (!game.trail[i]) {
       // no trail card, blank all fields
       blank(trailLocation[i]);
       blank(trailEncounter[i]);
       blank(trailPower[i]);
     } else {
       // if there is a location card here, show it
-      if (game.dracula.trail[i].location) {
-        showLocation(i, game.dracula.trail[i]);
+      if (game.trail[i].location) {
+        showLocation(i, game.trail[i]);
       } else {
         blank(trailLocation[i]);
       }
       // if there is an encounter here, show it
-      if (game.dracula.trail[i].encounter) {
-        showEncounter(i, game.dracula.trail[i]);
+      if (game.trail[i].encounter) {
+        showEncounter(i, game.trail[i]);
       } else {
         blank(trailEncounter[i]);
       }
       // Hide complicates what to show
-      if (game.dracula.trail[i].power) {
-        // if this is a combined move with Hide, show the other power on its own
-        if (game.dracula.trail[i].power.name.match(/and Hide/)) {
-          trailLocation[i].value = 'Land';
-          trailPower[i].value = game.dracula.trail[i].power.name.slice(0, game.dracula.trail[i].power.name.indexOf(' and Hide'));
-          // if this is Hide on its own, don't show the power
-        } else if (game.dracula.trail[i].power.name == PowerName.hide) {
-          trailLocation[i].value = 'Land';
-          blank(trailPower[i]);
-          // all other powers are displayed as usual
+      if (game.trail[i].power) {
+        if (game.trail[i].power.name.match(/Hide/)) {
+          // if the card is revealed, blank the location and show the power as normal          
+          if (game.trail[i].revealed) {
+            blank(trailLocation[i]);
+            trailPower[i].value = game.trail[i].power.name;
+          // otherwise show the combined power name, if applicable, and a secret "Land" card
+          } else {
+            trailLocation[i].value = 'Land';
+            const comboIndex = game.trail[i].power.name.indexOf(' and Hide');
+            trailPower[i].value = comboIndex > -1 ? game.trail[i].power.name.slice(0, game.trail[i].power.name.indexOf(' and Hide')) : '';
+          }
         } else {
-          trailPower[i].value = game.dracula.trail[i].power.name;
+          trailPower[i].value = game.trail[i].power.name;
         }
       } else {
         blank(trailPower[i]);
