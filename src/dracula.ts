@@ -3,6 +3,7 @@ import { Game } from "./game";
 import { Encounter, EncounterName } from "./encounter";
 import * as _ from 'lodash';
 import { Event } from "./event";
+import { Hunter } from "./hunter";
 
 export class Dracula {
   blood: number;
@@ -235,6 +236,33 @@ export class Dracula {
    */
   die(): string {
     return `Dracula was dealt a mortal blow\n${this.setBlood(Math.floor((this.blood - 1) / 5) * 5)}`;
+  }
+
+  /**
+   * Chooses the order in which Dracula would like the Encounters resolved
+   * @param encounters The list of Encounters to be resolved
+   */
+  chooseEncounterResolutionOrder(encounters: Encounter[]): string {
+    // TODO: make logical decision
+    if (encounters.length == 1) {
+      return `Resolve ${encounters[0].name}`;
+    }
+    const encountersCopy: Encounter[] = [];
+    while (encounters.length > 0) {
+      const choice = Math.floor(Math.random() * encounters.length);
+      encountersCopy.push(encounters.splice(choice, 1)[0]);
+    }
+    return 'Dracula chose this order for the encounters to be resolved: ' + encountersCopy.map(encounter => encounter.name).join(', ');
+  }
+
+  decideBatsDestination(hunter: Hunter, gameState: Game): Location {
+    // TODO: make logical decision
+    let possibleDestinations: Location[] = [hunter.currentLocation, ...hunter.currentLocation.roadConnections];
+    let nextLayerDestination: Location[] = [];
+    possibleDestinations.forEach(location => nextLayerDestination = nextLayerDestination.concat(location.roadConnections));
+    possibleDestinations = _.uniq(possibleDestinations.concat(nextLayerDestination));
+    const choice = Math.floor(Math.random() * possibleDestinations.length);
+    return possibleDestinations[choice];
   }
 
   /**

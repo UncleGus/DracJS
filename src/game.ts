@@ -1,7 +1,7 @@
-import { GameMap, LocationType, Location, LocationName } from "./map";
+import { GameMap, LocationType, Location, LocationName, LocationDomain } from "./map";
 import { Dracula, TrailCard, PowerName } from "./dracula";
 import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
-import { Encounter, initialiseEncounterPool } from "./encounter";
+import { Encounter, initialiseEncounterPool, EncounterName } from "./encounter";
 import { Item, initialiseItemDeck } from "./item";
 import { Event, initialiseEventDeck, EventType, EventName } from "./event";
 
@@ -27,6 +27,9 @@ export class Game {
   resolveTrack: number;
   trail: TrailCard[];
   catacombs: TrailCard[];
+  selectedTrailEncounter: number;
+  selectedCatacombEncounterA: number;
+  selectedCatacombEncounterB: number;
 
   constructor() {
     // construct game components
@@ -90,9 +93,9 @@ export class Game {
    * @param hunter the Hunter searching
    */
   searchWithHunter(hunter: Hunter) {
-    // TODO: resolve encounters, attack Dracula
-    // TODO: resolve catacombs as well
+    // TODO: attack Dracula
     let foundSomething = false;
+    const encountersToResolve: Encounter[] = [];
     if (hunter.currentLocation == this.dracula.currentLocation) {
       foundSomething = true;
       this.dracula.revealed = true;
@@ -117,17 +120,15 @@ export class Game {
           if (this.trail[hideIndex].encounter) {
             this.trail[hideIndex].encounter.revealed = true;
             this.log(`${hunter.name} has encountered ${this.trail[hideIndex].encounter.name} at ${hunter.currentLocation.name}`);
-            this.encounterPool.push(this.trail[hideIndex].encounter);
-            delete this.trail[hideIndex].encounter;
-            this.log(this.shuffleEncounters());
+            this.trail[hideIndex].encounter.revealed = true;
+            encountersToResolve.push(this.trail[hideIndex].encounter);
           }
         }
         if (trailCard.encounter) {
           trailCard.encounter.revealed = true;
           this.log(`${hunter.name} has encountered ${trailCard.encounter.name} at ${hunter.currentLocation.name}`);
-          this.encounterPool.push(trailCard.encounter);
-          delete trailCard.encounter;
-          this.log(this.shuffleEncounters());
+          trailCard.encounter.revealed = true;
+          encountersToResolve.push(trailCard.encounter);
         }
       }
     });
@@ -140,22 +141,21 @@ export class Game {
         if (catacomb.encounter) {
           catacomb.encounter.revealed = true;
           this.log(`${hunter.name} has encountered ${catacomb.encounter.name} at ${hunter.currentLocation.name}`);
-          this.encounterPool.push(catacomb.encounter);
-          delete catacomb.encounter;
-          this.log(this.shuffleEncounters());
+          encountersToResolve.push(catacomb.encounter);
         }
         if (catacomb.catacombEncounter) {
           catacomb.catacombEncounter.revealed = true;
           this.log(`${hunter.name} has encountered ${catacomb.catacombEncounter.name} at ${hunter.currentLocation.name}`);
-          this.encounterPool.push(catacomb.catacombEncounter);
-          delete catacomb.catacombEncounter;
-          this.log(this.shuffleEncounters());
+          encountersToResolve.push(catacomb.catacombEncounter);
         }
       }
       break;
     }
     if (!foundSomething) {
       this.log(`${hunter.name} found nothing at ${hunter.currentLocation.name}`);
+    }
+    if (encountersToResolve.length > 0) {
+      this.log(this.dracula.chooseEncounterResolutionOrder(encountersToResolve));
     }
   }
 
@@ -546,6 +546,173 @@ export class Game {
       this.eventDiscard.push(eventCardPlayed);
     }
     this.log(`${hunter.name} played event ${eventName}${locationName ? ` on ${locationName}` : ''}`);
+  }
+
+  /**
+   * Resolves the selected Encounter
+   * @param encounterName The name of the Encounter being resolved
+   * @param hunter The Hunter involved in the Encounter
+   */
+  resolveEncounter(encounterName: string, hunter: Hunter) {
+    if (!encounterName || encounterName == 'Encounter') {
+      return;
+    }
+    let currentEncounter: Encounter;
+    if (this.selectedTrailEncounter > -1) {
+      currentEncounter = this.trail[this.selectedTrailEncounter].encounter;
+      delete this.trail[this.selectedTrailEncounter].encounter;
+    }
+    if (this.selectedCatacombEncounterA > -1) {
+      currentEncounter = this.catacombs[this.selectedCatacombEncounterA].encounter;
+      delete this.catacombs[this.selectedCatacombEncounterA].encounter;
+    }
+    if (this.selectedCatacombEncounterB > -1) {
+      currentEncounter = this.catacombs[this.selectedCatacombEncounterB].encounter;
+      delete this.catacombs[this.selectedCatacombEncounterB].encounter;
+    }
+
+    switch (encounterName) {
+      case EncounterName.Ambush:
+        this.dracula.encounterHandSize += 1;
+        this.log(this.dracula.drawUpEncounters(this.encounterPool));
+        this.dracula.encounterHandSize -= 1;
+        this.log(this.dracula.discardDownEncounters(this.encounterPool));
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Assassin:
+        // TODO: resolve Assassin
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Bats:
+        hunter.encounterTiles.push(currentEncounter)
+        this.log(`Bats has ended ${hunter.name}'s turn`);
+        break;
+      case EncounterName.DesecratedSoil:
+        this.log('Draw an event card, if it is for Dracula, give it to him, otherwise discard it');
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Fog:
+        hunter.encounterTiles.push(currentEncounter)
+        this.log(`Fog has ended ${hunter.name}'s turn`);
+        break;
+      case EncounterName.MinionWithKnife:
+      case EncounterName.MinionWithKnifeAndPistol:
+      case EncounterName.MinionWithKnifeAndRifle:
+        // TODO: resolve Minion
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Hoax:
+        if (hunter.currentLocation.domain == LocationDomain.west) {
+          this.log(`${hunter.name} must discard all events`);
+        } else {
+          this.log(`${hunter.name} must discard one event`);
+        }
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Lightning:
+        this.log(`${hunter} must show Dracula a Crucifix or Heavenly Host or lost 2 health and discard an item`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Peasants:
+        if (hunter.currentLocation.domain == LocationDomain.west) {
+          this.log(`${hunter.name} must discard one item and draw a new one`);
+        } else {
+          this.log(`${hunter.name} must discard all items and draw new ones`);
+        }
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Plague:
+        this.log(`${hunter.name} loses 2 health`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Rats:
+        // TODO: integrate with Dracula's knowledge of Hunter Items
+        this.log(`${hunter.name} must show Dracula a Dogs item or roll four dice, losing one health for each 4-6 rolled`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Saboteur:
+        // TODO: integrate with Dracula's knowledge of Hunter Items
+        this.log(`${hunter.name} must show Dracula a Dogs item or discard one item or event and end the turn`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Spy:
+        // TODO: integrate with Dracula's knowledge of Hunter's next move
+        this.log(`${hunter.name} must show Dracula all items and events and declare next move`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.Thief:
+        // TODO: integrate with Dracula's knowledge of Hunter Items
+        this.log(`${hunter.name} must show Dracula a Dogs item or discard one random item or event of Dracula's choice`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+      case EncounterName.NewVampire:
+        // TODO: integrate with Dracula's knowledge of Hunter Items
+        if (this.timePhase < 3) {
+          this.log(`${hunter.name} found a vampire during the day and killed it`);
+        } else {
+          this.log(`${hunter.name} has encountered a vampire at night and must roll a die`);
+          this.log(`On a roll of 1-3, ${hunter.name} is bitten, unless they show Dracula a Heavenly Host or Crucifix item`);
+          this.log(`On a roll of 4-6, the vampire escapes unless ${hunter.name} discards a Knife or a Stake item`);
+          this.log(`If the vampire escapes, leave it here and ${hunter.name}'s turn ends, otherwise discard it`);
+        }
+        break;
+      case EncounterName.Wolves:
+        this.log(`${hunter.name} must show Dracula a Pistol and/or a Rifle item, or lose a health for each item type not shown`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
+    }
+  }
+
+  /**
+   * discards the selected Encounter
+   * @param encounterName The name of the Encounter being resolved
+   */
+  discardEncounter(encounterName: string) {
+    if (!encounterName || encounterName == 'Encounter') {
+      return;
+    }
+    let currentEncounter: Encounter;
+    if (this.selectedTrailEncounter > -1) {
+      currentEncounter = this.trail[this.selectedTrailEncounter].encounter;
+      delete this.trail[this.selectedTrailEncounter].encounter;
+    }
+    if (this.selectedCatacombEncounterA > -1) {
+      currentEncounter = this.catacombs[this.selectedCatacombEncounterA].encounter;
+      delete this.catacombs[this.selectedCatacombEncounterA].encounter;
+    }
+    if (this.selectedCatacombEncounterB > -1) {
+      currentEncounter = this.catacombs[this.selectedCatacombEncounterB].encounter;
+      delete this.catacombs[this.selectedCatacombEncounterB].encounter;
+    }
+    this.encounterPool.push(currentEncounter);
+    this.log(this.shuffleEncounters());
+    this.log(`${encounterName} discarded`);
   }
 
   /**

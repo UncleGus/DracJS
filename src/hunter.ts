@@ -1,6 +1,7 @@
 import { Location } from "./map";
 import { Item } from "./item";
 import { Event } from "./event";
+import { Encounter } from "./encounter";
 
 export class Hunter {
   name: string;
@@ -9,11 +10,13 @@ export class Hunter {
   currentLocation: Location;
   items: Item[];
   events: Event[];
+  encounterTiles: Encounter[];
 
   constructor(newName: string) {
     this.name = newName;
     this.items = [];
     this.events = [];
+    this.encounterTiles = [];
   }
 
   /**

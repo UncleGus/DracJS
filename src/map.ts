@@ -918,7 +918,7 @@ export enum LocationName {
   MediterraneanSea = 'Mediterranean Sea',
   Milan = 'Milan',
   Munich = 'Munich',
-  Nantes = 'Nantest',
+  Nantes = 'Nantes',
   Naples = 'Naples',
   NorthSea = 'North Sea',
   Nuremburg = 'Nuremburg',

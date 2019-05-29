@@ -18,7 +18,7 @@ export enum ItemName {
   Pistol = 'Pistol',
   Rifle = 'Rifle',
   SacredBullets = 'Sacred Bullets',
-  Stake = 'Stakes',
+  Stake = 'Stake',
   Punch = 'Punch',
   Dodge = 'Dodge',
   Escape = 'Escape'
