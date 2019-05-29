@@ -165,7 +165,10 @@ export class GameMap {
       {
         name: LocationName.CastleDracula,
         domain: LocationDomain.east,
-        roadConnections: [LocationName.Klausenburg, LocationName.Galatz],
+        roadConnections_: [LocationName.Klausenburg, LocationName.Galatz],
+        seaConnections_: [],
+        trainConnections_: [],
+        roadConnections: [],
         seaConnections: [],
         trainConnections: [],
         type: LocationType.castle
@@ -310,7 +313,10 @@ export class GameMap {
       {
         name: LocationName.StJosephAndStMary,
         domain: LocationDomain.east,
-        roadConnections: [LocationName.Zagreb, LocationName.Szeged, LocationName.Belgrade, LocationName.Sarajevo],
+        roadConnections_: [LocationName.Zagreb, LocationName.Szeged, LocationName.Belgrade, LocationName.Sarajevo],
+        seaConnections_: [],
+        trainConnections_: [],
+        roadConnections: [],
         seaConnections: [],
         trainConnections: [],
         type: LocationType.hospital
@@ -482,52 +488,52 @@ export class GameMap {
       {
         ...sea,
         name: LocationName.AtlanticOcean,
-        seaConnections: [LocationName.NorthSea, LocationName.IrishSea, LocationName.EnglishChannel, LocationName.BayOfBiscay, LocationName.MediterraneanSea, LocationName.Galway, LocationName.Lisbon, LocationName.Cadiz]
+        seaConnections_: [LocationName.NorthSea, LocationName.IrishSea, LocationName.EnglishChannel, LocationName.BayOfBiscay, LocationName.MediterraneanSea, LocationName.Galway, LocationName.Lisbon, LocationName.Cadiz]
       },
       {
         ...sea,
         name: LocationName.IrishSea,
-        seaConnections: [LocationName.AtlanticOcean, LocationName.Dublin, LocationName.Liverpool, LocationName.Swansea]
+        seaConnections_: [LocationName.AtlanticOcean, LocationName.Dublin, LocationName.Liverpool, LocationName.Swansea]
       },
       {
         ...sea,
         name: LocationName.EnglishChannel,
-        seaConnections: [LocationName.AtlanticOcean, LocationName.NorthSea, LocationName.Plymouth, LocationName.London, LocationName.LeHavre]
+        seaConnections_: [LocationName.AtlanticOcean, LocationName.NorthSea, LocationName.Plymouth, LocationName.London, LocationName.LeHavre]
       },
       {
         ...sea,
         name: LocationName.NorthSea,
-        seaConnections: [LocationName.AtlanticOcean, LocationName.EnglishChannel, LocationName.Edinburgh, LocationName.Amsterdam, LocationName.Hamburg]
+        seaConnections_: [LocationName.AtlanticOcean, LocationName.EnglishChannel, LocationName.Edinburgh, LocationName.Amsterdam, LocationName.Hamburg]
       },
       {
         ...sea,
         name: LocationName.BayOfBiscay,
-        seaConnections: [LocationName.AtlanticOcean, LocationName.Nantes, LocationName.Bordeaux, LocationName.Santander]
+        seaConnections_: [LocationName.AtlanticOcean, LocationName.Nantes, LocationName.Bordeaux, LocationName.Santander]
       },
       {
         ...sea,
         name: LocationName.MediterraneanSea,
-        seaConnections: [LocationName.AtlanticOcean, LocationName.TyrrhenianSea, LocationName.Alicante, LocationName.Barcelona, LocationName.Marseilles, LocationName.Cagliari]
+        seaConnections_: [LocationName.AtlanticOcean, LocationName.TyrrhenianSea, LocationName.Alicante, LocationName.Barcelona, LocationName.Marseilles, LocationName.Cagliari]
       },
       {
         ...sea,
         name: LocationName.TyrrhenianSea,
-        seaConnections: [LocationName.MediterraneanSea, LocationName.IonianSea, LocationName.Cagliari, LocationName.Genoa, LocationName.Rome, LocationName.Naples]
+        seaConnections_: [LocationName.MediterraneanSea, LocationName.IonianSea, LocationName.Cagliari, LocationName.Genoa, LocationName.Rome, LocationName.Naples]
       },
       {
         ...sea,
         name: LocationName.AdriaticSea,
-        seaConnections: [LocationName.IonianSea, LocationName.Bari, LocationName.Venice]
+        seaConnections_: [LocationName.IonianSea, LocationName.Bari, LocationName.Venice]
       },
       {
         ...sea,
         name: LocationName.IonianSea,
-        seaConnections: [LocationName.AdriaticSea, LocationName.BlackSea, LocationName.Valona, LocationName.Athens, LocationName.Salonica, LocationName.TyrrhenianSea]
+        seaConnections_: [LocationName.AdriaticSea, LocationName.BlackSea, LocationName.Valona, LocationName.Athens, LocationName.Salonica, LocationName.TyrrhenianSea]
       },
       {
         ...sea,
         name: LocationName.BlackSea,
-        seaConnections: [LocationName.IonianSea, LocationName.Varna, LocationName.Constanta]
+        seaConnections_: [LocationName.IonianSea, LocationName.Varna, LocationName.Constanta]
       },
     ];
     this.locations.sort((first, second) => {
@@ -585,23 +591,23 @@ export class GameMap {
         problems.push(`${location.name} has type ${location.type} and domain ${location.domain}`);
         return;
       }
-      if (!location.roadConnections) {
+      if (!location.roadConnections_) {
         problems.push(`${location.name} is missing road connection definition`);
         return;
       }
-      if (!location.trainConnections) {
+      if (!location.trainConnections_) {
         problems.push(`${location.name} is missing train connection definition`);
         return;
       }
-      if (!location.seaConnections) {
+      if (!location.seaConnections_) {
         problems.push(`${location.name} is missing sea connection definition`);
         return;
       }
-      if (location.roadConnections.length + location.trainConnections.length + location.seaConnections.length === 0) {
+      if (location.roadConnections_.length + location.trainConnections_.length + location.seaConnections_.length === 0) {
         problems.push(`${location.name} has no connections`);
         return;
       }
-      location.roadConnections.forEach(road => {
+      location.roadConnections_.forEach(road => {
         const destination = this.getLocationByName(road);
         if (!destination) {
           problems.push(`${location.name} has a road going to missing location ${road}`);
@@ -609,7 +615,7 @@ export class GameMap {
           if (destination.type === LocationType.sea) {
             problems.push(`${location.name} has a road going to sea location ${road}`);
           }
-          if (!destination.roadConnections.find(loc => loc === location.name)) {
+          if (!destination.roadConnections_.find(loc => loc === location.name)) {
             problems.push(`${location.name} has a road to ${road} with no road back`);
           }
           if (location.type === LocationType.sea) {
@@ -618,7 +624,7 @@ export class GameMap {
         }
       });
 
-      location.trainConnections.forEach(train => {
+      location.trainConnections_.forEach(train => {
         const destination = this.getLocationByName(train);
         if (!destination) {
           problems.push(`${location.name} has a train going to missing location ${train}`);
@@ -626,7 +632,7 @@ export class GameMap {
           if (destination.type === LocationType.sea) {
             problems.push(`${location.name} has a train going to sea location ${train}`);
           }
-          if (!destination.trainConnections.find(loc => loc === location.name)) {
+          if (!destination.trainConnections_.find(loc => loc === location.name)) {
             problems.push(`${location.name} has a train to ${train} with no train back`);
           }
           if (location.type === LocationType.sea) {
@@ -635,12 +641,12 @@ export class GameMap {
         }
       });
 
-      location.seaConnections.forEach(sea => {
+      location.seaConnections_.forEach(sea => {
         const destination = this.getLocationByName(sea);
         if (!destination) {
           problems.push(`${location.name} has a sea connection going to missing location ${sea}`);
         } else {
-          if (!destination.seaConnections.find(loc => loc === location.name)) {
+          if (!destination.seaConnections_.find(loc => loc === location.name)) {
             problems.push(`${location.name} has a sea connection to ${sea} with no sea connection back`);
           }
           if (location.type !== LocationType.sea && destination.type !== LocationType.sea) {
@@ -649,6 +655,8 @@ export class GameMap {
         }
       });
     });
+    console.log('Building network');
+    this.createNetwork();
     let proceed = true;
     for (let i = 0; i < this.locations.length - 1; i++) {
       if (!proceed) break;
@@ -672,6 +680,20 @@ export class GameMap {
       return `Map data invalid. ${problems.length} problems:\n${problems.join('\n')}`;
     }
     return 'All map data valid';
+  }
+
+  /**
+   * Creates connections to actual Locations based on the names in the temporary string-based arrays
+   */
+  createNetwork() {
+    this.locations.forEach(location => {
+      location.roadConnections = location.roadConnections_.map(road => this.getLocationByName(road));
+      location.seaConnections = location.seaConnections_.map(sea => this.getLocationByName(sea));
+      location.trainConnections = location.trainConnections_.map(train => this.getLocationByName(train));
+      delete location.roadConnections_;
+      delete location.seaConnections_;
+      delete location.trainConnections_;
+    });
   }
 
   /**
@@ -706,16 +728,13 @@ export class GameMap {
     let nextLayerOfConnectedLocations: Location[] = [];
     locationsAtCurrentDistance.forEach(location => {
       if (methods.find(method => method == 'road')) {
-        const roadConnections = location.roadConnections.map(road => this.getLocationByName(road));
-        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, roadConnections);
+        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.roadConnections);
       }
       if (methods.find(method => method == 'train')) {
-        const trainConnections = location.trainConnections.map(train => this.getLocationByName(train));
-        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, trainConnections);
+        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.trainConnections);
       }
       if (methods.find(method => method == 'sea')) {
-        const seaConnections = location.seaConnections.map(sea => this.getLocationByName(sea));
-        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, seaConnections);
+        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.seaConnections);
       }
     });
     const newLocationsToExamine = _.difference(nextLayerOfConnectedLocations, examinedLocations);
@@ -730,9 +749,12 @@ export interface Location {
   name: string;
   type: LocationType;
   domain: LocationDomain;
-  roadConnections: string[];
-  trainConnections: string[];
-  seaConnections: string[];
+  roadConnections_?: string[];
+  trainConnections_?: string[];
+  seaConnections_?: string[];
+  roadConnections: Location[];
+  trainConnections: Location[];
+  seaConnections: Location[];
 }
 
 export enum LocationType {
@@ -757,6 +779,9 @@ class GenericLocationBuilder {
       name,
       type: null,
       domain: null,
+      roadConnections_: [],
+      trainConnections_: [],
+      seaConnections_: [],
       roadConnections: [],
       trainConnections: [],
       seaConnections: []
@@ -768,7 +793,7 @@ class GenericLocationBuilder {
    * @param roadConnection The name of the Location to add
    */
   byRoad(roadConnection: string): any {
-    this.location.roadConnections.push(roadConnection);
+    this.location.roadConnections_.push(roadConnection);
     return this;
   }
 
@@ -777,7 +802,7 @@ class GenericLocationBuilder {
    * @param seaConnection The name of the Location to add
    */
   bySea(seaConnection: string): any {
-    this.location.seaConnections.push(seaConnection)
+    this.location.seaConnections_.push(seaConnection)
     return this;
   }
 
@@ -786,7 +811,7 @@ class GenericLocationBuilder {
    * @param trainConnection The name of the Location to add
    */
   byTrain(trainConnection: string): any {
-    this.location.trainConnections.push(trainConnection)
+    this.location.trainConnections_.push(trainConnection)
     return this;
   }
 
@@ -837,6 +862,9 @@ class LargeCityEast extends GenericLocationBuilder {
 const sea: Location = {
   name: null,
   domain: LocationDomain.sea,
+  roadConnections_: [],
+  trainConnections_: [],
+  seaConnections_: [],
   roadConnections: [],
   trainConnections: [],
   seaConnections: [],

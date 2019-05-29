@@ -9,7 +9,9 @@ export class Game {
   map: GameMap;
   encounterPool: Encounter[];
   itemDeck: Item[];
+  itemDiscard: Item[];
   eventDeck: Event[];
+  eventDiscard: Event[];
   dracula: Dracula;
   godalming: Godalming;
   seward: Seward;
@@ -27,7 +29,9 @@ export class Game {
     this.map = new GameMap();
     this.encounterPool = initialiseEncounterPool();
     this.itemDeck = initialiseItemDeck();
+    this.itemDiscard = [];
     this.eventDeck = initialiseEventDeck();
+    this.eventDiscard = [];
     this.catacombs = [];
     this.dracula = new Dracula();
     this.godalming = new Godalming;
@@ -59,6 +63,7 @@ export class Game {
     this.log(this.map.verifyMapData());
     this.log(this.shuffleEncounters());
     this.log(this.dracula.drawUpEncounters(this.encounterPool));
+    this.log(this.shuffleEvents());
     this.timePhase = -1;
     this.vampireTrack = 0;
     this.resolveTrack = 0;
@@ -153,10 +158,10 @@ export class Game {
   /**
    * Sets a Hunter's currentLocation
    * @param hunter The Hunter to move
-   * @param location The Location to which to move the Hunter
+   * @param locationName The name of the Location to which to move the Hunter
    */
-  setHunterLocation(hunter: Hunter, location: Location) {
-    this.log(hunter.setLocation(location));
+  setHunterLocation(hunter: Hunter, locationName: string) {
+    this.log(hunter.setLocation(this.map.getLocationByName(locationName)));
   }
 
   /**
@@ -369,7 +374,7 @@ export class Game {
   }
 
   /**
-   * Shuffles the encounters in the deck
+   * Shuffles the Encounters in the deck
    */
   shuffleEncounters(): string {
     const shuffledEncounters = [];
@@ -380,6 +385,94 @@ export class Game {
     }
     this.encounterPool = shuffledEncounters;
     return `Shuffled ${this.encounterPool.length} encounters in encounter pool`;
+  }
+
+  /**
+   * Shuffles the Events in the deck
+   */
+  shuffleEvents(): string {
+    const shuffledEvents = [];
+    while (this.eventDeck.length > 0) {
+      const randomIndex = Math.floor(Math.random()*this.eventDeck.length);
+      shuffledEvents.push(this.eventDeck.splice(randomIndex, 1)[0]);
+    }
+    this.eventDeck = shuffledEvents;
+    return `Shuffled ${this.eventDeck.length} events in event deck`;
+  }
+
+  /**
+   * Used when the Hunters draw an Event card and it is for Dracula
+   */
+  giveEventToDracula() {
+    let draculaEventIndex = 0;
+    for (draculaEventIndex; draculaEventIndex < this.eventDeck.length; draculaEventIndex++) {
+      if (this.eventDeck[draculaEventIndex].draculaCard) {
+        break;
+      }
+    }
+    this.dracula.eventHand.push(this.eventDeck.splice(draculaEventIndex, 1)[0]);
+    this.log('Event card given to Dracula');
+    this.log(this.dracula.discardDownEvents(this.eventDiscard));
+  }
+
+  /**
+   * Takes an Item of the given name from the Item deck and gives it to the given Hunter
+   * @param itemName The name of the Item
+   * @param hunter The Hunter to whom to give the Item
+   */
+  giveItemToHunter(itemName: string, hunter: Hunter) {
+    let itemIndex = 0;
+    for (itemIndex; itemIndex < this.itemDeck.length; itemIndex++) {
+      if (this.itemDeck[itemIndex].name == itemName) {
+        break;
+      }
+    }
+    hunter.items.push(this.itemDeck.splice(itemIndex, 1)[0]);
+  }
+
+  /**
+   * Takes an Event of the given name from the Event deck and gives it to the given Hunter
+   * @param eventName The name of the Event
+   * @param hunter The Hunter to whom to give the Event
+   */
+  giveEventToHunter(eventName: string, hunter: Hunter) {
+    let eventIndex = 0;
+    for (eventIndex; eventIndex < this.eventDeck.length; eventIndex++) {
+      if (this.eventDeck[eventIndex].name == eventName) {
+        break;
+      }
+    }
+    hunter.events.push(this.eventDeck.splice(eventIndex, 1)[0]);
+  }
+
+  /**
+   * Removes an Item of the given name from the given Hunter
+   * @param itemName The name of the Item
+   * @param hunter The Hunter from whom to remove the Item
+   */
+  discardHunterItem(itemName: string, hunter: Hunter) {
+    let itemIndex = 0;
+    for (itemIndex; itemIndex < hunter.items.length; itemIndex++) {
+      if (hunter.items[itemIndex].name == itemName) {
+        break;
+      }
+    }
+    this.itemDiscard.push(hunter.items.splice(itemIndex, 1)[0]);
+  }
+
+    /**
+   * Removes an Event of the given name from the given Hunter
+   * @param eventName The name of the Event
+   * @param hunter The Hunter from whom to remove the Event
+   */
+  discardHunterEvent(eventName: string, hunter: Hunter) {
+    let eventIndex = 0;
+    for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
+      if (hunter.events[eventIndex].name == eventName) {
+        break;
+      }
+    }
+    this.eventDiscard.push(hunter.events.splice(eventIndex, 1)[0]);
   }
 
   /**

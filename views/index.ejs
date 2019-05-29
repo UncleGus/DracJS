@@ -26,20 +26,28 @@
     <div class="row">
     </div>
     <div class="row">
-      <h3 style="text-align:center">Hunter Details</h3>
-      <% include partials/hunter %>
+      <div class="col-md-8">
+        <h3 style="text-align:center">Hunter Details</h3>
+        <% include partials/hunter %>
+      </div>
+      <div class="col-md-4">
+        <h3 style="text-align:center">Discard Piles</h3>
+        <% include partials/discards %>
+      </div>
+    </div>
+    <div class="row">
       <% include partials/actions %>
+    </div>
+    <div class="row">
+      <button id="startButton">Start</button>
+      <button id="draculaTurn" style="visibility: hidden">Perform Dracula's move</button>
+      <button id="debugGameState">Debug game state</button>
     </div>
     <div class="row">
       <div class="col-sm-12" id="log">
         <textarea id="logBox" style="height: 0px; width: 100%; min-height: 295px; max-height: 370px;"
           readonly></textarea>
       </div>
-    </div>
-    <div class="row">
-      <button id="startButton">Start</button>
-      <button id="draculaTurn" style="visibility: hidden">Perform Dracula's move</button>
-      <button id="debugGameState">Debug game state</button>
     </div>
   </div>
 </body>

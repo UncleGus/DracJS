@@ -11,22 +11,38 @@ const logBox = document.getElementById('logBox') as HTMLInputElement;
 const draculaBlood = document.getElementById('draculaBlood') as HTMLInputElement;
 const draculaLocation = document.getElementById('draculaLocation') as HTMLInputElement;
 const encounterCount = document.getElementById('encounterCount') as HTMLInputElement;
+const eventCount = document.getElementById('eventCount') as HTMLInputElement;
+
 const godalmingHealth = document.getElementById('godalmingHealth') as HTMLInputElement;
 const godalmingLocation = document.getElementById('godalmingLocation') as HTMLInputElement;
 const godalmingItems = document.getElementById('godalmingItems') as HTMLSelectElement;
+const godalmingEvents = document.getElementById('godalmingEvents') as HTMLSelectElement;
+
 const sewardHealth = document.getElementById('sewardHealth') as HTMLInputElement;
 const sewardLocation = document.getElementById('sewardLocation') as HTMLInputElement;
 const sewardItems = document.getElementById('sewardItems') as HTMLSelectElement;
+const sewardEvents = document.getElementById('sewardEvents') as HTMLSelectElement;
+
 const vanHelsingHealth = document.getElementById('vanHelsingHealth') as HTMLInputElement;
 const vanHelsingLocation = document.getElementById('vanHelsingLocation') as HTMLInputElement;
 const vanHelsingItems = document.getElementById('vanHelsingItems') as HTMLSelectElement;
+const vanHelsingEvents = document.getElementById('vanHelsingEvents') as HTMLSelectElement;
+
 const minaHealth = document.getElementById('minaHealth') as HTMLInputElement;
 const minaLocation = document.getElementById('minaLocation') as HTMLInputElement;
 const minaItems = document.getElementById('minaItems') as HTMLSelectElement;
+const minaEvents = document.getElementById('minaEvents') as HTMLSelectElement;
+
 const actingHunter = document.getElementById('actingHunter') as HTMLSelectElement;
 const moveMethod = document.getElementById('moveMethod') as HTMLSelectElement;
 const destination = document.getElementById('destination') as HTMLSelectElement;
 const travelButton = document.getElementById('travel');
+const draculaEvent = document.getElementById('draculaEvent');
+const eventDeck = document.getElementById('eventDeck') as HTMLSelectElement;
+const drawEvent = document.getElementById('hunterEvent');
+const itemDeck = document.getElementById('itemDeck') as HTMLSelectElement;
+const drawItem = document.getElementById('drawItem');
+
 const trailLocation = [
   document.getElementById('trail1') as HTMLInputElement,
   document.getElementById('trail2') as HTMLInputElement,
@@ -70,56 +86,56 @@ const catacombEncounterB = [
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
 const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
+const itemDiscard = document.getElementById('itemDiscard') as HTMLSelectElement;
+const eventDiscard = document.getElementById('eventDiscard') as HTMLSelectElement;
+const discardItem = document.getElementById('discardItem');
+const discardEvent = document.getElementById('discardEvent');
 const startButton = document.getElementById('startButton');
 const draculaTurnButton = document.getElementById('draculaTurn');
 const debugGameStateButton = document.getElementById('debugGameState');
 
+const hunters = [game.godalming, game.seward, game.vanHelsing, game.mina];
+const itemSelectors = [godalmingItems, sewardItems, vanHelsingItems, minaItems];
+const eventSelectors = [godalmingEvents, sewardEvents, vanHelsingEvents, minaEvents];
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
 
 // wire up webpage components
 draculaBlood.addEventListener('change', () => {
   game.setDraculaBlood(parseInt(draculaBlood.value));
-  updateAllFields();
+  updateDraculaDetails();
+  updateLog();
 });
 game.map.locations.filter(location => location.type == LocationType.largeCity || location.type == LocationType.smallCity).forEach(location => {
   destination.options.add(new Option(location.name));
 });
 travelButton.addEventListener('click', () => {
   moveMethod.selectedIndex = 0;
-  switch (actingHunter.selectedIndex) {
-    case 0:
-      game.setHunterLocation(game.godalming, game.map.getLocationByName(destination.value));
-      break;
-    case 1:
-      game.setHunterLocation(game.seward, game.map.getLocationByName(destination.value));
-      break;
-    case 2:
-      game.setHunterLocation(game.vanHelsing, game.map.getLocationByName(destination.value));
-      break;
-    case 3:
-      game.setHunterLocation(game.mina, game.map.getLocationByName(destination.value));
-      break;
-  }
+  game.setHunterLocation(hunters[actingHunter.selectedIndex], destination.value);
   if (moveMethod.value == 'Start Location') {
     actingHunter.selectedIndex = Math.min(actingHunter.selectedIndex + 1, 3);
   }
-  updateAllFields();
+  updateHunterDetails();
+  updateLog();
 });
 godalmingHealth.addEventListener('change', () => {
   game.setHunterHealth(game.godalming, parseInt(godalmingHealth.value));
-  updateAllFields();
+  updateHunterDetails();
+  updateLog();
 });
 sewardHealth.addEventListener('change', () => {
   game.setHunterHealth(game.seward, parseInt(sewardHealth.value));
-  updateAllFields();
+  updateHunterDetails();
+  updateLog();
 });
 vanHelsingHealth.addEventListener('change', () => {
   game.setHunterHealth(game.vanHelsing, parseInt(vanHelsingHealth.value));
-  updateAllFields();
+  updateHunterDetails();
+  updateLog();
 });
 minaHealth.addEventListener('change', () => {
   game.setHunterHealth(game.mina, parseInt(minaHealth.value));
-  updateAllFields();
+  updateHunterDetails();
+  updateLog();
 });
 startButton.addEventListener('click', () => {
   startButton.parentNode.removeChild(startButton);
@@ -132,11 +148,10 @@ startButton.addEventListener('click', () => {
   moveMethod.options.add(new Option('Train'));
   moveMethod.options.add(new Option('Sea'));
   moveMethod.addEventListener('change', () => {
-    const hunters = [game.godalming, game.seward, game.vanHelsing, game.mina];
     switch (moveMethod.selectedIndex) {
       case 1:
         clearOptions(destination);
-        hunters[actingHunter.selectedIndex].currentLocation.roadConnections.map(road => game.map.getLocationByName(road))
+        hunters[actingHunter.selectedIndex].currentLocation.roadConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         break;
       case 2:
@@ -145,8 +160,7 @@ startButton.addEventListener('click', () => {
         for (let i = 0; i < 3; i++) {
           let newDestinations: Location[] = [];
           trainDestinations.forEach(location => {
-            const locationsConnectedByTrain = location.trainConnections.map(train => game.map.getLocationByName(train));
-            newDestinations = newDestinations.concat(locationsConnectedByTrain);
+            newDestinations = newDestinations.concat(location.trainConnections);
           });
           trainDestinations = trainDestinations.concat(newDestinations);
         }
@@ -155,24 +169,70 @@ startButton.addEventListener('click', () => {
         break;
       case 3:
         clearOptions(destination);
-        hunters[actingHunter.selectedIndex].currentLocation.seaConnections.map(sea => game.map.getLocationByName(sea))
+        hunters[actingHunter.selectedIndex].currentLocation.seaConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         break;
     }
   });
   travelButton.addEventListener('click', () => {
     clearOptions(destination);
+    game.searchWithHunter(hunters[actingHunter.selectedIndex]);
+    updateAllFields();
   });
   actingHunter.selectedIndex = 0;
-  updateAllFields();
+  updateTrail();
+  updateDraculaDetails();
+  updateLog();
 });
 draculaTurnButton.addEventListener('click', () => {
   game.performTimeKeepingPhase();
+  updateCatacombs();
+  updateDraculaDetails();
   updateAllFields();
   game.performDraculaMovementPhase();
-  updateAllFields();
+  updateTrail();
+  updateCatacombs();
+  updateDraculaDetails();
+  updateLog();
   game.performDraculaActionPhase();
-  updateAllFields();
+  updateTrail();
+  updateCatacombs();
+  updateDraculaDetails();
+  updateLog();
+});
+draculaEvent.addEventListener('click', () => {
+  game.giveEventToDracula();
+  updateDraculaDetails();
+  updateDiscards();
+  updateLog();
+});
+drawItem.addEventListener('click', () => {
+  game.giveItemToHunter(itemDeck.value, hunters[actingHunter.selectedIndex]);
+  updateHunterDetails();
+  updateItemDeck();
+  updateLog();
+});
+drawEvent.addEventListener('click', () => {
+  game.giveEventToHunter(eventDeck.value, hunters[actingHunter.selectedIndex]);
+  updateHunterDetails();
+  updateEventDeck();
+  updateLog();
+});
+discardItem.addEventListener('click', () => {
+  if (itemSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
+    game.discardHunterItem(itemSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+    updateHunterDetails();
+    updateDiscards();
+    updateLog();
+  }
+});
+discardEvent.addEventListener('click', () => {
+  if (eventSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
+    game.discardHunterEvent(eventSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+    updateHunterDetails();
+    updateDiscards();
+    updateLog();
+  }
 });
 debugGameStateButton.addEventListener('click', () => {
   console.log(game);
@@ -187,23 +247,82 @@ updateAllFields();
  * Updates all the fields on the web page
  */
 function updateAllFields() {
+  updateDraculaDetails();
+  updateHunterDetails()
+  updateTrail();
+  updateCatacombs();
+  updateItemDeck();
+  updateEventDeck();
+  updateDiscards();
+  updateLog();
+}
+
+/**
+ * Updates the log field
+ */
+function updateLog() {
   logBox.value = game.logText;
   logBox.scrollTop = logBox.scrollHeight;
+}
+
+/**
+ * Updates the values in the fields in the Dracula's Details section
+ */
+function updateDraculaDetails() {
   draculaBlood.value = game.dracula.blood.toString();
   draculaLocation.value = game.dracula.revealed ? game.dracula.currentLocation.name : 'Hidden';
-  godalmingHealth.value = game.godalming.health.toString();
-  godalmingLocation.value = game.godalming.currentLocation.name;
-  sewardHealth.value = game.seward.health.toString();
-  sewardLocation.value = game.seward.currentLocation.name;
-  vanHelsingHealth.value = game.vanHelsing.health.toString();
-  vanHelsingLocation.value = game.vanHelsing.currentLocation.name;
-  minaHealth.value = game.mina.health.toString();
-  minaLocation.value = game.mina.currentLocation.name;
   encounterCount.value = game.dracula.encounterHand.length.toString();
+  eventCount.value = game.dracula.eventHand.length.toString();
   timePhase.value = timePhaseDescriptions[game.timePhase] || '';
   vampireTrack.value = game.vampireTrack.toString();
   resolveTrack.value = game.resolveTrack.toString();
+}
 
+/**
+ * Updates the values in the fields in the Hunter Details section
+ */
+function updateHunterDetails() {
+  godalmingHealth.value = game.godalming.health.toString();
+  godalmingLocation.value = game.godalming.currentLocation.name;
+  clearOptions(godalmingItems);
+  game.godalming.items.forEach(item => godalmingItems.options.add(new Option(item.name)));
+  godalmingItems.setAttribute('size', game.godalming.items.length.toString());
+  clearOptions(godalmingEvents);
+  game.godalming.events.forEach(event => godalmingEvents.options.add(new Option(event.name)));
+  godalmingEvents.setAttribute('size', game.godalming.events.length.toString());
+
+  sewardHealth.value = game.seward.health.toString();
+  sewardLocation.value = game.seward.currentLocation.name;
+  clearOptions(sewardItems);
+  game.seward.items.forEach(item => sewardItems.options.add(new Option(item.name)));
+  sewardItems.setAttribute('size', game.seward.items.length.toString());
+  clearOptions(sewardEvents);
+  game.seward.events.forEach(event => sewardEvents.options.add(new Option(event.name)));
+  sewardEvents.setAttribute('size', game.seward.events.length.toString());
+
+  vanHelsingHealth.value = game.vanHelsing.health.toString();
+  vanHelsingLocation.value = game.vanHelsing.currentLocation.name;
+  clearOptions(vanHelsingItems);
+  game.vanHelsing.items.forEach(item => vanHelsingItems.options.add(new Option(item.name)));
+  vanHelsingItems.setAttribute('size', game.vanHelsing.items.length.toString());
+  clearOptions(vanHelsingEvents);
+  game.vanHelsing.events.forEach(event => vanHelsingEvents.options.add(new Option(event.name)));
+  vanHelsingEvents.setAttribute('size', game.vanHelsing.events.length.toString());
+
+  minaHealth.value = game.mina.health.toString();
+  minaLocation.value = game.mina.currentLocation.name;
+  clearOptions(minaItems);
+  game.mina.items.forEach(item => minaItems.options.add(new Option(item.name)));
+  minaItems.setAttribute('size', game.mina.items.length.toString());
+  clearOptions(minaEvents);
+  game.mina.events.forEach(event => minaEvents.options.add(new Option(event.name)));
+  minaEvents.setAttribute('size', game.mina.events.length.toString());
+}
+
+/**
+ * Updates the values in all the fields in the Trail section
+ */
+function updateTrail() {
   for (let i = 0; i < 6; i++) {
     if (!game.trail[i]) {
       // no trail card, blank all fields
@@ -244,7 +363,12 @@ function updateAllFields() {
       }
     }
   }
+}
 
+/**
+ * Updates all the values in the fields in the Catacombs section
+ */
+function updateCatacombs() {
   for (let i = 0; i < 3; i++) {
     if (!game.catacombs[i]) {
       blank(catacombLocation[i]);
@@ -268,19 +392,34 @@ function updateAllFields() {
       }
     }
   }
+}
 
-  clearOptions(godalmingItems);
-  game.godalming.items.forEach(item => godalmingItems.options.add(new Option(item.name)));
-  godalmingItems.setAttribute('size', game.godalming.items.length.toString());
-  clearOptions(sewardItems);
-  game.seward.items.forEach(item => sewardItems.options.add(new Option(item.name)));
-  sewardItems.setAttribute('size', game.seward.items.length.toString());
-  clearOptions(vanHelsingItems);
-  game.vanHelsing.items.forEach(item => vanHelsingItems.options.add(new Option(item.name)));
-  vanHelsingItems.setAttribute('size', game.vanHelsing.items.length.toString());
-  clearOptions(minaItems);
-  game.mina.items.forEach(item => minaItems.options.add(new Option(item.name)));
-  minaItems.setAttribute('size', game.mina.items.length.toString());
+/**
+ * Updates the options in the Item deck field
+ */
+function updateItemDeck() {
+  clearOptions(itemDeck);
+  _.uniq(game.itemDeck.map(item => item.name)).forEach(item => itemDeck.options.add(new Option(item)));
+}
+
+/**
+ * Updates the options in the Event deck field
+ */
+function updateEventDeck() {
+  clearOptions(eventDeck);
+  _.uniq(game.eventDeck.filter(event => !event.draculaCard).map(event => event.name)).forEach(event => eventDeck.options.add(new Option(event)));
+}
+
+/**
+ * Updates the values in the fields in the Discards section
+ */
+function updateDiscards() {
+  clearOptions(itemDiscard);
+  game.itemDiscard.forEach(item => itemDiscard.options.add(new Option(item.name)));
+  itemDiscard.selectedIndex = itemDiscard.options.length - 1;
+  clearOptions(eventDiscard);
+  game.eventDiscard.forEach(event => eventDiscard.options.add(new Option(event.name)));
+  eventDiscard.selectedIndex = eventDiscard.options.length - 1;
 }
 
 /**

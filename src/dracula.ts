@@ -2,6 +2,7 @@ import { Location, LocationType } from "./map";
 import { Game } from "./game";
 import { Encounter, EncounterName } from "./encounter";
 import * as _ from 'lodash';
+import { Event } from "./event";
 
 export class Dracula {
   blood: number;
@@ -9,6 +10,8 @@ export class Dracula {
   revealed: boolean;
   encounterHand: Encounter[];
   encounterHandSize: number;
+  eventHand: Event[];
+  eventHandSize: number;
   droppedOffEncounter: Encounter;
   seaBloodPaid: boolean;
   nextMove: PossibleMove;
@@ -21,6 +24,8 @@ export class Dracula {
     this.revealed = false;
     this.encounterHandSize = 5;
     this.encounterHand = [];
+    this.eventHand = [];
+    this.eventHandSize = 4;
     this.seaBloodPaid = false;
     this.powers = [
       {
@@ -105,8 +110,7 @@ export class Dracula {
     // TODO: make logical decision
     this.nextMove = null;
     this.possibleMoves = [];
-    const connectedLocationNames = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
-    const connectedLocations = connectedLocationNames.map(name => gameState.map.getLocationByName(name));
+    const connectedLocations = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
     let invalidLocations = gameState.trail.filter(trail => trail.location).map(trail => trail.location);
     let seaIsInvalid = false;
     if (this.blood == 1) {
@@ -181,8 +185,8 @@ export class Dracula {
             this.possibleMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.WolfForm:
-          potentialDestinations = this.currentLocation.roadConnections.map(conn => gameState.map.getLocationByName(conn));
-          potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections.map(conn => gameState.map.getLocationByName(conn))));
+          potentialDestinations = this.currentLocation.roadConnections;
+          potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => !gameState.trail.find(trailCard => trailCard.location == dest) && !gameState.catacombs.find(trailCard => trailCard.location == dest));
@@ -190,8 +194,8 @@ export class Dracula {
           potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1}));
           break;
         case PowerName.WolfFormAndDoubleBack:
-          potentialDestinations = this.currentLocation.roadConnections.map(conn => gameState.map.getLocationByName(conn));
-          potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections.map(conn => gameState.map.getLocationByName(conn))));
+          potentialDestinations = this.currentLocation.roadConnections;
+          potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => gameState.trail.find(trailCard => trailCard.location == dest) || gameState.catacombs.find(trailCard => trailCard.location == dest));
@@ -284,6 +288,21 @@ export class Dracula {
       discardCount++;
     }
     return discardCount > 0 ? `Dracula discarded ${discardCount} encounter${discardCount > 1 ? 's': ''}` : '';
+  }
+
+  /**
+   * Discards Events down to Dracula's hand limit
+   * @param events The pool of Events to which to discard
+   */
+  discardDownEvents(events: Event[]): string {
+    // TODO: Make logical decision
+    let discardCount = 0;
+    while (this.eventHand.length > this.eventHandSize) {
+      const choice = Math.floor(Math.random()*this.eventHand.length);
+      events.push(this.eventHand.splice(choice, 1)[0]);
+      discardCount++;
+    }
+    return discardCount > 0 ? `Dracula discarded ${discardCount} event${discardCount > 1 ? 's': ''}` : '';
   }
 
   /**
