@@ -1,11 +1,15 @@
-import { GameMap, LocationType, Location } from "./map";
+import { GameMap, LocationType, Location, LocationName } from "./map";
 import { Dracula, TrailCard, PowerName } from "./dracula";
 import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
 import { Encounter, initialiseEncounterPool } from "./encounter";
+import { Item, initialiseItemDeck } from "./item";
+import { Event, initialiseEventDeck } from "./event";
 
 export class Game {
   map: GameMap;
   encounterPool: Encounter[];
+  itemDeck: Item[];
+  eventDeck: Event[];
   dracula: Dracula;
   godalming: Godalming;
   seward: Seward;
@@ -22,6 +26,8 @@ export class Game {
     // construct game components
     this.map = new GameMap();
     this.encounterPool = initialiseEncounterPool();
+    this.itemDeck = initialiseItemDeck();
+    this.eventDeck = initialiseEventDeck();
     this.catacombs = [];
     this.dracula = new Dracula();
     this.godalming = new Godalming;
@@ -30,11 +36,11 @@ export class Game {
     this.mina = new Mina();
     
     // set initial locations to avoid null references
-    this.dracula.setLocation(this.map.locations[0]);
-    this.godalming.setLocation(this.map.locations[0]);
-    this.seward.setLocation(this.map.locations[0]);
-    this.vanHelsing.setLocation(this.map.locations[0]);
-    this.mina.setLocation(this.map.locations[0]);
+    this.dracula.setLocation(this.map.getLocationByName(LocationName.London));
+    this.godalming.setLocation(this.map.getLocationByName(LocationName.London));
+    this.seward.setLocation(this.map.getLocationByName(LocationName.London));
+    this.vanHelsing.setLocation(this.map.getLocationByName(LocationName.London));
+    this.mina.setLocation(this.map.getLocationByName(LocationName.London));
   }
 
   /**

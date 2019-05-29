@@ -5,4 +5,8 @@ body {
 a {
   color: #00B7FF; }
 
-/*# sourceMappingURL=style.css.map */
+input[type="number"] {
+  width: 40px;
+  float: right;
+}
+  /*# sourceMappingURL=style.css.map */

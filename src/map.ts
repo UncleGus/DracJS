@@ -862,7 +862,7 @@ export enum LocationName {
   Cadiz = 'Cadiz',
   Cagliari = 'Cagliari',
   CastleDracula = 'Castle Dracula',
-  ClermontFerrand = 'Clermont-Ferranc',
+  ClermontFerrand = 'Clermont-Ferrand',
   Cologne = 'Cologne',
   Constanta = 'Constanta',
   Dublin = 'Dublin',

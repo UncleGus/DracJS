@@ -1,13 +1,16 @@
 import { Location } from "./map";
+import { Item } from "./item";
 
 export class Hunter {
   name: string;
   maxHealth: number;
   health: number;
   currentLocation: Location;
+  items: Item[];
 
   constructor(newName: string) {
     this.name = newName;
+    this.items = [];
   }
 
   /**
