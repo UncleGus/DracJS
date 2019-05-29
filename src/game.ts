@@ -3,7 +3,7 @@ import { Dracula, TrailCard, PowerName } from "./dracula";
 import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
 import { Encounter, initialiseEncounterPool } from "./encounter";
 import { Item, initialiseItemDeck } from "./item";
-import { Event, initialiseEventDeck, EventType } from "./event";
+import { Event, initialiseEventDeck, EventType, EventName } from "./event";
 
 export class Game {
   map: GameMap;
@@ -13,6 +13,7 @@ export class Game {
   itemInTrade: Item;
   eventDeck: Event[];
   eventDiscard: Event[];
+  consecratedLocation: Location;
   hunterAlly: Event;
   draculaAlly: Event;
   dracula: Dracula;
@@ -41,7 +42,7 @@ export class Game {
     this.seward = new Seward();
     this.vanHelsing = new VanHelsing();
     this.mina = new Mina();
-    
+
     // set initial locations to avoid null references
     this.dracula.setLocation(this.map.getLocationByName(LocationName.London));
     this.godalming.setLocation(this.map.getLocationByName(LocationName.London));
@@ -57,7 +58,7 @@ export class Game {
   log(message: string) {
     this.logText += message ? `\n${message}` : '';
   }
-  
+
   /**
    * Sets up the initial state of the game
    */
@@ -128,7 +129,7 @@ export class Game {
           delete trailCard.encounter;
           this.log(this.shuffleEncounters());
         }
-      }      
+      }
     });
     for (let i = 0; i < this.catacombs.length; i++) {
       const catacomb = this.catacombs[i];
@@ -185,21 +186,29 @@ export class Game {
   }
 
   /**
+   * Moves the Consecrated Ground marker to the Location with the given name
+   * @param locationName The name of the Location to which to move the Consecrated Ground marker
+   */
+  moveConescratedGroundMarker(locationName: string) {
+    this.consecratedLocation = this.map.getLocationByName(locationName);
+  }
+
+  /**
    * Performs the Timekeeping phase of Dracula's turn, including selecting his next move
    * This needs to be done at this point as it affects what he does with the catacombs
    */
   performTimeKeepingPhase() {
     this.log('Performing Timekeeping phase');
     this.log(this.dracula.chooseNextMove(this));
-    
+
     // evaluate catacombs
     this.log(this.dracula.evaluateCatacombs(this));
-    
+
     // perform timekeeping
     if (this.dracula.currentLocation.type !== LocationType.sea) {
       this.log('Time advancing...');
       this.timePhase += 1;
-      
+
       // handle new day
       if (this.timePhase == 6) {
         this.log('A new day dawns');
@@ -226,7 +235,7 @@ export class Game {
       this.trail[0].revealed = true;
       this.log(this.dracula.chooseNextMove(this));
     }
-    
+
     let doubleBackTrailIndex: number;
     let doubleBackCatacombIndex: number;
     let doubleBackedCard: TrailCard;
@@ -261,7 +270,7 @@ export class Game {
             const doubleBackedCard = this.catacombs.splice(doubleBackCatacombIndex, 1)[0];
             this.pushToTrail(doubleBackedCard);
             this.log(this.dracula.decideWhichEncounterToKeep(this.trail[0], this));
-          }          
+          }
           break;
         case PowerName.Feed:
           this.log('Dracula played power Feed');
@@ -272,12 +281,12 @@ export class Game {
             this.dracula.currentLocation == this.seward.currentLocation ||
             this.dracula.currentLocation == this.vanHelsing.currentLocation ||
             this.dracula.currentLocation == this.mina.currentLocation) {
-              this.log('Dracula played power Hide');
-              this.dracula.revealed = true;
-            } else {
-              this.log('Dracula moved to a hidden location');
-              this.dracula.revealed = false;
-            }
+            this.log('Dracula played power Hide');
+            this.dracula.revealed = true;
+          } else {
+            this.log('Dracula moved to a hidden location');
+            this.dracula.revealed = false;
+          }
           break;
         case PowerName.WolfForm:
           this.log('Dracula played power Wolf Form');
@@ -297,17 +306,17 @@ export class Game {
       // check if new location causes Dracula to be revealed
       if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
         nextLocation == this.vanHelsing.currentLocation || nextLocation == this.mina.currentLocation))) {
-          this.dracula.revealed = true;
-        } else {
-          this.dracula.revealed = false;
-        }
-        
+        this.dracula.revealed = true;
+      } else {
+        this.dracula.revealed = false;
+      }
+
       // move to new location
       this.log(this.dracula.setLocation(nextLocation));
 
       // pay blood for sea travel
       if (nextLocation.type == LocationType.sea && !this.dracula.seaBloodPaid) {
-        this.log(this.dracula.setBlood(this.dracula.blood -1));
+        this.log(this.dracula.setBlood(this.dracula.blood - 1));
         this.dracula.seaBloodPaid = true;
       } else {
         this.dracula.seaBloodPaid = false;
@@ -319,7 +328,7 @@ export class Game {
       this.pushToTrail(doubleBackedCard);
       this.dracula.revealed = doubleBackedCard.revealed;
     } else {
-      this.log(this.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, power: this.dracula.nextMove.power}));
+      this.log(this.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, power: this.dracula.nextMove.power }));
     }
     if (this.trail.length == 7) {
       this.log('A card has dropped off the end of the trail');
@@ -351,6 +360,9 @@ export class Game {
         }
       }
       this.log(this.dracula.decideFateOfDroppedOffCard(droppedOffCard, this));
+      if (this.dracula.currentLocation.type == LocationType.castle) {
+        this.setDraculaBlood(this.dracula.blood + 2);
+      }
     }
   }
 
@@ -363,15 +375,15 @@ export class Game {
       this.dracula.currentLocation == this.vanHelsing.currentLocation || this.dracula.currentLocation == this.mina.currentLocation)) {
       this.log('Dracula attacks!');
     } else if (this.dracula.currentLocation.type !== LocationType.castle && this.dracula.currentLocation.type !== LocationType.sea &&
-        (!this.dracula.nextMove.power || this.dracula.nextMove.power.name == 'Hide' || this.dracula.nextMove.power.name == 'Wolf Form' || this.dracula.nextMove.power.name == 'Wolf Form and Hide')) {
+      (!this.dracula.nextMove.power || this.dracula.nextMove.power.name == 'Hide' || this.dracula.nextMove.power.name == 'Wolf Form' || this.dracula.nextMove.power.name == 'Wolf Form and Hide')) {
       this.trail[0].encounter = this.dracula.chooseEncounter();
       this.log('Dracula placed an encounter');
     }
-    
+
     if (this.dracula.droppedOffEncounter) {
       this.log(this.dracula.decideFateOfDroppedOffEncounter(this));
     }
-    
+
     // Refill encounter hand
     this.log(this.dracula.drawUpEncounters(this.encounterPool));
   }
@@ -382,7 +394,7 @@ export class Game {
   shuffleEncounters(): string {
     const shuffledEncounters = [];
     while (this.encounterPool.length > 0) {
-      const randomIndex = Math.floor(Math.random()*this.encounterPool.length);
+      const randomIndex = Math.floor(Math.random() * this.encounterPool.length);
       this.encounterPool[randomIndex].revealed = false;
       shuffledEncounters.push(this.encounterPool.splice(randomIndex, 1)[0]);
     }
@@ -396,7 +408,7 @@ export class Game {
   shuffleEvents(): string {
     const shuffledEvents = [];
     while (this.eventDeck.length > 0) {
-      const randomIndex = Math.floor(Math.random()*this.eventDeck.length);
+      const randomIndex = Math.floor(Math.random() * this.eventDeck.length);
       shuffledEvents.push(this.eventDeck.splice(randomIndex, 1)[0]);
     }
     this.eventDeck = shuffledEvents;
@@ -513,7 +525,7 @@ export class Game {
    * @param eventName The name of the Event
    * @param hunter The Hunter playing the Event
    */
-  playHunterEvent(eventName: string, hunter: Hunter) {
+  playHunterEvent(eventName: string, hunter: Hunter, locationName?: string) {
     // TODO: so much
     let eventIndex = 0;
     for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
@@ -522,18 +534,18 @@ export class Game {
       }
     }
     const eventCardPlayed = hunter.events.splice(eventIndex, 1)[0];
-    switch(eventCardPlayed.type) {
-      case EventType.Ally:
-        if (this.hunterAlly) {
-          this.log(`Hunters discarded Ally ${this.hunterAlly.name}`);
-          this.eventDiscard.push(this.hunterAlly);
-        }
-        this.hunterAlly = eventCardPlayed;
-        break;
-      default:
-        this.eventDiscard.push(eventCardPlayed);
+    if (eventCardPlayed.type == EventType.Ally) {
+      if (this.hunterAlly) {
+        this.log(`Hunters discarded Ally ${this.hunterAlly.name}`);
+        this.eventDiscard.push(this.hunterAlly);
+      }
+      this.hunterAlly = eventCardPlayed;
+    } else if (eventCardPlayed.name == EventName.ConsecratedGround) {
+      this.moveConescratedGroundMarker(locationName);
+    } else {
+      this.eventDiscard.push(eventCardPlayed);
     }
-    this.log(`${hunter.name} played event ${eventName}`);
+    this.log(`${hunter.name} played event ${eventName}${locationName ? ` on ${locationName}` : ''}`);
   }
 
   /**

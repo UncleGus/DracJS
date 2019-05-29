@@ -3,6 +3,7 @@ import { Game } from "./game";
 import { LocationType, Location } from "./map";
 import { TrailCard } from "./dracula";
 import { Encounter } from "./encounter";
+import { EventName } from './event';
 
 const game = new Game();
 
@@ -49,6 +50,9 @@ const drawItem = document.getElementById('drawItem');
 const discardItem = document.getElementById('discardItem');
 const giveItem = document.getElementById('giveItem');
 const takeItem = document.getElementById('takeItem');
+
+const locationSelector = document.getElementById('locationSelector') as HTMLSelectElement;
+const consecratedGround = document.getElementById('consecratedGround') as HTMLInputElement;
 
 const trailLocation = [
   document.getElementById('trail1') as HTMLInputElement,
@@ -142,6 +146,17 @@ minaHealth.addEventListener('change', () => {
   updateHunterDetails();
   updateLog();
 });
+
+eventSelectors.forEach(selector => {
+  selector.addEventListener('click', () => {
+    clearOptions(locationSelector);
+    if (selector.value == EventName.ConsecratedGround) {
+      game.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity)
+        .forEach(location => locationSelector.options.add(new Option(location.name)));
+    }
+  });
+});
+
 startButton.addEventListener('click', () => {
   startButton.parentNode.removeChild(startButton);
   game.startGame();
@@ -255,9 +270,11 @@ discardEvent.addEventListener('click', () => {
 });
 playEvent.addEventListener('click', () => {
   if (eventSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
-    game.playHunterEvent(eventSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+    game.playHunterEvent(eventSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex], locationSelector.value);
     updateHunterDetails();
     updateDiscards();
+    clearOptions(locationSelector);
+    updateMarkers();
     updateLog();
   }
 });
@@ -282,6 +299,7 @@ function updateAllFields() {
   updateItemDeck();
   updateEventDeck();
   updateDiscards();
+  updateMarkers();
   updateLog();
 }
 
@@ -451,6 +469,10 @@ function updateDiscards() {
   clearOptions(eventDiscard);
   game.eventDiscard.forEach(event => eventDiscard.options.add(new Option(event.name)));
   eventDiscard.selectedIndex = eventDiscard.options.length - 1;
+}
+
+function updateMarkers() {
+  consecratedGround.value = game.consecratedLocation ? game.consecratedLocation.name : '';
 }
 
 /**
