@@ -22,4 +22,7 @@ input[type="number"] {
 .selectedEncounter {
   background-color: coral; }
 
+.right {
+  float: right; }
+
 /*# sourceMappingURL=style.css.map */

@@ -94,6 +94,9 @@ export class Game {
    */
   searchWithHunter(hunter: Hunter) {
     // TODO: attack Dracula
+    if (hunter.currentLocation.type == LocationType.sea) {
+      return;
+    }
     let foundSomething = false;
     const encountersToResolve: Encounter[] = [];
     if (hunter.currentLocation == this.dracula.currentLocation) {
@@ -165,7 +168,22 @@ export class Game {
    * @param locationName The name of the Location to which to move the Hunter
    */
   setHunterLocation(hunter: Hunter, locationName: string) {
-    this.log(hunter.setLocation(this.map.getLocationByName(locationName)));
+    if (hunter.groupNumber == 0) {
+      this.log(hunter.setLocation(this.map.getLocationByName(locationName)));
+    } else {
+      if (this.godalming.groupNumber == hunter.groupNumber) {
+        this.log(this.godalming.setLocation(this.map.getLocationByName(locationName)));
+      }
+      if (this.seward.groupNumber == hunter.groupNumber) {
+        this.log(this.seward.setLocation(this.map.getLocationByName(locationName)));
+      }
+      if (this.vanHelsing.groupNumber == hunter.groupNumber) {
+        this.log(this.vanHelsing.setLocation(this.map.getLocationByName(locationName)));
+      }
+      if (this.mina.groupNumber == hunter.groupNumber) {
+        this.log(this.mina.setLocation(this.map.getLocationByName(locationName)));
+      }
+    }
   }
 
   /**

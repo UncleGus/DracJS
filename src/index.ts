@@ -16,21 +16,25 @@ const eventCount = document.getElementById('eventCount') as HTMLInputElement;
 const draculaAlly = document.getElementById('draculaAlly') as HTMLInputElement;
 const hunterAlly = document.getElementById('hunterAlly') as HTMLInputElement;
 
+const godalmingGroup = document.getElementById('godalmingGroup') as HTMLSelectElement;
 const godalmingHealth = document.getElementById('godalmingHealth') as HTMLInputElement;
 const godalmingLocation = document.getElementById('godalmingLocation') as HTMLInputElement;
 const godalmingItems = document.getElementById('godalmingItems') as HTMLSelectElement;
 const godalmingEvents = document.getElementById('godalmingEvents') as HTMLSelectElement;
 
+const sewardGroup = document.getElementById('sewardGroup') as HTMLSelectElement;
 const sewardHealth = document.getElementById('sewardHealth') as HTMLInputElement;
 const sewardLocation = document.getElementById('sewardLocation') as HTMLInputElement;
 const sewardItems = document.getElementById('sewardItems') as HTMLSelectElement;
 const sewardEvents = document.getElementById('sewardEvents') as HTMLSelectElement;
 
+const vanHelsingGroup = document.getElementById('vanHelsingGroup') as HTMLSelectElement;
 const vanHelsingHealth = document.getElementById('vanHelsingHealth') as HTMLInputElement;
 const vanHelsingLocation = document.getElementById('vanHelsingLocation') as HTMLInputElement;
 const vanHelsingItems = document.getElementById('vanHelsingItems') as HTMLSelectElement;
 const vanHelsingEvents = document.getElementById('vanHelsingEvents') as HTMLSelectElement;
 
+const minaGroup = document.getElementById('minaGroup') as HTMLSelectElement;
 const minaHealth = document.getElementById('minaHealth') as HTMLInputElement;
 const minaLocation = document.getElementById('minaLocation') as HTMLInputElement;
 const minaItems = document.getElementById('minaItems') as HTMLSelectElement;
@@ -112,6 +116,7 @@ const vanHelsingDetails = document.getElementById('vanHelsingDetails');
 const minaDetails = document.getElementById('minaDetails');
 
 const hunters = [game.godalming, game.seward, game.vanHelsing, game.mina];
+const hunterGroups = [godalmingGroup, sewardGroup, vanHelsingGroup, minaGroup];
 const hunterDetails = [godalmingDetails, sewardDetails, vanHelsingDetails, minaDetails];
 const itemSelectors = [godalmingItems, sewardItems, vanHelsingItems, minaItems];
 const eventSelectors = [godalmingEvents, sewardEvents, vanHelsingEvents, minaEvents];
@@ -129,8 +134,10 @@ for (let i = 0; i < 4; i++) {
   hunterDetails[i].addEventListener('click', () => {
     actingHunter.selectedIndex = i;
     updateTargetLocation();
-    updateMoveMethods();
     updateSelectedHunter();
+  });
+  hunterGroups[i].addEventListener('change', () => {
+    hunters[i].groupNumber = hunterGroups[i].selectedIndex;
   });
 }
 
@@ -176,9 +183,6 @@ actingHunter.addEventListener('change', () => {
   hunterDetails[actingHunter.selectedIndex].classList.add('selectedHunter');
 });
 
-game.map.locations.filter(location => location.type == LocationType.largeCity || location.type == LocationType.smallCity).forEach(location => {
-  destination.options.add(new Option(location.name));
-});
 travelButton.addEventListener('click', () => {
   if (moveMethod.value == 'Bats') {
     game.setHunterLocation(hunters[actingHunter.selectedIndex], game.dracula.decideBatsDestination(hunters[actingHunter.selectedIndex], game).name);
@@ -215,24 +219,27 @@ minaHealth.addEventListener('change', () => {
 });
 
 startButton.addEventListener('click', () => {
+  actingHunter.selectedIndex = 0;
   startButton.parentNode.removeChild(startButton);
   game.startGame();
   draculaTurnButton.style.removeProperty('display');
   clearOptions(destination);
-  moveMethod.options.remove(0);
-  moveMethod.options.add(new Option('No travel'));
-  moveMethod.options.add(new Option('Road'));
-  moveMethod.options.add(new Option('Train'));
-  moveMethod.options.add(new Option('Sea'));
+  for (let i = 0; i < 4; i++) {
+    hunterDetails[i].addEventListener('click', () => {
+      actingHunter.selectedIndex = i;
+      updateMoveMethods();
+    });
+  }
+  clearOptions(moveMethod);
+  updateMoveMethods();
   moveMethod.addEventListener('change', () => {
+    clearOptions(destination);
     switch (moveMethod.value) {
       case 'Road':
-        clearOptions(destination);
         hunters[actingHunter.selectedIndex].currentLocation.roadConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         break;
       case 'Train':
-        clearOptions(destination);
         let trainDestinations: Location[] = [hunters[actingHunter.selectedIndex].currentLocation];
         for (let i = 0; i < 3; i++) {
           let newDestinations: Location[] = [];
@@ -245,15 +252,10 @@ startButton.addEventListener('click', () => {
         trainDestinations.forEach(dest => destination.options.add(new Option(dest.name)));
         break;
       case 'Sea':
-        clearOptions(destination);
         hunters[actingHunter.selectedIndex].currentLocation.seaConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         break;
-      case 'Bats':
-      case 'Fog':
-        clearOptions(destination);
-        break;
-      }
+    }
   });
   travelButton.addEventListener('click', () => {
     clearOptions(destination);
@@ -561,21 +563,29 @@ function updateCatacombs() {
  * Updates the values in the moveMethod field
  */
 function updateMoveMethods() {
-  clearOptions(moveMethod);
-  if (hunters[actingHunter.selectedIndex].encounterTiles.find(encounter => encounter.name == EncounterName.Fog)) {
-    moveMethod.options.add(new Option(EncounterName.Fog));
-  } else if (hunters[actingHunter.selectedIndex].encounterTiles.find(encounter => encounter.name == EncounterName.Bats)) {
-    moveMethod.options.add(new Option(EncounterName.Bats));
+  clearOptions(destination);
+  if (moveMethod.options.length == 0 || moveMethod.options[0].text !== 'Start Location') {
+    clearOptions(moveMethod);
+    if (hunters[actingHunter.selectedIndex].encounterTiles.find(encounter => encounter.name == EncounterName.Fog)) {
+      moveMethod.options.add(new Option(EncounterName.Fog));
+    } else if (hunters[actingHunter.selectedIndex].encounterTiles.find(encounter => encounter.name == EncounterName.Bats)) {
+      moveMethod.options.add(new Option(EncounterName.Bats));
+    } else {
+      moveMethod.options.add(new Option('No travel'));
+      if (hunters[actingHunter.selectedIndex].currentLocation.roadConnections.length > 0) {
+        moveMethod.options.add(new Option('Road'));
+      }
+      if (hunters[actingHunter.selectedIndex].currentLocation.trainConnections.length > 0) {
+        moveMethod.options.add(new Option('Train'));
+      }
+      if (hunters[actingHunter.selectedIndex].currentLocation.seaConnections.length > 0) {
+        moveMethod.options.add(new Option('Sea'));
+      }
+    }
   } else {
-    if (hunters[actingHunter.selectedIndex].currentLocation.roadConnections.length > 0) {
-      moveMethod.options.add(new Option('Road'));
-    }
-    if (hunters[actingHunter.selectedIndex].currentLocation.trainConnections.length > 0) {
-      moveMethod.options.add(new Option('Train'));
-    }
-    if (hunters[actingHunter.selectedIndex].currentLocation.seaConnections.length > 0) {
-      moveMethod.options.add(new Option('Sea'));
-    }
+    game.map.locations.filter(location => location.type == LocationType.largeCity || location.type == LocationType.smallCity).forEach(location => {
+      destination.options.add(new Option(location.name));
+    });
   }
 }
 

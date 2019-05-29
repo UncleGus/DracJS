@@ -11,12 +11,14 @@ export class Hunter {
   items: Item[];
   events: Event[];
   encounterTiles: Encounter[];
+  groupNumber: number;
 
   constructor(newName: string) {
     this.name = newName;
     this.items = [];
     this.events = [];
     this.encounterTiles = [];
+    this.groupNumber = 0;
   }
 
   /**
