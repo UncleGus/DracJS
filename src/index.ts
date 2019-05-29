@@ -12,6 +12,8 @@ const draculaBlood = document.getElementById('draculaBlood') as HTMLInputElement
 const draculaLocation = document.getElementById('draculaLocation') as HTMLInputElement;
 const encounterCount = document.getElementById('encounterCount') as HTMLInputElement;
 const eventCount = document.getElementById('eventCount') as HTMLInputElement;
+const draculaAlly = document.getElementById('draculaAlly') as HTMLInputElement;
+const hunterAlly = document.getElementById('hunterAlly') as HTMLInputElement;
 
 const godalmingHealth = document.getElementById('godalmingHealth') as HTMLInputElement;
 const godalmingLocation = document.getElementById('godalmingLocation') as HTMLInputElement;
@@ -40,8 +42,13 @@ const travelButton = document.getElementById('travel');
 const draculaEvent = document.getElementById('draculaEvent');
 const eventDeck = document.getElementById('eventDeck') as HTMLSelectElement;
 const drawEvent = document.getElementById('hunterEvent');
+const discardEvent = document.getElementById('discardEvent');
+const playEvent = document.getElementById('playEvent');
 const itemDeck = document.getElementById('itemDeck') as HTMLSelectElement;
 const drawItem = document.getElementById('drawItem');
+const discardItem = document.getElementById('discardItem');
+const giveItem = document.getElementById('giveItem');
+const takeItem = document.getElementById('takeItem');
 
 const trailLocation = [
   document.getElementById('trail1') as HTMLInputElement,
@@ -88,8 +95,6 @@ const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement
 const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
 const itemDiscard = document.getElementById('itemDiscard') as HTMLSelectElement;
 const eventDiscard = document.getElementById('eventDiscard') as HTMLSelectElement;
-const discardItem = document.getElementById('discardItem');
-const discardEvent = document.getElementById('discardEvent');
 const startButton = document.getElementById('startButton');
 const draculaTurnButton = document.getElementById('draculaTurn');
 const debugGameStateButton = document.getElementById('debugGameState');
@@ -226,6 +231,20 @@ discardItem.addEventListener('click', () => {
     updateLog();
   }
 });
+giveItem.addEventListener('click', () => {
+  if (itemSelectors[actingHunter.selectedIndex].selectedIndex > -1 && !game.itemInTrade) {
+    game.tradeItemFromHunter(itemSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+    updateHunterDetails();
+    updateLog();
+  }
+});
+takeItem.addEventListener('click', () => {
+  if (game.itemInTrade) {
+    game.tradeItemToHunter(hunters[actingHunter.selectedIndex]);
+    updateHunterDetails();
+    updateLog();
+  }
+});
 discardEvent.addEventListener('click', () => {
   if (eventSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
     game.discardHunterEvent(eventSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
@@ -234,6 +253,15 @@ discardEvent.addEventListener('click', () => {
     updateLog();
   }
 });
+playEvent.addEventListener('click', () => {
+  if (eventSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
+    game.playHunterEvent(eventSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+    updateHunterDetails();
+    updateDiscards();
+    updateLog();
+  }
+});
+
 debugGameStateButton.addEventListener('click', () => {
   console.log(game);
 });
@@ -271,6 +299,7 @@ function updateLog() {
 function updateDraculaDetails() {
   draculaBlood.value = game.dracula.blood.toString();
   draculaLocation.value = game.dracula.revealed ? game.dracula.currentLocation.name : 'Hidden';
+  draculaAlly.value = game.draculaAlly ? game.draculaAlly.name : ''; 
   encounterCount.value = game.dracula.encounterHand.length.toString();
   eventCount.value = game.dracula.eventHand.length.toString();
   timePhase.value = timePhaseDescriptions[game.timePhase] || '';
@@ -317,6 +346,8 @@ function updateHunterDetails() {
   clearOptions(minaEvents);
   game.mina.events.forEach(event => minaEvents.options.add(new Option(event.name)));
   minaEvents.setAttribute('size', game.mina.events.length.toString());
+
+  hunterAlly.value = game.hunterAlly ? game.hunterAlly.name : '';
 }
 
 /**

@@ -3,15 +3,18 @@ import { Dracula, TrailCard, PowerName } from "./dracula";
 import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
 import { Encounter, initialiseEncounterPool } from "./encounter";
 import { Item, initialiseItemDeck } from "./item";
-import { Event, initialiseEventDeck } from "./event";
+import { Event, initialiseEventDeck, EventType } from "./event";
 
 export class Game {
   map: GameMap;
   encounterPool: Encounter[];
   itemDeck: Item[];
   itemDiscard: Item[];
+  itemInTrade: Item;
   eventDeck: Event[];
   eventDiscard: Event[];
+  hunterAlly: Event;
+  draculaAlly: Event;
   dracula: Dracula;
   godalming: Godalming;
   seward: Seward;
@@ -48,7 +51,7 @@ export class Game {
   }
 
   /**
-   * Adds a message to the console text boc in a new line
+   * Adds a message to the console text box in a new line
    * @param message the message to display
    */
   log(message: string) {
@@ -428,6 +431,33 @@ export class Game {
       }
     }
     hunter.items.push(this.itemDeck.splice(itemIndex, 1)[0]);
+    this.log(`${hunter.name} took item ${itemName}`);
+  }
+
+  /**
+   * Takes an Item out of a Hunter's hand to trade it to another Hunter
+   * @param itemName The name of the Item to remove
+   * @param hunter The Hunter giving the Item away
+   */
+  tradeItemFromHunter(itemName: string, hunter: Hunter) {
+    let itemIndex = 0;
+    for (itemIndex; itemIndex < hunter.items.length; itemIndex++) {
+      if (hunter.items[itemIndex].name == itemName) {
+        break;
+      }
+    }
+    this.itemInTrade = hunter.items.splice(itemIndex, 1)[0];
+    this.log(`${hunter.name} gave away item ${itemName}`);
+  }
+
+  /**
+   * Gives an Item previous traded away from a Hunter to another Hunter
+   * @param hunter The Hunter receiving the Item
+   */
+  tradeItemToHunter(hunter: Hunter) {
+    hunter.items.push(this.itemInTrade);
+    this.log(`${hunter.name} received item ${this.itemInTrade.name}`);
+    this.itemInTrade = null;
   }
 
   /**
@@ -443,6 +473,7 @@ export class Game {
       }
     }
     hunter.events.push(this.eventDeck.splice(eventIndex, 1)[0]);
+    this.log(`${hunter.name} took event ${eventName}`);
   }
 
   /**
@@ -458,9 +489,10 @@ export class Game {
       }
     }
     this.itemDiscard.push(hunter.items.splice(itemIndex, 1)[0]);
+    this.log(`${hunter.name} discarded item ${itemName}`);
   }
 
-    /**
+  /**
    * Removes an Event of the given name from the given Hunter
    * @param eventName The name of the Event
    * @param hunter The Hunter from whom to remove the Event
@@ -473,6 +505,35 @@ export class Game {
       }
     }
     this.eventDiscard.push(hunter.events.splice(eventIndex, 1)[0]);
+    this.log(`${hunter.name} discarded event ${eventName}`);
+  }
+
+  /**
+   * Plays an Event of the given name from the given Hunter
+   * @param eventName The name of the Event
+   * @param hunter The Hunter playing the Event
+   */
+  playHunterEvent(eventName: string, hunter: Hunter) {
+    // TODO: so much
+    let eventIndex = 0;
+    for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
+      if (hunter.events[eventIndex].name == eventName) {
+        break;
+      }
+    }
+    const eventCardPlayed = hunter.events.splice(eventIndex, 1)[0];
+    switch(eventCardPlayed.type) {
+      case EventType.Ally:
+        if (this.hunterAlly) {
+          this.log(`Hunters discarded Ally ${this.hunterAlly.name}`);
+          this.eventDiscard.push(this.hunterAlly);
+        }
+        this.hunterAlly = eventCardPlayed;
+        break;
+      default:
+        this.eventDiscard.push(eventCardPlayed);
+    }
+    this.log(`${hunter.name} played event ${eventName}`);
   }
 
   /**
