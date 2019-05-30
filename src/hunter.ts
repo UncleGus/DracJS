@@ -13,6 +13,7 @@ export class Hunter {
   encounterTiles: Encounter[];
   groupNumber: number;
   lastUsedCombatItem: string;
+  inCombat: boolean;
 
   constructor(newName: string) {
     this.name = newName;

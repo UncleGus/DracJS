@@ -5,6 +5,7 @@ import { TrailCard } from "./dracula";
 import { Encounter, EncounterName } from "./encounter";
 import { EventName } from './event';
 import { Hunter } from './hunter';
+import { ItemName, Item } from './item';
 
 const game = new Game();
 
@@ -180,10 +181,16 @@ fight.addEventListener('click', () => {
 
 hunterWin.addEventListener('click', () => {
   game.applyHunterAttackSuccess(hunters[actingHunter.selectedIndex].lastUsedCombatItem);
+  updateHunterDetails();
+  updateLog();
 });
 
 enemyWin.addEventListener('click', () => {
   game.applyEnemyAttackSuccess(game.huntersInGroup(hunters[actingHunter.selectedIndex]))
+  updateHunterDetails();
+  updateDraculaDetails();
+  updateTrail();
+  updateLog();
 });
 
 discardEncounter.addEventListener('click', () => {
@@ -404,6 +411,9 @@ function updateHunterDetails() {
     (hunterDetails[i].querySelector('#location') as HTMLInputElement).value = hunters[i].currentLocation.name;
     clearOptions(hunterDetails[i].querySelector('#items') as HTMLSelectElement);
     hunters[i].items.forEach(item => (hunterDetails[i].querySelector('#items') as HTMLSelectElement).options.add(new Option(item.name)));
+    if (hunters[i].inCombat) {
+      [ItemName.Punch, ItemName.Dodge, ItemName.Escape].forEach(basicAttack => (hunterDetails[i].querySelector('#items') as HTMLSelectElement).options.add(new Option(basicAttack)));
+    }
     (hunterDetails[i].querySelector('#items') as HTMLSelectElement).setAttribute('size', hunters[i].items.length.toString());
     clearOptions(hunterDetails[i].querySelector('#events') as HTMLSelectElement);
     hunters[i].events.forEach(event => (hunterDetails[i].querySelector('#events') as HTMLSelectElement).options.add(new Option(event.name)));

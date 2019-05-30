@@ -31,6 +31,7 @@ export class Game {
   selectedTrailEncounter: number;
   selectedCatacombEncounterA: number;
   selectedCatacombEncounterB: number;
+  roundsContinued: number;
 
   constructor() {
     // construct game components
@@ -208,7 +209,7 @@ export class Game {
    * Moves the Consecrated Ground marker to the Location with the given name
    * @param locationName The name of the Location to which to move the Consecrated Ground marker
    */
-  moveConescratedGroundMarker(locationName: string) {
+  moveConsecratedGroundMarker(locationName: string) {
     this.consecratedLocation = this.map.getLocationByName(locationName);
   }
 
@@ -560,7 +561,7 @@ export class Game {
       }
       this.hunterAlly = eventCardPlayed;
     } else if (eventCardPlayed.name == EventName.ConsecratedGround) {
-      this.moveConescratedGroundMarker(locationName);
+      this.moveConsecratedGroundMarker(locationName);
     } else {
       this.eventDiscard.push(eventCardPlayed);
     }
@@ -610,8 +611,10 @@ export class Game {
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
+        this.roundsContinued = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
+          companion.inCombat = true;
         });
         this.log(`Resolve a combat against ${EncounterName.MinionWithKnife} - an escape result means no further encounters are resolved`);
         this.encounterPool.push(currentEncounter);
@@ -644,8 +647,10 @@ export class Game {
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
+        this.roundsContinued = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
+          companion.inCombat = true;
         });
         this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
         this.encounterPool.push(currentEncounter);
@@ -661,8 +666,10 @@ export class Game {
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
+        this.roundsContinued = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
+          companion.inCombat = true;
         });
         this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
         this.encounterPool.push(currentEncounter);
@@ -678,8 +685,10 @@ export class Game {
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
+        this.roundsContinued = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
+          companion.inCombat = true;
         });
         this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
         this.encounterPool.push(currentEncounter);
@@ -856,7 +865,6 @@ export class Game {
    * @param items The names of the combat cards chosen by the Hunters
    */
   resolveCombatRound(hunters: Hunter[], items: string[]) {
-    // TODO: add the basic combat cards to the Hunters and remove them at the end of the combat
     for (let i = 0; i < hunters.length; i++) {
       this.log(`${hunters[i].name} used ${items[i]}`);
     }
@@ -986,11 +994,23 @@ export class Game {
         this.log('Dracula escapes in the form of a bat');
         break;
       case CombatOutcome.Continue:
-        // TODO: count continues and end as appropriate
-        this.log('Combat continues another round');
+        this.roundsContinued++;
+        if (this.roundsContinued > 2) {
+          this.log('Combat ends');
+          this.godalming.inCombat = false;
+          this.seward.inCombat = false;
+          this.vanHelsing.inCombat = false;
+          this.mina.inCombat = false;
+        } else {
+          this.log('Combat continues another round');
+        }
         break;
       case CombatOutcome.End:
         this.log('Combat ends');
+        this.godalming.inCombat = false;
+        this.seward.inCombat = false;
+        this.vanHelsing.inCombat = false;
+        this.mina.inCombat = false;
         break;
       case CombatOutcome.Invalid:
         this.log(`This is not a valid combat card combination: ${hunter.lastUsedCombatItem} and ${this.dracula.lastUsedAttack}`);
