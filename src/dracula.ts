@@ -19,6 +19,8 @@ export class Dracula {
   powers: Power[];
   hideLocation: Location;
   possibleMoves: PossibleMove[];
+  availableAttacks: string[];
+  lastUsedAttack: string;
 
   constructor() {
     this.blood = 15;
@@ -455,6 +457,18 @@ export class Dracula {
       return 'Dracula returned the dropped off encounter to the encounter pool';
     }
   }
+
+  /**
+   * Chooses which combat card to use in the current round of combat
+   * @param hunters The Hunters involved in the combat
+   */
+  chooseCombatCard(hunters: Hunter[]): string {
+    // TODO: Make logical descision
+    const allowedAttacks = _.without(this.availableAttacks, this.lastUsedAttack);
+    const choice = Math.floor(Math.random() * allowedAttacks.length);
+    this.lastUsedAttack = allowedAttacks[choice];
+    return `Dracula chose ${allowedAttacks[choice]}`;
+  }
 }
 
 export interface TrailCard {
@@ -486,4 +500,20 @@ export enum PowerName {
   WolfForm = 'Wolf Form',
   WolfFormAndDoubleBack = 'Wolf Form and Double Back',
   WolfFormAndHide = 'Wolf Form and Hide'
+}
+
+export enum Attack {
+  Claws = 'Claws',
+  DodgeDracula = 'Dodge (Dracula)',
+  EscapeMan = 'Escape (Man)',
+  EscapeBat = 'Escape (Bat)',
+  EscapeMist = 'Escape (Mist)',
+  Fangs = 'Fangs',
+  Mesmerize = 'Mesmerize',
+  Strength = 'Strength',
+  DodgeMinion = 'Dodge (Minion)',
+  Punch = 'Punch',
+  Knife = 'Knife',
+  Pistol = 'Pistol',
+  Rifle = 'Rifle'
 }

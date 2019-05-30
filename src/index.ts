@@ -4,6 +4,7 @@ import { LocationType, Location } from "./map";
 import { TrailCard } from "./dracula";
 import { Encounter, EncounterName } from "./encounter";
 import { EventName } from './event';
+import { Hunter } from './hunter';
 
 const game = new Game();
 
@@ -54,6 +55,9 @@ const drawItem = document.getElementById('drawItem');
 const discardItem = document.getElementById('discardItem');
 const giveItem = document.getElementById('giveItem');
 const takeItem = document.getElementById('takeItem');
+const fight = document.getElementById('fight');
+const hunterWins = document.getElementById('hunterWins');
+const enemyWins = document.getElementById('enemyWins');
 
 const targetLocation = document.getElementById('targetLocation');
 const locationSelector = document.getElementById('locationSelector') as HTMLSelectElement;
@@ -118,7 +122,7 @@ const minaDetails = document.getElementById('minaDetails');
 const hunters = [game.godalming, game.seward, game.vanHelsing, game.mina];
 const hunterGroups = [godalmingGroup, sewardGroup, vanHelsingGroup, minaGroup];
 const hunterDetails = [godalmingDetails, sewardDetails, vanHelsingDetails, minaDetails];
-const itemSelectors = [godalmingItems, sewardItems, vanHelsingItems, minaItems];
+const hunterItems = [godalmingItems, sewardItems, vanHelsingItems, minaItems];
 const eventSelectors = [godalmingEvents, sewardEvents, vanHelsingEvents, minaEvents];
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
 let selectedEncounterName = '';
@@ -171,7 +175,41 @@ resolveEncounter.addEventListener('click', () => {
   updateAllFields();
 });
 
-resolveEncounter.addEventListener('click', () => {
+fight.addEventListener('click', () => {
+  const huntersInCombat: Hunter[] = [];
+  const chosenItems: string[] = [];
+  if (hunters[actingHunter.selectedIndex].groupNumber == 0) {
+    if (hunterItems[actingHunter.selectedIndex].selectedIndex > -1) {
+      huntersInCombat.push(hunters[actingHunter.selectedIndex]);
+      chosenItems.push(hunterItems[actingHunter.selectedIndex].value);
+    } else {
+      return;
+    }
+  } else {
+    for (let i = 0; i < 4; i++) {
+      if (hunters[i].groupNumber == hunters[actingHunter.selectedIndex].groupNumber) {
+        huntersInCombat.push(hunters[i]);
+        if (hunterItems[i].selectedIndex > -1) {
+          chosenItems.push(hunterItems[i].value);
+        } else {
+          return;
+        }
+      }
+    }
+  }
+  game.resolveCombatRound(huntersInCombat, chosenItems);
+  updateLog();
+});
+
+hunterWins.addEventListener('click', () => {
+  game.applyHunterAttackSuccess(hunters[actingHunter.selectedIndex].lastUsedCombatItem);
+});
+
+enemyWins.addEventListener('click', () => {
+  game.applyEnemyAttackSuccess(game.huntersInGroup(hunters[actingHunter.selectedIndex]))
+})
+
+discardEncounter.addEventListener('click', () => {
   game.discardEncounter(selectedEncounterName);
   updateAllFields();
 });
@@ -184,8 +222,15 @@ actingHunter.addEventListener('change', () => {
 });
 
 travelButton.addEventListener('click', () => {
-  if (moveMethod.value == 'Bats') {
+  if (moveMethod.value == EncounterName.Bats) {
     game.setHunterLocation(hunters[actingHunter.selectedIndex], game.dracula.decideBatsDestination(hunters[actingHunter.selectedIndex], game).name);
+    game.huntersInGroup(hunters[actingHunter.selectedIndex]).forEach(companion => {
+      game.discardEncounterFromHunter(companion, EncounterName.Bats);
+    });
+  } else if (moveMethod.value == EncounterName.Fog) {
+    game.huntersInGroup(hunters[actingHunter.selectedIndex]).forEach(companion => {
+      game.discardEncounterFromHunter(companion, EncounterName.Fog);
+    });
   } else if (destination.value) {
     moveMethod.selectedIndex = 0;
     game.setHunterLocation(hunters[actingHunter.selectedIndex], destination.value);
@@ -258,8 +303,10 @@ startButton.addEventListener('click', () => {
     }
   });
   travelButton.addEventListener('click', () => {
-    clearOptions(destination);
-    game.searchWithHunter(hunters[actingHunter.selectedIndex]);
+    if (destination.value) {
+      clearOptions(destination);
+      game.searchWithHunter(hunters[actingHunter.selectedIndex]);
+    }
     updateAllFields();
   });
   actingHunter.selectedIndex = 0;
@@ -304,16 +351,16 @@ drawEvent.addEventListener('click', () => {
   updateLog();
 });
 discardItem.addEventListener('click', () => {
-  if (itemSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
-    game.discardHunterItem(itemSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+  if (hunterItems[actingHunter.selectedIndex].selectedIndex > -1) {
+    game.discardHunterItem(hunterItems[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
     updateHunterDetails();
     updateDiscards();
     updateLog();
   }
 });
 giveItem.addEventListener('click', () => {
-  if (itemSelectors[actingHunter.selectedIndex].selectedIndex > -1 && !game.itemInTrade) {
-    game.tradeItemFromHunter(itemSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+  if (hunterItems[actingHunter.selectedIndex].selectedIndex > -1 && !game.itemInTrade) {
+    game.tradeItemFromHunter(hunterItems[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
     updateHunterDetails();
     updateLog();
   }

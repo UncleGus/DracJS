@@ -1,9 +1,10 @@
 import { GameMap, LocationType, Location, LocationName, LocationDomain } from "./map";
-import { Dracula, TrailCard, PowerName } from "./dracula";
+import { Dracula, TrailCard, PowerName, Attack } from "./dracula";
 import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
 import { Encounter, initialiseEncounterPool, EncounterName } from "./encounter";
-import { Item, initialiseItemDeck } from "./item";
+import { Item, initialiseItemDeck, ItemName } from "./item";
 import { Event, initialiseEventDeck, EventType, EventName } from "./event";
+import { getHunterSuccessCombatOutcome } from "./combat";
 
 export class Game {
   map: GameMap;
@@ -600,14 +601,27 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Assassin:
-        // TODO: resolve Assassin
+        this.dracula.availableAttacks = [
+          Attack.DodgeMinion,
+          Attack.Punch,
+          Attack.Knife,
+          Attack.Pistol,
+          Attack.Rifle
+        ];
+        this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.lastUsedCombatItem = '';
+        });
+        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife} - an escape result means no further encounters are resolved`);
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Bats:
-        hunter.encounterTiles.push(currentEncounter)
-        this.log(`Bats has ended ${hunter.name}'s turn`);
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.encounterTiles.push(currentEncounter)
+          this.log(`Bats has ended ${companion.name}'s turn`);
+        });
         break;
       case EncounterName.DesecratedSoil:
         this.log('Draw an event card, if it is for Dracula, give it to him, otherwise discard it');
@@ -616,73 +630,140 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Fog:
-        hunter.encounterTiles.push(currentEncounter)
-        this.log(`Fog has ended ${hunter.name}'s turn`);
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.encounterTiles.push(currentEncounter);
+          this.log(`Fog has ended ${companion.name}'s turn`);
+        });
         break;
       case EncounterName.MinionWithKnife:
+        this.dracula.availableAttacks = [
+          Attack.DodgeMinion,
+          Attack.Punch,
+          Attack.Knife
+        ];
+        this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.lastUsedCombatItem = '';
+        });
+        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
       case EncounterName.MinionWithKnifeAndPistol:
+        this.dracula.availableAttacks = [
+          Attack.DodgeMinion,
+          Attack.Punch,
+          Attack.Knife,
+          Attack.Pistol
+        ];
+        this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.lastUsedCombatItem = '';
+        });
+        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
       case EncounterName.MinionWithKnifeAndRifle:
-        // TODO: resolve Minion
+        this.dracula.availableAttacks = [
+          Attack.DodgeMinion,
+          Attack.Punch,
+          Attack.Knife,
+          Attack.Rifle
+        ];
+        this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.lastUsedCombatItem = '';
+        });
+        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Hoax:
-        if (hunter.currentLocation.domain == LocationDomain.west) {
-          this.log(`${hunter.name} must discard all events`);
-        } else {
-          this.log(`${hunter.name} must discard one event`);
-        }
+        this.huntersInGroup(hunter).forEach(companion => {
+          if (companion.currentLocation.domain == LocationDomain.west) {
+            this.log(`${companion.name} must discard all events`);
+          } else {
+            this.log(`${companion.name} must discard one event`);
+          }
+        });
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Lightning:
-        this.log(`${hunter} must show Dracula a Crucifix or Heavenly Host or lost 2 health and discard an item`);
-        this.encounterPool.push(currentEncounter);
-        this.log(this.shuffleEncounters());
-        this.log(`${encounterName} resolved`);
-        break;
-      case EncounterName.Peasants:
-        if (hunter.currentLocation.domain == LocationDomain.west) {
-          this.log(`${hunter.name} must discard one item and draw a new one`);
+        if (hunter.groupNumber == 0) {
+          this.log(`${hunter.name} must show Dracula a Crucifix or Heavenly Host or lost 2 health and discard an item`);
         } else {
-          this.log(`${hunter.name} must discard all items and draw new ones`);
+          this.log('The Hunter group must show Dracula a Crucifix or Heavenly Host or each lose 2 health and discard an item');
         }
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
+      case EncounterName.Peasants:
+        this.huntersInGroup(hunter).forEach(companion => {
+          if (companion.currentLocation.domain == LocationDomain.west) {
+            this.log(`${companion.name} must discard one item and draw a new one`);
+          } else {
+            this.log(`${companion.name} must discard all items and draw new ones`);
+          }
+        });
+        this.encounterPool.push(currentEncounter);
+        this.log(this.shuffleEncounters());
+        this.log(`${encounterName} resolved`);
+        break;
       case EncounterName.Plague:
-        this.log(`${hunter.name} loses 2 health`);
+        this.huntersInGroup(hunter).forEach(companion => {
+          this.log(`${companion.name} loses 2 health`);
+        });
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Rats:
         // TODO: integrate with Dracula's knowledge of Hunter Items
-        this.log(`${hunter.name} must show Dracula a Dogs item or roll four dice, losing one health for each 4-6 rolled`);
+        if (hunter.groupNumber == 0) {
+          this.log(`${hunter.name} must show Dracula a Dogs item or roll four dice, losing one health for each 4-6 rolled`);
+        } else {
+          this.log('The Hunter group must show Dracula a Dogs item or each roll four dice, losing one health for each 4-6 rolled')
+        }
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Saboteur:
         // TODO: integrate with Dracula's knowledge of Hunter Items
-        this.log(`${hunter.name} must show Dracula a Dogs item or discard one item or event and end the turn`);
+        if (hunter.groupNumber == 0) {
+          this.log(`${hunter.name} must show Dracula a Dogs item or discard one item or event and end the turn`);
+        } else {
+          this.log('The Hunter group must show Dracula a Dogs item or each discard one item or event and end the turn');
+        }
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Spy:
         // TODO: integrate with Dracula's knowledge of Hunter's next move
-        this.log(`${hunter.name} must show Dracula all items and events and declare next move`);
+        if (hunter.groupNumber == 0) {
+          this.log(`${hunter.name} must show Dracula all items and events and declare next move`);
+        } else {
+          this.log('The Hunter group must show Dracula all items and events and declare their next moves');
+        }
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Thief:
         // TODO: integrate with Dracula's knowledge of Hunter Items
-        this.log(`${hunter.name} must show Dracula a Dogs item or discard one random item or event of Dracula's choice`);
+        if (hunter.groupNumber == 0) {
+          this.log(`${hunter.name} must show Dracula a Dogs item or discard one random item or event of Dracula's choice`);
+        } else {
+          this.log('The Hunter group must show Dracula a Dogs item or each discard one random item or event of Dracula\'s choice');
+        }
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
@@ -690,16 +771,31 @@ export class Game {
       case EncounterName.NewVampire:
         // TODO: integrate with Dracula's knowledge of Hunter Items
         if (this.timePhase < 3) {
-          this.log(`${hunter.name} found a vampire during the day and killed it`);
+          if (hunter.groupNumber == 0) {
+            this.log(`${hunter.name} found a vampire during the day and killed it`);
+          } else {
+            this.log('The Hunter group found a vampire during the day and killed it');
+          }
         } else {
-          this.log(`${hunter.name} has encountered a vampire at night and must roll a die`);
-          this.log(`On a roll of 1-3, ${hunter.name} is bitten, unless they show Dracula a Heavenly Host or Crucifix item`);
-          this.log(`On a roll of 4-6, the vampire escapes unless ${hunter.name} discards a Knife or a Stake item`);
-          this.log(`If the vampire escapes, leave it here and ${hunter.name}'s turn ends, otherwise discard it`);
+          if (hunter.groupNumber == 0) {
+            this.log(`${hunter.name} has encountered a vampire at night and must roll a die`);
+            this.log(`On a roll of 1-3, ${hunter.name} is bitten, unless they show Dracula a Heavenly Host or Crucifix item`);
+            this.log(`On a roll of 4-6, the vampire escapes unless ${hunter.name} discards a Knife or a Stake item`);
+            this.log(`If the vampire escapes, leave it here and ${hunter.name}'s turn ends, otherwise discard it`);
+          } else {
+            this.log('The Hunter group has encountered a vampire at night and must roll a die');
+            this.log('On a roll of 1-3, each Hunter is bitten, unless they show Dracula a Heavenly Host or Crucifix item');
+            this.log('On a roll of 4-6, the vampire escapes unless one Hunter discards a Knife or a Stake item');
+            this.log('If the vampire escapes, leave it here and the group\'s turn ends, otherwise discard it');
+          }
         }
         break;
       case EncounterName.Wolves:
-        this.log(`${hunter.name} must show Dracula a Pistol and/or a Rifle item, or lose a health for each item type not shown`);
+        if (hunter.groupNumber == 0) {
+          this.log(`${hunter.name} must show Dracula a Pistol and/or a Rifle item, or lose a health for each item type not shown`);
+        } else {
+          this.log('The Hunter group must show Dracula a Pistol and/or a Rifle item, or each lose a health for each item type not shown');
+        }
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
@@ -734,11 +830,77 @@ export class Game {
   }
 
   /**
+   * Removes an Encounter tile of the given name from the given Hunter
+   * @param hunter The Hunter discarding the tile
+   * @param encounterName The name of the Encounter being discarded
+   */
+  discardEncounterFromHunter(hunter: Hunter, encounterName: string) {
+    let encounterIndex = 0;
+    for (encounterIndex; encounterIndex < hunter.encounterTiles.length; encounterIndex++) {
+      if (hunter.encounterTiles[encounterIndex].name == encounterName) {
+        break;
+      }
+    }
+    this.log(`${encounterName} tile discarded from ${hunter.name}`);
+    this.encounterPool.push(hunter.encounterTiles.splice(encounterIndex, 1)[0]);
+    this.log(this.shuffleEncounters());
+  }
+
+  /**
+   * Chooses which combat card Dracula plays in a current round of combat
+   * @param hunters The Hunters involved in the combat
+   * @param items The names of the combat cards chosen by the Hunters
+   */
+  resolveCombatRound(hunters: Hunter[], items: string[]) {
+    // TODO: add the basic combat cards to the Hunters and remove them at the end of the combat
+    for (let i = 0; i < hunters.length; i++) {
+      this.log(`${hunters[i].name} used ${items[i]}`);
+    }
+    this.log(this.dracula.chooseCombatCard(hunters));
+    for (let i = 0; i < hunters.length; i++) {
+      hunters[i].lastUsedCombatItem = items[i];
+    }
+  }
+
+  /**
    * Adds a card to the head of the trail
    * @param newTrailCard The card to add to the head of the trail
    */
   pushToTrail(newTrailCard: TrailCard): string {
     this.trail.unshift(newTrailCard);
     return 'Dracula added a card to the trail';
+  }
+
+  /**
+   * Returns array of Hunters in the same group as the given Hunter
+   * @param hunter The Hunter in the group (or alone)
+   */
+  huntersInGroup(hunter: Hunter): Hunter[] {
+    if (hunter.groupNumber == 0) {
+      return [hunter];
+    } else {
+      const huntersInGroup = [];
+      if (this.godalming.groupNumber == hunter.groupNumber) {
+        huntersInGroup.push(this.godalming);
+      }
+      if (this.seward.groupNumber == hunter.groupNumber) {
+        huntersInGroup.push(this.seward);
+      }
+      if (this.vanHelsing.groupNumber == hunter.groupNumber) {
+        huntersInGroup.push(this.vanHelsing);
+      }
+      if (this.mina.groupNumber == hunter.groupNumber) {
+        huntersInGroup.push(this.mina);
+      }
+      return huntersInGroup;
+    }
+  }
+
+  /**
+   * Applies the outcome of a successful attack with the given Item
+   * @param itemName The name of the Item used in the successful attack
+   */
+  applyHunterAttackSuccess(itemName: string) {
+    const outcome = getHunterSuccessCombatOutcome(itemName, this.dracula.lastUsedAttack);
   }
 }
