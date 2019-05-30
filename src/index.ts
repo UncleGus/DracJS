@@ -17,29 +17,10 @@ const eventCount = document.getElementById('eventCount') as HTMLInputElement;
 const draculaAlly = document.getElementById('draculaAlly') as HTMLInputElement;
 const hunterAlly = document.getElementById('hunterAlly') as HTMLInputElement;
 
-const godalmingGroup = document.getElementById('godalmingGroup') as HTMLSelectElement;
-const godalmingHealth = document.getElementById('godalmingHealth') as HTMLInputElement;
-const godalmingLocation = document.getElementById('godalmingLocation') as HTMLInputElement;
-const godalmingItems = document.getElementById('godalmingItems') as HTMLSelectElement;
-const godalmingEvents = document.getElementById('godalmingEvents') as HTMLSelectElement;
-
-const sewardGroup = document.getElementById('sewardGroup') as HTMLSelectElement;
-const sewardHealth = document.getElementById('sewardHealth') as HTMLInputElement;
-const sewardLocation = document.getElementById('sewardLocation') as HTMLInputElement;
-const sewardItems = document.getElementById('sewardItems') as HTMLSelectElement;
-const sewardEvents = document.getElementById('sewardEvents') as HTMLSelectElement;
-
-const vanHelsingGroup = document.getElementById('vanHelsingGroup') as HTMLSelectElement;
-const vanHelsingHealth = document.getElementById('vanHelsingHealth') as HTMLInputElement;
-const vanHelsingLocation = document.getElementById('vanHelsingLocation') as HTMLInputElement;
-const vanHelsingItems = document.getElementById('vanHelsingItems') as HTMLSelectElement;
-const vanHelsingEvents = document.getElementById('vanHelsingEvents') as HTMLSelectElement;
-
-const minaGroup = document.getElementById('minaGroup') as HTMLSelectElement;
-const minaHealth = document.getElementById('minaHealth') as HTMLInputElement;
-const minaLocation = document.getElementById('minaLocation') as HTMLInputElement;
-const minaItems = document.getElementById('minaItems') as HTMLSelectElement;
-const minaEvents = document.getElementById('minaEvents') as HTMLSelectElement;
+const godalming = document.getElementById('godalming');
+const seward = document.getElementById('seward');
+const vanHelsing = document.getElementById('vanHelsing');
+const mina = document.getElementById('mina');
 
 const actingHunter = document.getElementById('actingHunter') as HTMLSelectElement;
 const moveMethod = document.getElementById('moveMethod') as HTMLSelectElement;
@@ -56,12 +37,21 @@ const discardItem = document.getElementById('discardItem');
 const giveItem = document.getElementById('giveItem');
 const takeItem = document.getElementById('takeItem');
 const fight = document.getElementById('fight');
-const hunterWins = document.getElementById('hunterWins');
-const enemyWins = document.getElementById('enemyWins');
-
+const hunterWin = document.getElementById('hunterWin');
+const enemyWin = document.getElementById('enemyWin');
 const targetLocation = document.getElementById('targetLocation');
 const locationSelector = document.getElementById('locationSelector') as HTMLSelectElement;
 const consecratedGround = document.getElementById('consecratedGround') as HTMLInputElement;
+const timePhase = document.getElementById('timePhase') as HTMLInputElement;
+const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
+const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
+const itemDiscard = document.getElementById('itemDiscard') as HTMLSelectElement;
+const eventDiscard = document.getElementById('eventDiscard') as HTMLSelectElement;
+const resolveEncounter = document.getElementById('resolveEncounter');
+const discardEncounter = document.getElementById('discardEncounter');
+const startButton = document.getElementById('startButton');
+const draculaTurnButton = document.getElementById('draculaTurn');
+const debugGameStateButton = document.getElementById('debugGameState');
 
 const trailLocation = [
   document.getElementById('trail1') as HTMLInputElement,
@@ -103,27 +93,9 @@ const catacombEncounterB = [
   document.getElementById('catacombEncounter3B') as HTMLInputElement,
 ];
 
-const timePhase = document.getElementById('timePhase') as HTMLInputElement;
-const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
-const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
-const itemDiscard = document.getElementById('itemDiscard') as HTMLSelectElement;
-const eventDiscard = document.getElementById('eventDiscard') as HTMLSelectElement;
-const resolveEncounter = document.getElementById('resolveEncounter');
-const discardEncounter = document.getElementById('discardEncounter');
-const startButton = document.getElementById('startButton');
-const draculaTurnButton = document.getElementById('draculaTurn');
-const debugGameStateButton = document.getElementById('debugGameState');
-
-const godalmingDetails = document.getElementById('godalmingDetails');
-const sewardDetails = document.getElementById('sewardDetails');
-const vanHelsingDetails = document.getElementById('vanHelsingDetails');
-const minaDetails = document.getElementById('minaDetails');
 
 const hunters = [game.godalming, game.seward, game.vanHelsing, game.mina];
-const hunterGroups = [godalmingGroup, sewardGroup, vanHelsingGroup, minaGroup];
-const hunterDetails = [godalmingDetails, sewardDetails, vanHelsingDetails, minaDetails];
-const hunterItems = [godalmingItems, sewardItems, vanHelsingItems, minaItems];
-const eventSelectors = [godalmingEvents, sewardEvents, vanHelsingEvents, minaEvents];
+const hunterDetails = [godalming, seward, vanHelsing, mina];
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
 let selectedEncounterName = '';
 
@@ -140,8 +112,13 @@ for (let i = 0; i < 4; i++) {
     updateTargetLocation();
     updateSelectedHunter();
   });
-  hunterGroups[i].addEventListener('change', () => {
-    hunters[i].groupNumber = hunterGroups[i].selectedIndex;
+  hunterDetails[i].querySelector('#group').addEventListener('change', () => {
+    hunters[i].groupNumber = (hunterDetails[i].querySelector('#group') as HTMLSelectElement).selectedIndex;
+  });
+  hunterDetails[i].querySelector('#health').addEventListener('change', () => {
+    game.setHunterHealth(hunters[i], parseInt((hunterDetails[i].querySelector('#health') as HTMLSelectElement).value));
+    updateHunterDetails();
+    updateLog();
   });
 }
 
@@ -179,9 +156,9 @@ fight.addEventListener('click', () => {
   const huntersInCombat: Hunter[] = [];
   const chosenItems: string[] = [];
   if (hunters[actingHunter.selectedIndex].groupNumber == 0) {
-    if (hunterItems[actingHunter.selectedIndex].selectedIndex > -1) {
+    if ((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
       huntersInCombat.push(hunters[actingHunter.selectedIndex]);
-      chosenItems.push(hunterItems[actingHunter.selectedIndex].value);
+      chosenItems.push((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).value);
     } else {
       return;
     }
@@ -189,8 +166,8 @@ fight.addEventListener('click', () => {
     for (let i = 0; i < 4; i++) {
       if (hunters[i].groupNumber == hunters[actingHunter.selectedIndex].groupNumber) {
         huntersInCombat.push(hunters[i]);
-        if (hunterItems[i].selectedIndex > -1) {
-          chosenItems.push(hunterItems[i].value);
+        if ((hunterDetails[i].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
+          chosenItems.push((hunterDetails[i].querySelector('#items') as HTMLSelectElement).value);
         } else {
           return;
         }
@@ -201,11 +178,11 @@ fight.addEventListener('click', () => {
   updateLog();
 });
 
-hunterWins.addEventListener('click', () => {
+hunterWin.addEventListener('click', () => {
   game.applyHunterAttackSuccess(hunters[actingHunter.selectedIndex].lastUsedCombatItem);
 });
 
-enemyWins.addEventListener('click', () => {
+enemyWin.addEventListener('click', () => {
   game.applyEnemyAttackSuccess(game.huntersInGroup(hunters[actingHunter.selectedIndex]))
 });
 
@@ -241,26 +218,6 @@ travelButton.addEventListener('click', () => {
     updateHunterDetails();
     updateLog();
   }
-});
-godalmingHealth.addEventListener('change', () => {
-  game.setHunterHealth(game.godalming, parseInt(godalmingHealth.value));
-  updateHunterDetails();
-  updateLog();
-});
-sewardHealth.addEventListener('change', () => {
-  game.setHunterHealth(game.seward, parseInt(sewardHealth.value));
-  updateHunterDetails();
-  updateLog();
-});
-vanHelsingHealth.addEventListener('change', () => {
-  game.setHunterHealth(game.vanHelsing, parseInt(vanHelsingHealth.value));
-  updateHunterDetails();
-  updateLog();
-});
-minaHealth.addEventListener('change', () => {
-  game.setHunterHealth(game.mina, parseInt(minaHealth.value));
-  updateHunterDetails();
-  updateLog();
 });
 
 startButton.addEventListener('click', () => {
@@ -351,16 +308,16 @@ drawEvent.addEventListener('click', () => {
   updateLog();
 });
 discardItem.addEventListener('click', () => {
-  if (hunterItems[actingHunter.selectedIndex].selectedIndex > -1) {
-    game.discardHunterItem(hunterItems[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
+    game.discardHunterItem((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex]);
     updateHunterDetails();
     updateDiscards();
     updateLog();
   }
 });
 giveItem.addEventListener('click', () => {
-  if (hunterItems[actingHunter.selectedIndex].selectedIndex > -1 && !game.itemInTrade) {
-    game.tradeItemFromHunter(hunterItems[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).selectedIndex > -1 && !game.itemInTrade) {
+    game.tradeItemFromHunter((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex]);
     updateHunterDetails();
     updateLog();
   }
@@ -373,16 +330,16 @@ takeItem.addEventListener('click', () => {
   }
 });
 discardEvent.addEventListener('click', () => {
-  if (eventSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
-    game.discardHunterEvent(eventSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex]);
+  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
+    game.discardHunterEvent((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex]);
     updateHunterDetails();
     updateDiscards();
     updateLog();
   }
 });
 playEvent.addEventListener('click', () => {
-  if (eventSelectors[actingHunter.selectedIndex].selectedIndex > -1) {
-    game.playHunterEvent(eventSelectors[actingHunter.selectedIndex].value, hunters[actingHunter.selectedIndex], locationSelector.value);
+  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
+    game.playHunterEvent((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex], locationSelector.value);
     updateHunterDetails();
     updateDiscards();
     updateTargetLocation();
@@ -442,42 +399,16 @@ function updateDraculaDetails() {
  * Updates the values in the fields in the Hunter Details section
  */
 function updateHunterDetails() {
-  godalmingHealth.value = game.godalming.health.toString();
-  godalmingLocation.value = game.godalming.currentLocation.name;
-  clearOptions(godalmingItems);
-  game.godalming.items.forEach(item => godalmingItems.options.add(new Option(item.name)));
-  godalmingItems.setAttribute('size', game.godalming.items.length.toString());
-  clearOptions(godalmingEvents);
-  game.godalming.events.forEach(event => godalmingEvents.options.add(new Option(event.name)));
-  godalmingEvents.setAttribute('size', game.godalming.events.length.toString());
-
-  sewardHealth.value = game.seward.health.toString();
-  sewardLocation.value = game.seward.currentLocation.name;
-  clearOptions(sewardItems);
-  game.seward.items.forEach(item => sewardItems.options.add(new Option(item.name)));
-  sewardItems.setAttribute('size', game.seward.items.length.toString());
-  clearOptions(sewardEvents);
-  game.seward.events.forEach(event => sewardEvents.options.add(new Option(event.name)));
-  sewardEvents.setAttribute('size', game.seward.events.length.toString());
-
-  vanHelsingHealth.value = game.vanHelsing.health.toString();
-  vanHelsingLocation.value = game.vanHelsing.currentLocation.name;
-  clearOptions(vanHelsingItems);
-  game.vanHelsing.items.forEach(item => vanHelsingItems.options.add(new Option(item.name)));
-  vanHelsingItems.setAttribute('size', game.vanHelsing.items.length.toString());
-  clearOptions(vanHelsingEvents);
-  game.vanHelsing.events.forEach(event => vanHelsingEvents.options.add(new Option(event.name)));
-  vanHelsingEvents.setAttribute('size', game.vanHelsing.events.length.toString());
-
-  minaHealth.value = game.mina.health.toString();
-  minaLocation.value = game.mina.currentLocation.name;
-  clearOptions(minaItems);
-  game.mina.items.forEach(item => minaItems.options.add(new Option(item.name)));
-  minaItems.setAttribute('size', game.mina.items.length.toString());
-  clearOptions(minaEvents);
-  game.mina.events.forEach(event => minaEvents.options.add(new Option(event.name)));
-  minaEvents.setAttribute('size', game.mina.events.length.toString());
-
+  for (let i = 0; i < 4; i++) {
+    (hunterDetails[i].querySelector('#health') as HTMLSelectElement).value = hunters[i].health.toString();
+    (hunterDetails[i].querySelector('#location') as HTMLInputElement).value = hunters[i].currentLocation.name;
+    clearOptions(hunterDetails[i].querySelector('#items') as HTMLSelectElement);
+    hunters[i].items.forEach(item => (hunterDetails[i].querySelector('#items') as HTMLSelectElement).options.add(new Option(item.name)));
+    (hunterDetails[i].querySelector('#items') as HTMLSelectElement).setAttribute('size', hunters[i].items.length.toString());
+    clearOptions(hunterDetails[i].querySelector('#events') as HTMLSelectElement);
+    hunters[i].events.forEach(event => (hunterDetails[i].querySelector('#events') as HTMLSelectElement).options.add(new Option(event.name)));
+    (hunterDetails[i].querySelector('#events') as HTMLSelectElement).setAttribute('size', hunters[i].events.length.toString());
+  }
   hunterAlly.value = game.hunterAlly ? game.hunterAlly.name : '';
 }
 
@@ -520,7 +451,7 @@ function updateSelectedEncounter() {
  */
 function updateTargetLocation() {
   clearOptions(locationSelector);
-  if (eventSelectors[actingHunter.selectedIndex].value == EventName.ConsecratedGround) {
+  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).value == EventName.ConsecratedGround) {
     game.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity)
       .forEach(location => locationSelector.options.add(new Option(location.name)));
   }
@@ -664,6 +595,9 @@ function updateDiscards() {
   eventDiscard.selectedIndex = eventDiscard.options.length - 1;
 }
 
+/**
+ * Updates the marker related field values
+ */
 function updateMarkers() {
   consecratedGround.value = game.consecratedLocation ? game.consecratedLocation.name : '';
 }
