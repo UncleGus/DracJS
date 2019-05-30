@@ -208,13 +208,20 @@ actingHunter.addEventListener('change', () => {
 travelButton.addEventListener('click', () => {
   if (moveMethod.value == EncounterName.Bats) {
     game.setHunterLocation(hunters[actingHunter.selectedIndex], game.dracula.decideBatsDestination(hunters[actingHunter.selectedIndex], game).name);
+    let batsTile: Encounter;
     game.huntersInGroup(hunters[actingHunter.selectedIndex]).forEach(companion => {
-      game.discardEncounterFromHunter(companion, EncounterName.Bats);
+      batsTile = game.removeEncounterFromHunter(companion, EncounterName.Bats);
     });
+    game.encounterPool.push(batsTile);
+    game.shuffleEncounters();
   } else if (moveMethod.value == EncounterName.Fog) {
+    let fogTile: Encounter;
     game.huntersInGroup(hunters[actingHunter.selectedIndex]).forEach(companion => {
-      game.discardEncounterFromHunter(companion, EncounterName.Fog);
+      fogTile = game.removeEncounterFromHunter(companion, EncounterName.Fog);
     });
+    game.encounterPool.push(fogTile);
+    game.shuffleEncounters();
+
   } else if (destination.value) {
     moveMethod.selectedIndex = 0;
     game.setHunterLocation(hunters[actingHunter.selectedIndex], destination.value);

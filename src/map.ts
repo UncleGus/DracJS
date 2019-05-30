@@ -731,7 +731,7 @@ export class GameMap {
         nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.roadConnections);
       }
       if (methods.find(method => method == 'train')) {
-        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.trainConnections);
+        nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, this.locationsConnectedBySingleTrain(location));
       }
       if (methods.find(method => method == 'sea')) {
         nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.seaConnections);
@@ -742,6 +742,25 @@ export class GameMap {
       return -1;
     }
     return this.distanceBetweenLocations(null, destination, methods, examinedLocations, newLocationsToExamine, distance + 1);
+  }
+
+  /**
+   * Returns all Locations within 1 move by train from the given Location
+   * @param origin The origination point
+   */
+  locationsConnectedBySingleTrain(origin: Location): Location[] {
+    let connectedLocations: Location[] = [];
+    const routes1 = origin.trainConnections.map(train => [origin, train]);
+    const routes2: Location[][] = [];
+    routes1.forEach(route => route[1].trainConnections.filter(conn => conn !== route[0]).map(train => routes2.push([...route, train])));
+    const routes3: Location[][] = [];
+    routes2.forEach(route => route[2].trainConnections.filter(conn => conn !== route[1]).map(train => routes3.push([...route, train])));
+    const filteredRoutes3 = routes3.filter(route => !route.find(location => location.domain == LocationDomain.east));
+    routes1.forEach(route => connectedLocations.push(route[1]));
+    routes2.forEach(route => connectedLocations.push(route[2]));
+    filteredRoutes3.forEach(route => connectedLocations.push(route[3]));
+
+    return _.uniq(connectedLocations);
   }
 }
 

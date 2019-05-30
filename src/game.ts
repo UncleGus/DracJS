@@ -843,20 +843,19 @@ export class Game {
   }
 
   /**
-   * Removes an Encounter tile of the given name from the given Hunter
-   * @param hunter The Hunter discarding the tile
-   * @param encounterName The name of the Encounter being discarded
+   * Removes an Encounter tile of the given name from the given Hunter and returns it
+   * @param hunter The Hunter removing the tile
+   * @param encounterName The name of the Encounter being removed
    */
-  discardEncounterFromHunter(hunter: Hunter, encounterName: string) {
+  removeEncounterFromHunter(hunter: Hunter, encounterName: string): Encounter {
     let encounterIndex = 0;
     for (encounterIndex; encounterIndex < hunter.encounterTiles.length; encounterIndex++) {
       if (hunter.encounterTiles[encounterIndex].name == encounterName) {
         break;
       }
     }
-    this.log(`${encounterName} tile discarded from ${hunter.name}`);
-    this.encounterPool.push(hunter.encounterTiles.splice(encounterIndex, 1)[0]);
-    this.log(this.shuffleEncounters());
+    this.log(`${encounterName} tile removed from ${hunter.name}`);
+    return hunter.encounterTiles.splice(encounterIndex, 1)[0];
   }
 
   /**
