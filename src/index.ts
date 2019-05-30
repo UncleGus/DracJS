@@ -207,7 +207,7 @@ hunterWins.addEventListener('click', () => {
 
 enemyWins.addEventListener('click', () => {
   game.applyEnemyAttackSuccess(game.huntersInGroup(hunters[actingHunter.selectedIndex]))
-})
+});
 
 discardEncounter.addEventListener('click', () => {
   game.discardEncounter(selectedEncounterName);

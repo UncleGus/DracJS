@@ -4,7 +4,7 @@ import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
 import { Encounter, initialiseEncounterPool, EncounterName } from "./encounter";
 import { Item, initialiseItemDeck, ItemName } from "./item";
 import { Event, initialiseEventDeck, EventType, EventName } from "./event";
-import { getHunterSuccessCombatOutcome } from "./combat";
+import { getHunterSuccessCombatOutcome, CombatOutcome, getEnemySuccessCombatOutcome } from "./combat";
 
 export class Game {
   map: GameMap;
@@ -609,6 +609,7 @@ export class Game {
           Attack.Rifle
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.dracula.repelled = false;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
         });
@@ -642,6 +643,7 @@ export class Game {
           Attack.Knife
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.dracula.repelled = false;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
         });
@@ -658,6 +660,7 @@ export class Game {
           Attack.Pistol
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.dracula.repelled = false;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
         });
@@ -674,6 +677,7 @@ export class Game {
           Attack.Rifle
         ];
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
+        this.dracula.repelled = false;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
         });
@@ -902,5 +906,95 @@ export class Game {
    */
   applyHunterAttackSuccess(itemName: string) {
     const outcome = getHunterSuccessCombatOutcome(itemName, this.dracula.lastUsedAttack);
+    this.dracula.repelled = false;
+    outcome.forEach(effect => {
+      this.handleEffect(effect);
+    });
+  }
+
+  /**
+   * Decides which Hunter to whom to apply the successful attack
+   * @param hunters The Hunters involved in the combat
+   */
+  applyEnemyAttackSuccess(hunters: Hunter[]) {
+    // TODO: Make logical decision
+    const choice = Math.floor(Math.random() * hunters.length);
+    const outcome = getEnemySuccessCombatOutcome(hunters[choice].lastUsedCombatItem, this.dracula.lastUsedAttack);
+    this.dracula.repelled = false;
+    outcome.forEach(effect => {
+      this.handleEffect(effect, hunters[choice]);
+    });
+  }
+
+  /**
+   * Handles an individual combat effect
+   * @param effect The effect to handle
+   */
+  handleEffect(effect: CombatOutcome, hunter?: Hunter) {
+    switch (effect) {
+      case CombatOutcome.DraculaLose1Blood:
+        this.log('Dracula loses 1 blood');
+        break;
+      case CombatOutcome.DraculaLose2Blood:
+        this.log('Dracula loses 2 blood');
+        break;
+      case CombatOutcome.DraculaLose3Blood:
+        this.log('Dracula loses 3 blood');
+        break;
+      case CombatOutcome.DraculaLose4Blood:
+        this.log('Dracula loses 3 blood');
+        break;
+      case CombatOutcome.HunterRollBonus:
+        this.log('+1 to Hunter rolls in the next round of combat');
+        break;
+      case CombatOutcome.Repel:
+        this.log('Dracula is Repelled');
+        this.dracula.repelled = true;
+        break;
+      case CombatOutcome.DraculaDeath:
+        this.log('Dracula is critically wounded');
+        break;
+      case CombatOutcome.MinionDeath:
+        this.log('Dracula\'s agent is killed');
+        break;
+      case CombatOutcome.HunterLose1Health:
+        this.log(`${hunter.name} loses 1 health`);
+        break;
+      case CombatOutcome.HunterLose2Health:
+        this.log(`${hunter.name} loses 2 health`);
+        break;
+      case CombatOutcome.HunterLose3Health:
+        this.log(`${hunter.name} loses 3 health`);
+        break;
+      case CombatOutcome.DraculaInitiativeBonus:
+        this.log('Dracula gets +1 to combat rolls next round');
+        break;
+      case CombatOutcome.HunterItemDestroyed:
+        this.log(`${hunter.name}'s ${hunter.lastUsedCombatItem} is destroyed`);
+        break;
+      case CombatOutcome.HunterEventDiscarded:
+        this.log(`${hunter.name} must discard one event`);
+        break;
+      case CombatOutcome.HunterLosesAllItems:
+        this.log(`${hunter.name} loses all items`);
+        break;
+      case CombatOutcome.Bite:
+        this.log(`${hunter.name} is bitten`);
+        break;
+      case CombatOutcome.EscapeAsBat:
+        // TODO: apply Escape As Bat move
+        this.log('Dracula escapes in the form of a bat');
+        break;
+      case CombatOutcome.Continue:
+        // TODO: count continues and end as appropriate
+        this.log('Combat continues another round');
+        break;
+      case CombatOutcome.End:
+        this.log('Combat ends');
+        break;
+      case CombatOutcome.Invalid:
+        this.log(`This is not a valid combat card combination: ${hunter.lastUsedCombatItem} and ${this.dracula.lastUsedAttack}`);
+        break;
+    }
   }
 }

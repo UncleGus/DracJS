@@ -21,6 +21,7 @@ export class Dracula {
   possibleMoves: PossibleMove[];
   availableAttacks: string[];
   lastUsedAttack: string;
+  repelled: boolean;
 
   constructor() {
     this.blood = 15;
@@ -464,7 +465,10 @@ export class Dracula {
    */
   chooseCombatCard(hunters: Hunter[]): string {
     // TODO: Make logical descision
-    const allowedAttacks = _.without(this.availableAttacks, this.lastUsedAttack);
+    let allowedAttacks = _.without(this.availableAttacks, this.lastUsedAttack);
+    if (this.repelled) {
+      allowedAttacks = _.without(this.availableAttacks, Attack.Claws, Attack.Fangs, Attack.Mesmerize, Attack.Strength);
+    }
     const choice = Math.floor(Math.random() * allowedAttacks.length);
     this.lastUsedAttack = allowedAttacks[choice];
     return `Dracula chose ${allowedAttacks[choice]}`;

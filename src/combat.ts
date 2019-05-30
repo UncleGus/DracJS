@@ -16,7 +16,7 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Knife:
         case Attack.Pistol:
         case Attack.Rifle:
-          outcome.push(CombatOutcome.HunterInitiativeBonus, CombatOutcome.Continue);
+          outcome.push(CombatOutcome.HunterRollBonus, CombatOutcome.Continue);
           break;
         case Attack.EscapeMan:
         case Attack.EscapeMist:
@@ -24,6 +24,9 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
           break;
         case Attack.EscapeBat:
           outcome.push(CombatOutcome.EscapeAsBat, CombatOutcome.End);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -53,7 +56,10 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
           outcome.push(CombatOutcome.DraculaLose1Blood);
           break;
         case Attack.Punch:
-          outcome.push(CombatOutcome.MinionDeath);
+          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.End);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -70,7 +76,7 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
           outcome.push(CombatOutcome.Continue);
           break;
         case Attack.EscapeMan:
-          outcome.push(CombatOutcome.DraculaDeath);
+          outcome.push(CombatOutcome.DraculaDeath, CombatOutcome.End);
           break;
         case Attack.EscapeMist:
           outcome.push(CombatOutcome.End);
@@ -84,7 +90,10 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Punch:
         case Attack.Knife:
         case Attack.Pistol:
-          outcome.push(CombatOutcome.MinionDeath);
+          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.End);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -109,7 +118,10 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Knife:
         case Attack.Pistol:
         case Attack.Rifle:
-          outcome.push(CombatOutcome.MinionDeath);
+          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.End);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -134,7 +146,10 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Knife:
         case Attack.Pistol:
         case Attack.Rifle:
-          outcome.push(CombatOutcome.MinionDeath);
+          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.End);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -146,7 +161,7 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
           outcome.push(CombatOutcome.DraculaLose1Blood, CombatOutcome.HunterItemDestroyed);
           break;
         case Attack.DodgeDracula:
-          outcome.push(CombatOutcome.DraculaDeath, CombatOutcome.HunterItemDestroyed);
+          outcome.push(CombatOutcome.DraculaDeath, CombatOutcome.End, CombatOutcome.HunterItemDestroyed);
           break;
         case Attack.EscapeMan:
         case Attack.Fangs:
@@ -163,7 +178,10 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Knife:
         case Attack.Pistol:
         case Attack.Rifle:
-          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.HunterItemDestroyed);
+          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.End, CombatOutcome.HunterItemDestroyed);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -175,22 +193,25 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.EscapeBat:
         case Attack.Fangs:
         case Attack.Mesmerize:
-          outcome.push(CombatOutcome.DraculaDeath);
+          outcome.push(CombatOutcome.DraculaDeath, CombatOutcome.End);
           break;
         case Attack.EscapeMist:
         case Attack.Strength:
           outcome.push(CombatOutcome.End);
           break;
         case Attack.DodgeMinion:
-          outcome.push(CombatOutcome.MinionDeath);
+          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.End);
           break;
         case Attack.Punch:
         case Attack.Knife:
         case Attack.Pistol:
-          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.HunterItemDestroyed);
+          outcome.push(CombatOutcome.MinionDeath, CombatOutcome.End, CombatOutcome.HunterItemDestroyed);
           break;
         case Attack.Rifle:
           outcome.push(CombatOutcome.Continue);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -221,6 +242,9 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Rifle:
           outcome.push(CombatOutcome.Invalid);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
       break;
     case ItemName.HeavenlyHost:
@@ -240,6 +264,9 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Knife:
         case Attack.Pistol:
         case Attack.Rifle:
+          outcome.push(CombatOutcome.Invalid);
+          break;
+        default:
           outcome.push(CombatOutcome.Invalid);
           break;
       }
@@ -269,7 +296,13 @@ export function getHunterSuccessCombatOutcome(hunterItem: string, enemyItem: str
         case Attack.Rifle:
           outcome.push(CombatOutcome.Invalid);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
+      break;
+    default:
+      outcome.push(CombatOutcome.Invalid);
       break;
   }
   return outcome;
@@ -307,6 +340,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Rifle:
           outcome.push(CombatOutcome.Continue);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
       break;
     case ItemName.Escape:
@@ -339,6 +375,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
           break;
         case Attack.Rifle:
           outcome.push(CombatOutcome.HunterLose3Health);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -379,6 +418,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Rifle:
           outcome.push(CombatOutcome.HunterLose3Health);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
       break;
     case ItemName.Knife:
@@ -415,6 +457,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
           break;
         case Attack.Rifle:
           outcome.push(CombatOutcome.HunterLose3Health);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -455,6 +500,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Rifle:
           outcome.push(CombatOutcome.HunterLose2Health);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
       break;
     case ItemName.Rifle:
@@ -488,6 +536,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Rifle:
           outcome.push(CombatOutcome.HunterLose2Health);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
       break;
     case ItemName.SacredBullets:
@@ -520,6 +571,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
           break;
         case Attack.Knife:
           outcome.push(CombatOutcome.HunterLose1Health, CombatOutcome.HunterEventDiscarded, CombatOutcome.HunterItemDestroyed);
+          break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
           break;
       }
       break;
@@ -558,6 +612,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Rifle:
           outcome.push(CombatOutcome.HunterLose3Health);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
       break;
     case ItemName.Crucifix:
@@ -589,6 +646,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Rifle:
           outcome.push(CombatOutcome.Invalid);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
       break;
     case ItemName.HeavenlyHost:
@@ -614,6 +674,9 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Knife:
         case Attack.Pistol:
         case Attack.Rifle:
+          outcome.push(CombatOutcome.Invalid);
+          break;
+        default:
           outcome.push(CombatOutcome.Invalid);
           break;
       }
@@ -647,7 +710,13 @@ export function getEnemySuccessCombatOutcome(hunterItem: string, enemyItem: stri
         case Attack.Rifle:
           outcome.push(CombatOutcome.Invalid);
           break;
+        default:
+          outcome.push(CombatOutcome.Invalid);
+          break;
       }
+      break;
+    default:
+      outcome.push(CombatOutcome.Invalid);
       break;
   }
   return outcome;
@@ -658,7 +727,7 @@ export enum CombatOutcome {
   DraculaLose2Blood,
   DraculaLose3Blood,
   DraculaLose4Blood,
-  HunterInitiativeBonus,
+  HunterRollBonus,
   Repel,
   DraculaDeath,
   MinionDeath,
