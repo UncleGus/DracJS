@@ -35,6 +35,7 @@ export class Game {
   selectedCatacombEncounterB: number;
   selectedAmbushEncounter: boolean;
   roundsContinued: number;
+  roadBlock: Location[];
 
   constructor() {
     // construct game components
@@ -45,6 +46,7 @@ export class Game {
     this.eventDeck = initialiseEventDeck();
     this.eventDiscard = [];
     this.catacombs = [];
+    this.roadBlock = [];
     this.heavenlyHostLocations = [];
     this.dracula = new Dracula();
     this.godalming = new Hunter(HunterName.godalming, 12);
@@ -520,12 +522,7 @@ export class Game {
             this.log(`Dracula chose to keep ${this.draculaAlly.name}`);
           }
         }
-        switch (this.draculaAlly.name) {
-          case EventName.DraculasBrides:
-            this.dracula.encounterHandSize = 7;
-            this.log(this.dracula.drawUpEncounters(this.encounterPool));
-            break;
-        }
+        this.updateAllyEffects();
       } else {
         this.eventDiscard.push(eventCardDrawn);
         this.dracula.eventAwaitingApproval = eventCardDrawn.name;
@@ -628,7 +625,7 @@ export class Game {
    * @param eventName The name of the Event
    * @param hunter The Hunter playing the Event
    */
-  playHunterEvent(eventName: string, hunter: Hunter, locationNames?: string[]) {
+  playHunterEvent(eventName: string, hunter: Hunter, locationNames: string[] = [], allySelected?: boolean, roadblockSelected?: boolean) {
     // TODO: so much
     if (this.dracula.eventAwaitingApproval && eventName !== EventName.GoodLuck) {
       return;
@@ -649,7 +646,17 @@ export class Game {
     } else {
       this.eventDiscard.push(eventCardPlayed);
     }
-    this.log(`${hunter.name} played event ${eventName}${locationNames ? ` on ${locationNames[0]} and ${locationNames[1]}` : ''}`);
+    // TODO: This is only necessary if Dracula needs to know the Hunters' intent
+    if (eventName == EventName.GoodLuck) {
+      if (allySelected && this.draculaAlly) {
+        this.log(`${hunter.name} played Good Luck to discard ${this.draculaAlly.name}`);
+      } else if (roadblockSelected && this.roadBlock.length == 2) {
+        this.log(`${hunter.name} played Good Luck to discard the roadblock between ${this.roadBlock[0].name} and ${this.roadBlock[0].name}`);
+      }
+    }
+    if (locationNames.length > 0) {
+      this.log(`${hunter.name} played event ${eventName} on ${locationNames[0]}${locationNames.length > 1 ? `and ${locationNames[1]}` : ''}`);
+    }
     if (this.dracula.willPlayFalseTipOffToCancel(eventCardPlayed, this)) {
       this.log(`Dracula played False Tip-off to cancel ${eventCardPlayed.name}`);
     } else if (this.dracula.willPlayDevilishPowerToCancel(eventCardPlayed, this)) {
@@ -1301,6 +1308,32 @@ export class Game {
         const evasionDestination = this.dracula.chooseEvasionDestination(this);
         this.log(this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail() }));
         break;
+    }
+  }
+
+  /**
+   * Discards Dracula's current Ally
+   */
+  discardDraculaAlly() {
+    this.log(`${this.draculaAlly.name} discarded`);
+    this.eventDiscard.push(this.draculaAlly);
+    this.updateAllyEffects();
+  }
+
+  /**
+   * Updates the effects from Dracula's Ally
+   */
+  updateAllyEffects() {
+    if (!this.draculaAlly) {
+      this.dracula.encounterHandSize = 5;
+      this.log(this.dracula.discardDownEncounters(this.encounterPool));
+    } else {
+      switch (this.draculaAlly.name) {
+        case EventName.DraculasBrides:
+          this.dracula.encounterHandSize = 7;
+          this.log(this.dracula.drawUpEncounters(this.encounterPool));
+          break;
+      }
     }
   }
 }

@@ -101,6 +101,8 @@ const hunters = [game.godalming, game.seward, game.vanHelsing, game.mina];
 const hunterDetails = [godalming, seward, vanHelsing, mina];
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
 let draculaSelected = false;
+let draculaAllySelected = false;
+let roadBlockSelected = false;
 let selectedEncounterName = '';
 let actingHunter = 0;
 
@@ -150,6 +152,8 @@ for (let i = 0; i < 6; i++) {
     game.selectedCatacombEncounterA = -1;
     game.selectedCatacombEncounterB = -1;
     draculaSelected = false;
+    draculaAllySelected = false;
+    roadBlockSelected = false;
     game.selectedAmbushEncounter = false;
     selectedEncounterName = trailEncounter[i].value;
     updateSelectedEncounter();
@@ -161,6 +165,8 @@ for (let i = 0; i < 3; i++) {
     game.selectedCatacombEncounterA = i;
     game.selectedCatacombEncounterB = -1;
     draculaSelected = false;
+    draculaAllySelected = false;
+    roadBlockSelected = false;
     game.selectedAmbushEncounter = false;
     selectedEncounterName = catacombEncounterA[i].value;
     updateSelectedEncounter();
@@ -180,6 +186,8 @@ dracula.addEventListener('click', () => {
   game.selectedCatacombEncounterA = -1;
   game.selectedCatacombEncounterB = -1;
   draculaSelected = true;
+  draculaAllySelected = false;
+  roadBlockSelected = false;
   game.selectedAmbushEncounter = false;
   selectedEncounterName = 'Dracula';
   updateSelectedEncounter();
@@ -189,10 +197,24 @@ ambushEncounter.addEventListener('click', () => {
   game.selectedCatacombEncounterA = -1;
   game.selectedCatacombEncounterB = -1;
   draculaSelected = false;
+  draculaAllySelected = false;
+  roadBlockSelected = false;
   game.selectedAmbushEncounter = true;
   selectedEncounterName = ambushEncounter.value;
   updateSelectedEncounter();
 });
+draculaAlly.addEventListener('click', () => {
+  game.selectedTrailEncounter = -1;
+  game.selectedCatacombEncounterA = -1;
+  game.selectedCatacombEncounterB = -1;
+  draculaSelected = false;
+  draculaAllySelected = true;
+  roadBlockSelected = false;
+  game.selectedAmbushEncounter = false;
+  selectedEncounterName = ambushEncounter.value;
+  updateSelectedEncounter();
+});
+
 resolveEncounter.addEventListener('click', () => {
   game.resolveEncounter(selectedEncounterName, hunters[actingHunter]);
   updateAllFields();
@@ -439,7 +461,12 @@ takeItem.addEventListener('click', () => {
   }
 });
 discardEvent.addEventListener('click', () => {
-  if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
+  if (draculaAllySelected && draculaAlly.value != '') {
+    game.discardDraculaAlly();
+    updateHunterDetails();
+    updateDiscards();
+    updateLog();
+  } else if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
     game.discardHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter]);
     updateHunterDetails();
     updateDiscards();
@@ -448,7 +475,7 @@ discardEvent.addEventListener('click', () => {
 });
 playEvent.addEventListener('click', () => {
   if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
-    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter]);
+    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], [], draculaAllySelected, roadBlockSelected);
     updateHunterDetails();
     updateDiscards();
     updateTargetLocation();
@@ -550,6 +577,7 @@ function updateSelectedEncounter() {
   });
   dracula.classList.remove('selectedEncounter');
   ambushEncounter.classList.remove('selectedEncounter');
+  draculaAlly.classList.remove('selectedEncounter');
   if (game.selectedTrailEncounter > -1) {
     trailEncounter[game.selectedTrailEncounter].classList.add('selectedEncounter');
   }
@@ -561,6 +589,9 @@ function updateSelectedEncounter() {
   }
   if (draculaSelected) {
     dracula.classList.add('selectedEncounter');
+  }
+  if (draculaAllySelected) {
+    draculaAlly.classList.add('selectedEncounter');
   }
   if (game.selectedAmbushEncounter) {
     ambushEncounter.classList.add('selectedEncounter');
