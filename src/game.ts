@@ -666,7 +666,7 @@ export class Game {
     } else if (this.dracula.willPlayDevilishPowerToCancel(eventCardPlayed, this)) {
       this.log(`Dracula played Devilish Power to cancel ${eventCardPlayed.name}`);
     }
-    switch(eventCardPlayed.name) {
+    switch (eventCardPlayed.name) {
       case EventName.HiredScouts:
         locationNames.forEach(name => {
           const trailCard = this.trail.find(card => card.location == this.map.getLocationByName(name));
@@ -1302,7 +1302,7 @@ export class Game {
     if (logMessage) {
       this.log(logMessage);
       return true;
-    }    
+    }
   }
 
   /**
@@ -1362,17 +1362,19 @@ export class Game {
    * Updates the effects from Dracula's Ally
    */
   updateAllyEffects() {
-    if (!this.draculaAlly) {
-      this.dracula.encounterHandSize = 5;
-      this.log(this.dracula.discardDownEncounters(this.encounterPool));
-    } else {
-      switch (this.draculaAlly.name) {
-        case EventName.DraculasBrides:
-          this.dracula.encounterHandSize = 7;
-          this.log(this.dracula.drawUpEncounters(this.encounterPool));
-          break;
-      }
+    this.dracula.encounterHandSize = 5;
+    this.dracula.eventHandSize = 4;
+    switch (this.draculaAlly.name) {
+      case EventName.DraculasBrides:
+        this.dracula.encounterHandSize = 7;
+        this.log(this.dracula.drawUpEncounters(this.encounterPool));
+        break;
+      case EventName.ImmanuelHildesheim:
+        this.dracula.eventHandSize = 6;
+        break;
     }
+    this.log(this.dracula.discardDownEncounters(this.encounterPool));
+    this.log(this.dracula.discardDownEvents(this.eventDiscard));
   }
 
   resolveHypnosis() {
