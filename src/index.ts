@@ -41,7 +41,8 @@ const fight = document.getElementById('fight');
 const hunterWin = document.getElementById('hunterWin');
 const enemyWin = document.getElementById('enemyWin');
 const targetLocation = document.getElementById('targetLocation');
-const locationSelector = document.getElementById('locationSelector') as HTMLSelectElement;
+const locationSelector1 = document.getElementById('locationSelector1') as HTMLSelectElement;
+const locationSelector2 = document.getElementById('locationSelector2') as HTMLSelectElement;
 const consecratedGround = document.getElementById('consecratedGround') as HTMLSelectElement;
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
@@ -483,15 +484,11 @@ discardEvent.addEventListener('click', () => {
 playEvent.addEventListener('click', () => {
   if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
     if (game.dracula.eventAwaitingApproval && !((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.GoodLuck
-        || (hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.CharteredCarriage)) {
-          return;
+      || (hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.CharteredCarriage)) {
+      return;
     }
-    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], [], draculaAllySelected, roadBlockSelected);
-    updateHunterDetails();
-    updateDiscards();
-    updateTargetLocation();
-    updateMarkers();
-    updateLog();
+    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], [locationSelector1.value, locationSelector2.value], draculaAllySelected, roadBlockSelected);
+    updateAllFields();
   }
 });
 
@@ -613,16 +610,18 @@ function updateSelectedEncounter() {
  * Updates the options and visibility of the locationSelector
  */
 function updateTargetLocation() {
-  clearOptions(locationSelector);
-  if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.ConsecratedGround) {
-    game.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity)
-      .forEach(location => locationSelector.options.add(new Option(location.name)));
-  }
-  if (locationSelector.options.length > 0) {
-    targetLocation.style.removeProperty('display');
-  } else {
-    targetLocation.style.display = 'none';
-  }
+  [locationSelector1, locationSelector2].forEach(locationSelector => {
+    clearOptions(locationSelector);
+    if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.HiredScouts) {
+      game.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity)
+        .forEach(location => locationSelector.options.add(new Option(location.name)));
+    }
+    if (locationSelector.options.length > 0) {
+      targetLocation.style.removeProperty('display');
+    } else {
+      targetLocation.style.display = 'none';
+    }
+  });
 }
 
 /**

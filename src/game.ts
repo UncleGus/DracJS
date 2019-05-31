@@ -630,6 +630,10 @@ export class Game {
     if (this.dracula.eventAwaitingApproval && eventName !== EventName.GoodLuck) {
       return;
     }
+    if (eventName == EventName.HiredScouts && locationNames.length < 2) {
+      this.log('Choose two cities to investigate with Hired Scouts');
+      return;
+    }
     let eventIndex = 0;
     for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
       if (hunter.events[eventIndex].name == eventName) {
@@ -647,20 +651,54 @@ export class Game {
       this.eventDiscard.push(eventCardPlayed);
     }
     // TODO: This is only necessary if Dracula needs to know the Hunters' intent
-    if (eventName == EventName.GoodLuck) {
-      if (allySelected && this.draculaAlly) {
-        this.log(`${hunter.name} played Good Luck to discard ${this.draculaAlly.name}`);
-      } else if (roadblockSelected && this.roadBlock.length == 2) {
-        this.log(`${hunter.name} played Good Luck to discard the roadblock between ${this.roadBlock[0].name} and ${this.roadBlock[0].name}`);
-      }
-    }
-    if (locationNames.length > 0) {
-      this.log(`${hunter.name} played event ${eventName} on ${locationNames[0]}${locationNames.length > 1 ? `and ${locationNames[1]}` : ''}`);
-    }
+    // if (eventName == EventName.GoodLuck) {
+    //   if (allySelected && this.draculaAlly) {
+    //     this.log(`${hunter.name} played Good Luck to discard ${this.draculaAlly.name}`);
+    //   } else if (roadblockSelected && this.roadBlock.length == 2) {
+    //     this.log(`${hunter.name} played Good Luck to discard the roadblock between ${this.roadBlock[0].name} and ${this.roadBlock[0].name}`);
+    //   }
+    // }
+    // if (locationNames.length > 0) {
+    //   this.log(`${hunter.name} played event ${eventName} on ${locationNames[0]}${locationNames.length > 1 ? `and ${locationNames[1]}` : ''}`);
+    // }
     if (this.dracula.willPlayFalseTipOffToCancel(eventCardPlayed, this)) {
       this.log(`Dracula played False Tip-off to cancel ${eventCardPlayed.name}`);
     } else if (this.dracula.willPlayDevilishPowerToCancel(eventCardPlayed, this)) {
       this.log(`Dracula played Devilish Power to cancel ${eventCardPlayed.name}`);
+    }
+    switch(eventCardPlayed.name) {
+      case EventName.HiredScouts:
+        locationNames.forEach(name => {
+          const trailCard = this.trail.find(card => card.location == this.map.getLocationByName(name));
+          if (trailCard) {
+            this.log(`${name} is in Dracula's trail`);
+            trailCard.revealed = true;
+            if (trailCard.encounter) {
+              trailCard.encounter.revealed = true;
+            }
+            if (this.dracula.currentLocation == trailCard.location) {
+              this.dracula.revealed = true;
+            }
+          } else {
+            this.log(`${name} is not in Dracula's trail`);
+          }
+        });
+        locationNames.forEach(name => {
+          const catacombCard = this.catacombs.find(card => card.location == this.map.getLocationByName(name));
+          if (catacombCard) {
+            this.log(`${name} is in Dracula's trail`);
+            catacombCard.revealed = true;
+            if (catacombCard.encounter) {
+              catacombCard.encounter.revealed = true;
+            }
+            if (catacombCard.catacombEncounter) {
+              catacombCard.catacombEncounter.revealed = true;
+            }
+          } else {
+            this.log(`${name} is not in Dracula's catacombs`);
+          }
+        });
+        break;
     }
   }
 
