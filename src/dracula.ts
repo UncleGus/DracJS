@@ -27,6 +27,7 @@ export class Dracula {
   repelled: boolean;
   lastPlayedEvent: string;
   eventAwaitingApproval: string;
+  potentialTargetHunters: Hunter[];
   hypnosisInEffect: boolean;
 
   constructor() {
@@ -600,12 +601,17 @@ export class Dracula {
   /**
    * Chooses which combat card to use in the current round of combat
    * @param hunters The Hunters involved in the combat
+   * @param gameState The state of the game
    */
-  chooseCombatCardAndHunter(hunters: Hunter[]): string {
+  chooseCombatCardAndHunter(hunters: Hunter[], gameState: Game): string {
     // TODO: Make logical descision
     let allowedAttacks = _.without(this.availableAttacks, this.lastUsedAttack);
     if (this.repelled) {
       allowedAttacks = _.without(this.availableAttacks, Attack.Claws, Attack.Fangs, Attack.Mesmerize, Attack.Strength);
+    }
+    if (gameState.rageRounds > 0) {
+      allowedAttacks = _.without(this.availableAttacks, Attack.EscapeBat, Attack.EscapeMan, Attack.EscapeMist);
+      gameState.rageRounds -= 1;
     }
     const attackChoice = Math.floor(Math.random() * allowedAttacks.length);
     const targetChoice = Math.floor(Math.random() * hunters.length);
@@ -827,6 +833,27 @@ export class Dracula {
     const hunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina];
     const choice = Math.floor(Math.random() * 4);
     return `Quincey has targeted ${hunters[choice].name}, who must show Dracula a Heavenly Host or Crucifix or suffer 1 health loss`;
+  }
+
+  willPlayRage(hunters: Hunter[], gameState: Game): string {
+    // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
+    if (!this.eventHand.find(event => event.name == EventName.Rage)) {
+      return;
+    }
+    if (Math.random() < 0.5) {
+      this.playEvent(EventName.Rage, gameState.eventDiscard);
+      this.eventAwaitingApproval = EventName.Rage;
+      this.potentialTargetHunters = hunters;
+      return 'Dracula played Rage';
+    }
+  }
+
+  chooseRageVictim(gameState: Game): string {
+    // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
+    const hunterChoice = Math.floor(Math.random() * this.potentialTargetHunters.length);
+    const targetHunter = this.potentialTargetHunters[hunterChoice];
+    const itemChoice = Math.floor(Math.random() * targetHunter.items.length);
+    return `Dracula played Rage against ${targetHunter.name} and discarded ${targetHunter.items[itemChoice].name}`;
   }
 }
 

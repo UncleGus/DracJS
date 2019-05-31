@@ -35,6 +35,7 @@ export class Game {
   selectedCatacombEncounterB: number;
   selectedAmbushEncounter: boolean;
   roundsContinued: number;
+  rageRounds: number;
   roadBlock: Location[];
 
   constructor() {
@@ -773,11 +774,13 @@ export class Game {
         this.dracula.lastUsedAttack = Attack.DodgeDracula;
         this.dracula.repelled = false;
         this.roundsContinued = 0;
+        this.rageRounds = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
           companion.inCombat = true;
         });
         this.log('Resolve a combat against Dracula');
+        this.log(this.dracula.willPlayRage(this.huntersInGroup(hunter), this));
         break;
       case EncounterName.Ambush:
         this.dracula.encounterHandSize += 1;
@@ -799,6 +802,7 @@ export class Game {
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
         this.roundsContinued = 0;
+        this.rageRounds = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
           companion.inCombat = true;
@@ -835,6 +839,7 @@ export class Game {
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
         this.roundsContinued = 0;
+        this.rageRounds = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
           companion.inCombat = true;
@@ -854,6 +859,7 @@ export class Game {
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
         this.roundsContinued = 0;
+        this.rageRounds = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
           companion.inCombat = true;
@@ -873,6 +879,7 @@ export class Game {
         this.dracula.lastUsedAttack = Attack.DodgeMinion;
         this.dracula.repelled = false;
         this.roundsContinued = 0;
+        this.rageRounds = 0;
         this.huntersInGroup(hunter).forEach(companion => {
           companion.lastUsedCombatItem = '';
           companion.inCombat = true;
@@ -1054,7 +1061,7 @@ export class Game {
     for (let i = 0; i < hunters.length; i++) {
       this.log(`${hunters[i].name} used ${items[i]}`);
     }
-    this.log(this.dracula.chooseCombatCardAndHunter(hunters));
+    this.log(this.dracula.chooseCombatCardAndHunter(hunters, this));
     for (let i = 0; i < hunters.length; i++) {
       hunters[i].lastUsedCombatItem = items[i];
     }
@@ -1377,6 +1384,10 @@ export class Game {
         break;
       case EventName.NightVisit:
         this.log(this.dracula.chooseHunterToNightVisit(this));
+        break;
+      case EventName.Rage:
+        this.log(this.dracula.chooseRageVictim(this));
+        this.rageRounds = 3;
         break;
     }
     this.dracula.eventAwaitingApproval = null;
