@@ -16,6 +16,7 @@ export class Game {
   eventDeck: Event[];
   eventDiscard: Event[];
   consecratedLocation: Location;
+  holyHostLocations: Location[];
   hunterAlly: Event;
   draculaAlly: Event;
   dracula: Dracula;
@@ -44,6 +45,7 @@ export class Game {
     this.eventDeck = initialiseEventDeck();
     this.eventDiscard = [];
     this.catacombs = [];
+    this.holyHostLocations = [];
     this.dracula = new Dracula();
     this.godalming = new Hunter(HunterName.godalming, 12);
     this.seward = new Hunter(HunterName.seward, 10);
@@ -446,7 +448,7 @@ export class Game {
       this.log('Dracula attacks! Resolve an encounter with Dracula');
     } else if (this.dracula.currentLocation.type !== LocationType.castle && this.dracula.currentLocation.type !== LocationType.sea &&
       (!this.dracula.nextMove.power || this.dracula.nextMove.power.name == 'Hide' || this.dracula.nextMove.power.name == 'Wolf Form' || this.dracula.nextMove.power.name == 'Wolf Form and Hide')) {
-      this.trail[0].encounter = this.dracula.chooseEncounter();
+      this.trail[0].encounter = this.dracula.chooseEncounterForTrail();
       this.log('Dracula placed an encounter');
     }
 
@@ -1161,5 +1163,39 @@ export class Game {
    */
   hunterIsIn(location: Location) {
     return !![this.godalming, this.seward, this.vanHelsing, this.mina].find(hunter => hunter.currentLocation == location);
+  }
+
+  /**
+   * Determines if a given Location is in the trail
+   * @param location The Location to look for
+   */
+  trailContains(location: Location): boolean {
+    this.trail.forEach(card => {
+      if (card.location == location) {
+        return true;
+      }
+    });
+    return false;
+  }
+
+  /**
+   * Determines if a given Location is in the catacombs
+   * @param location The Location to look for
+   */
+  catacombsContains(location: Location): boolean {
+    this.catacombs.forEach(card => {
+      if (card.location == location) {
+        return true;
+      }
+    });
+    return false;
+  }
+
+  /**
+   * Determines if a Location is blocked to Dracula due to Consecrated Ground or one of the Heavenly Hosts or by being the Hospital
+   * @param location The Location to check
+   */
+  cityIsConsecrated(location: Location) {
+    return location.type == LocationType.hospital || this.consecratedLocation == location || !!this.holyHostLocations.find(city => city == location);
   }
 }

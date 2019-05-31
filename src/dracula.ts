@@ -119,7 +119,7 @@ export class Dracula {
     this.possibleMoves = [];
     const connectedLocations = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
     let invalidLocations = gameState.trail.filter(trail => trail.location).map(trail => trail.location);
-    invalidLocations.push(gameState.map.locations.find(location => location.type == LocationType.hospital));
+    invalidLocations.push(gameState.map.locations.find(location => location.type == LocationType.hospital), gameState.consecratedLocation);
     let seaIsInvalid = false;
     if (this.blood == 1) {
       if (this.currentLocation.type !== LocationType.sea) {
@@ -193,11 +193,11 @@ export class Dracula {
           this.possibleMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.WolfForm:
-          potentialDestinations = this.currentLocation.roadConnections;
-          potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections));
+          potentialDestinations = this.currentLocation.roadConnections.filter(road => !gameState.cityIsConsecrated(road));
+          potentialDestinations.forEach(dest => secondLayerDestination.push(...dest.roadConnections));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
-          potentialDestinations = potentialDestinations.filter(dest => !gameState.trail.find(trailCard => trailCard.location == dest) && !gameState.catacombs.find(trailCard => trailCard.location == dest));
+          potentialDestinations = potentialDestinations.filter(dest => !gameState.trailContains(dest) && !gameState.catacombsContains(dest) && !gameState.cityIsConsecrated(dest));
           potentialDestinations = _.without(potentialDestinations, this.currentLocation);
           potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
@@ -206,7 +206,7 @@ export class Dracula {
           potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
-          potentialDestinations = potentialDestinations.filter(dest => gameState.trail.find(trailCard => trailCard.location == dest) || gameState.catacombs.find(trailCard => trailCard.location == dest));
+          potentialDestinations = potentialDestinations.filter(dest => (gameState.trailContains(dest) || gameState.catacombsContains(dest)) && !gameState.cityIsConsecrated(dest));
           potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndHide:
@@ -231,9 +231,17 @@ export class Dracula {
   /**
    * Chooses which Encounter to place on a trail card
    */
-  chooseEncounter(): Encounter {
+  chooseEncounterForTrail(): Encounter {
     // TODO: make logical decision
-    // TODO: either include logic for catacombs choice here or make a second function for that case
+    const randomChoice = Math.floor(Math.random() * this.encounterHand.length);
+    return this.encounterHand.splice(randomChoice, 1)[0];
+  }
+
+  /**
+   * Chooses which Encounter to place on a catacombs card
+   */
+  chooseEncounterForCatacombs(): Encounter {
+    // TODO: make logical decision
     const randomChoice = Math.floor(Math.random() * this.encounterHand.length);
     return this.encounterHand.splice(randomChoice, 1)[0];
   }
@@ -377,7 +385,7 @@ export class Dracula {
     // TODO: make logical decision
     if (droppedOffCard.location) {
       if (Math.random() < 0.2 && gameState.catacombs.length < 3 && droppedOffCard.location.type !== LocationType.sea) {
-        droppedOffCard.catacombEncounter = this.chooseEncounter();
+        droppedOffCard.catacombEncounter = this.chooseEncounterForCatacombs();
         gameState.catacombs.push(droppedOffCard);
         delete droppedOffCard.power;
         return 'Dracula moved the card to the catacombs with an additional encounter on it'
