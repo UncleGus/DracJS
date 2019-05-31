@@ -3,7 +3,7 @@ import { GameMap, LocationType, Location, LocationName, LocationDomain } from ".
 import { Dracula, TrailCard, PowerName, Attack } from "./dracula";
 import { Hunter, HunterName } from "./hunter";
 import { Encounter, initialiseEncounterPool, EncounterName } from "./encounter";
-import { Item, initialiseItemDeck, ItemName } from "./item";
+import { Item, initialiseItemDeck } from "./item";
 import { Event, initialiseEventDeck, EventType, EventName } from "./event";
 import { getHunterSuccessCombatOutcome, CombatOutcome, getEnemySuccessCombatOutcome } from "./combat";
 
@@ -505,7 +505,7 @@ export class Game {
     const eventCardDrawn = this.eventDeck.splice(draculaEventIndex, 1)[0];
     if (eventCardDrawn.type == EventType.Keep) {
       this.dracula.eventHand.push();
-      this.log('Event card given to Dracula');
+      this.log('Keep event card given to Dracula');
       this.log(this.dracula.discardDownEvents(this.eventDiscard));
     } else {
       this.log(`Dracula drew ${eventCardDrawn.name}`);
@@ -674,7 +674,7 @@ export class Game {
       return;
     }
     let currentEncounter: Encounter;
-    if (encounterName !== 'Dracula') {
+    if (encounterName !== EncounterName.Dracula) {
       if (this.selectedTrailEncounter > -1) {
         currentEncounter = this.trail[this.selectedTrailEncounter].encounter;
         delete this.trail[this.selectedTrailEncounter].encounter;
@@ -694,7 +694,7 @@ export class Game {
     }
 
     switch (encounterName) {
-      case 'Dracula':
+      case EncounterName.Dracula:
         this.dracula.availableAttacks = this.timePhase < 3 ? [
           Attack.Claws,
           Attack.DodgeDracula,
@@ -1259,21 +1259,20 @@ export class Game {
   /**
    * Determines if Dracula will play a start of turn Event
    */
-  draculaPlaysStartOfTurnEvent(): boolean {
+  draculaChooseStartOfTurnEvent() {
     let logMessage = this.dracula.chooseStartOfTurnEvent(this);
     if (logMessage) {
       this.log(logMessage);
       return true;
-    }
-    return false;
+    }    
   }
 
   /**
    * Determines if Dracula will play a start of movement Event
    */
-  draculaPlaysStartOfMovementEvent(): boolean {
+  draculaChooseStartOfMovementEvent() {
     // TODO: this is a placeholder
-    return false;
+    return;
   }
 
   /**
@@ -1291,6 +1290,7 @@ export class Game {
   draculaPlaysFalseTipoff(hunters: Hunter[]): boolean {
     if (this.dracula.willPlayFalseTipoff(hunters, this)) {
       this.log('Dracula played False Tip-off');
+      return true;
     }
     return false;
   }

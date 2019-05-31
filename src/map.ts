@@ -714,7 +714,7 @@ export class GameMap {
    * @param distance Only used for recursive calls
    */
   distanceBetweenLocations(origin: Location, destination: Location,
-    methods: string[] = ['road', 'train', 'sea'],
+    methods: string[] = [TravelMethod.road, TravelMethod.train, TravelMethod.sea],
     examinedLocations: Location[] = [], locationsAtCurrentDistance: Location[] = [], distance: number = 0): number {
 
     if (origin) {
@@ -727,13 +727,13 @@ export class GameMap {
     examinedLocations = _.union(examinedLocations, locationsAtCurrentDistance);
     let nextLayerOfConnectedLocations: Location[] = [];
     locationsAtCurrentDistance.forEach(location => {
-      if (methods.find(method => method == 'road')) {
+      if (methods.find(method => method == TravelMethod.road)) {
         nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.roadConnections);
       }
-      if (methods.find(method => method == 'train')) {
+      if (methods.find(method => method == TravelMethod.train)) {
         nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, this.locationsConnectedBySingleTrain(location));
       }
-      if (methods.find(method => method == 'sea')) {
+      if (methods.find(method => method == TravelMethod.sea)) {
         nextLayerOfConnectedLocations = _.union(nextLayerOfConnectedLocations, location.seaConnections);
       }
     });
@@ -978,4 +978,15 @@ export enum LocationName {
   Vienna = 'Vienna',
   Zagreb = 'Zagreb',
   Zurich = 'Zurich'
+}
+
+export enum TravelMethod {
+  start = 'Start Location',
+  noTravel = 'No travel',
+  road = 'Road',
+  train = 'Train',
+  sea = 'Sea',
+  senseOfEmergency = 'Sense of Emergency',
+  bats = 'Bats',
+  fog = 'Fog'
 }

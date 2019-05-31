@@ -1,7 +1,7 @@
-import { Location, LocationType, LocationDomain } from "./map";
+import * as _ from 'lodash';
+import { Location, LocationType, LocationDomain, TravelMethod } from "./map";
 import { Game } from "./game";
 import { Encounter, EncounterName } from "./encounter";
-import * as _ from 'lodash';
 import { Event, EventName } from "./event";
 import { Hunter } from "./hunter";
 
@@ -111,6 +111,10 @@ export class Dracula {
     return validLocations[randomIndex];
   }
 
+  /**
+   * Chooses a Location to move to when Evade is resolved
+   * @param gameState 
+   */
   chooseEvasionDestination(gameState: Game): Location {
     // TODO: improve logic
     const validLocations = gameState.map.locations.filter(location =>
@@ -207,7 +211,7 @@ export class Dracula {
           break;
         case PowerName.DoubleBack:
           gameState.trail.concat(gameState.catacombs).forEach(trailCard => {
-            if (gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, ['road', 'sea']) == 1) {
+            if (gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, [TravelMethod.road, TravelMethod.sea]) == 1) {
               this.possibleMoves.push({ location: trailCard.location, power: validPower, value: 1 });
             }
           });
@@ -715,7 +719,6 @@ export class Dracula {
     if (this.eventHand.find(event => event.name == EventName.FalseTipoff)) {
       if (Math.random() < 0.25) {
         this.playEvent(EventName.FalseTipoff, gameState.eventDiscard);
-        this.eventAwaitingApproval = EventName.FalseTipoff;
         return true;
       }
       return false;
@@ -728,6 +731,9 @@ export class Dracula {
    */
   chooseStartOfTurnEvent(gameState: Game): string {
     // TODO: Make logical decision
+    if (this.eventAwaitingApproval) {
+      return;
+    }
     let potentialEvents = this.eventHand.filter(card => card.name
       == EventName.DevilishPower);
     // || card.name == EventName.Roadblock

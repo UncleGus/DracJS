@@ -1,11 +1,11 @@
 import * as _ from 'lodash';
-import { Game } from "./game";
-import { LocationType, Location } from "./map";
-import { TrailCard } from "./dracula";
-import { Encounter, EncounterName } from "./encounter";
+import { Game } from './game';
+import { LocationType, Location, TravelMethod } from './map';
+import { TrailCard } from './dracula';
+import { Encounter, EncounterName } from './encounter';
 import { EventName } from './event';
 import { Hunter } from './hunter';
-import { ItemName, Item } from './item';
+import { ItemName } from './item';
 
 const game = new Game();
 
@@ -189,7 +189,7 @@ dracula.addEventListener('click', () => {
   draculaAllySelected = false;
   roadBlockSelected = false;
   game.selectedAmbushEncounter = false;
-  selectedEncounterName = 'Dracula';
+  selectedEncounterName = EncounterName.Dracula;
   updateSelectedEncounter();
 });
 ambushEncounter.addEventListener('click', () => {
@@ -295,16 +295,16 @@ travelButton.addEventListener('click', () => {
     });
     game.encounterPool.push(fogTile);
     game.shuffleEncounters();
-  } else if (moveMethod.value == 'Train' && game.draculaPlaysFalseTipoff(game.huntersInGroup(hunters[actingHunter]))) {
+  } else if (moveMethod.value == TravelMethod.train && game.draculaPlaysFalseTipoff(game.huntersInGroup(hunters[actingHunter]))) {
 
   } else if (destination.value) {
     moveMethod.selectedIndex = 0;
     game.setHunterLocation(hunters[actingHunter], destination.value);
-    if (moveMethod.value == 'Start Location') {
+    if (moveMethod.value == TravelMethod.start) {
       actingHunter = Math.min(actingHunter + 1, 3);
       updateSelectedHunter();
     }
-    if (moveMethod.value == 'Sense of Emergency') {
+    if (moveMethod.value == TravelMethod.senseOfEmergency) {
       game.resolveTrack--;
       updateDraculaDetails();
     }
@@ -330,11 +330,11 @@ startButton.addEventListener('click', () => {
   moveMethod.addEventListener('change', () => {
     clearOptions(destination);
     switch (moveMethod.value) {
-      case 'Road':
+      case TravelMethod.road:
         hunters[actingHunter].currentLocation.roadConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         break;
-      case 'Train':
+      case TravelMethod.train:
         let trainDestinations: Location[] = [hunters[actingHunter].currentLocation];
         for (let i = 0; i < 3; i++) {
           let newDestinations: Location[] = [];
@@ -346,7 +346,7 @@ startButton.addEventListener('click', () => {
         trainDestinations = _.uniq(trainDestinations);
         trainDestinations.forEach(dest => destination.options.add(new Option(dest.name)));
         break;
-      case 'Sea':
+      case TravelMethod.sea:
         hunters[actingHunter].currentLocation.seaConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         if (hunters[actingHunter].currentLocation.type == LocationType.sea) {
@@ -355,7 +355,7 @@ startButton.addEventListener('click', () => {
           };
         }
         break;
-      case 'Sense of Emergency':
+      case TravelMethod.senseOfEmergency:
         game.map.locations.forEach(location => destination.options.add(new Option(location.name)));
         break;
     }
@@ -383,7 +383,8 @@ approvalButton.addEventListener('click', () => {
 draculaTurnButton.addEventListener('click', () => {
   switch (draculaTurnButton.textContent) {
     case 'Perform Timekeeping phase':
-      if (game.draculaPlaysStartOfTurnEvent() || game.dracula.eventAwaitingApproval) {
+      game.draculaChooseStartOfTurnEvent();
+      if (game.dracula.eventAwaitingApproval) {
         updateAllFields();
         return;
       }
@@ -394,7 +395,8 @@ draculaTurnButton.addEventListener('click', () => {
       updateAllFields();
       break;
     case 'Perform Movement phase':
-      if (game.draculaPlaysStartOfMovementEvent() || game.dracula.eventAwaitingApproval) {
+      game.draculaChooseStartOfMovementEvent();
+      if (game.dracula.eventAwaitingApproval) {
         updateAllFields();
         return;
       }
@@ -406,7 +408,8 @@ draculaTurnButton.addEventListener('click', () => {
       updateLog();
       break;
     case 'Perform Action phase':
-      if (game.draculaPlaysStartOfActionEvent() || game.dracula.eventAwaitingApproval) {
+      game.draculaPlaysStartOfActionEvent();
+      if (game.dracula.eventAwaitingApproval) {
         updateAllFields();
         return;
       }
@@ -420,6 +423,10 @@ draculaTurnButton.addEventListener('click', () => {
   }
 });
 draculaEvent.addEventListener('click', () => {
+  if (game.dracula.eventAwaitingApproval) {
+    updateAllFields();
+    return;
+  }
   game.giveEventToDracula();
   updateDraculaDetails();
   updateDiscards();
@@ -475,6 +482,10 @@ discardEvent.addEventListener('click', () => {
 });
 playEvent.addEventListener('click', () => {
   if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
+    if (game.dracula.eventAwaitingApproval && !((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.GoodLuck
+        || (hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.CharteredCarriage)) {
+          return;
+    }
     game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], [], draculaAllySelected, roadBlockSelected);
     updateHunterDetails();
     updateDiscards();
@@ -702,18 +713,18 @@ function updateMoveMethods() {
     } else if (hunters[actingHunter].encounterTiles.find(encounter => encounter.name == EncounterName.Bats)) {
       moveMethod.options.add(new Option(EncounterName.Bats));
     } else {
-      moveMethod.options.add(new Option('No travel'));
+      moveMethod.options.add(new Option(TravelMethod.noTravel));
       if (hunters[actingHunter].currentLocation.roadConnections.length > 0) {
-        moveMethod.options.add(new Option('Road'));
+        moveMethod.options.add(new Option(TravelMethod.road));
       }
       if (hunters[actingHunter].currentLocation.trainConnections.length > 0) {
-        moveMethod.options.add(new Option('Train'));
+        moveMethod.options.add(new Option(TravelMethod.train));
       }
       if (hunters[actingHunter].currentLocation.seaConnections.length > 0) {
-        moveMethod.options.add(new Option('Sea'));
+        moveMethod.options.add(new Option(TravelMethod.sea));
       }
       if (game.resolveTrack > 0 && hunters[actingHunter].health > (6 - game.vampireTrack)) {
-        moveMethod.options.add(new Option('Sense of Emergency'));
+        moveMethod.options.add(new Option(TravelMethod.senseOfEmergency));
       }
     }
   } else {

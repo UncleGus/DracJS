@@ -79,5 +79,6 @@ export enum EncounterName {
   Spy = 'Spy',
   Thief = 'Thief',
   NewVampire = 'New Vampire',
-  Wolves = 'Wolves'
+  Wolves = 'Wolves',
+  Dracula = 'Dracula'
 }
