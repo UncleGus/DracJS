@@ -262,6 +262,11 @@ export class Game {
    */
   performTimeKeepingPhase() {
     this.log('Performing Timekeeping phase');
+    if (this.draculaAlly) {
+      if (this.draculaAlly.name == EventName.QuinceyPMorris) {
+        this.log(this.dracula.chooseVictimForQuincey(this));
+      }
+    }
     this.log(this.dracula.chooseNextMove(this));
 
     // evaluate catacombs
@@ -1369,6 +1374,9 @@ export class Game {
         this.dracula.revealed = false;
         const evasionDestination = this.dracula.chooseEvasionDestination(this);
         this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail() });
+        break;
+      case EventName.NightVisit:
+        this.log(this.dracula.chooseHunterToNightVisit(this));
         break;
     }
     this.dracula.eventAwaitingApproval = null;

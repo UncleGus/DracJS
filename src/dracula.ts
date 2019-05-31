@@ -793,6 +793,11 @@ export class Dracula {
     return `Dracula played Devilish power to ${options[choice]}`;
   }
 
+  /**
+   * Decides whether to replace the existing Ally with the one drawn
+   * @param ally The newly drawn Ally
+   * @param gameState The state of the game
+   */
   replaceExistingAlly(ally: Event, gameState: Game): boolean {
     // TODO: Make logical decision
     if (Math.random() < 0.5) {
@@ -800,6 +805,28 @@ export class Dracula {
     } else {
       return false;
     }
+  }
+
+  /**
+   * Choose which bitten Hunter to play Night Visit on
+   * @param gameState The state of the game
+   */
+  chooseHunterToNightVisit(gameState: Game): string {
+    // TODO: Make logical decision
+    const bittenHunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina].filter(hunter => hunter.bites > 0);
+    const choice = Math.floor(Math.random() * bittenHunters.length);
+    return `Dracula pays a Night Visit to ${bittenHunters[choice].name}, costing them 2 health`;
+  }
+
+  /**
+   * Chooses a victim for Quincey P. Morris
+   * @param gameState The state of the game
+   */
+  chooseVictimForQuincey(gameState: Game): string {
+    // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
+    const hunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina];
+    const choice = Math.floor(Math.random() * 4);
+    return `Quincey has targeted ${hunters[choice].name}, who must show Dracula a Heavenly Host or Crucifix or suffer 1 health loss`;
   }
 }
 
