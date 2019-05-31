@@ -42,7 +42,7 @@ const hunterWin = document.getElementById('hunterWin');
 const enemyWin = document.getElementById('enemyWin');
 const targetLocation = document.getElementById('targetLocation');
 const locationSelector = document.getElementById('locationSelector') as HTMLSelectElement;
-const consecratedGround = document.getElementById('consecratedGround') as HTMLInputElement;
+const consecratedGround = document.getElementById('consecratedGround') as HTMLSelectElement;
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
 const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
@@ -53,6 +53,7 @@ const discardEncounter = document.getElementById('discardEncounter');
 const startButton = document.getElementById('startButton');
 const draculaTurnButton = document.getElementById('draculaTurn');
 const newspaperReportsButton = document.getElementById('newspaperReports');
+const approvalButton = document.getElementById('approval');
 const debugGameStateButton = document.getElementById('debugGameState');
 
 const trailLocation = [
@@ -247,6 +248,15 @@ discardEncounter.addEventListener('click', () => {
   updateAllFields();
 });
 
+consecratedGround.options.add(new Option('Nowhere'));
+game.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity)
+  .map(city => city.name).sort().forEach(city => consecratedGround.options.add(new Option(city)));
+consecratedGround.addEventListener('change', () => {
+  if (consecratedGround.selectedIndex > 0) {
+    game.consecratedLocation = game.map.getLocationByName(consecratedGround.value);
+  }
+});
+
 travelButton.addEventListener('click', () => {
   if (moveMethod.value == EncounterName.Bats) {
     game.setHunterLocation(hunters[actingHunter], game.dracula.decideBatsDestination(hunters[actingHunter], game).name);
@@ -340,21 +350,51 @@ startButton.addEventListener('click', () => {
   updateDraculaDetails();
   updateLog();
 });
+
+approvalButton.addEventListener('click', () => {
+  if (game.dracula.eventAwaitingApproval) {
+    game.resolveApprovedEvent();
+    updateAllFields()
+  }
+});
 draculaTurnButton.addEventListener('click', () => {
-  game.performTimeKeepingPhase();
-  updateCatacombs();
-  updateDraculaDetails();
-  updateAllFields();
-  game.performDraculaMovementPhase();
-  updateTrail();
-  updateCatacombs();
-  updateDraculaDetails();
-  updateLog();
-  game.performDraculaActionPhase();
-  updateTrail();
-  updateCatacombs();
-  updateDraculaDetails();
-  updateLog();
+  switch (draculaTurnButton.textContent) {
+    case 'Perform Timekeeping phase':
+      if (game.draculaPlaysStartOfTurnEvent() || game.dracula.eventAwaitingApproval) {
+        updateAllFields();
+        return;
+      }
+      draculaTurnButton.textContent = 'Perform Movement phase';
+      game.performTimeKeepingPhase();
+      updateCatacombs();
+      updateDraculaDetails();
+      updateAllFields();
+      break;
+    case 'Perform Movement phase':
+      if (game.draculaPlaysStartOfMovementEvent() || game.dracula.eventAwaitingApproval) {
+        updateAllFields();
+        return;
+      }
+      draculaTurnButton.textContent = 'Perform Action phase';
+      game.performDraculaMovementPhase();
+      updateTrail();
+      updateCatacombs();
+      updateDraculaDetails();
+      updateLog();
+      break;
+    case 'Perform Action phase':
+      if (game.draculaPlaysStartOfActionEvent() || game.dracula.eventAwaitingApproval) {
+        updateAllFields();
+        return;
+      }
+      draculaTurnButton.textContent = 'Perform Timekeeping phase';
+      game.performDraculaActionPhase();
+      updateTrail();
+      updateCatacombs();
+      updateDraculaDetails();
+      updateLog();
+      break;
+  }
 });
 draculaEvent.addEventListener('click', () => {
   game.giveEventToDracula();
@@ -407,7 +447,7 @@ discardEvent.addEventListener('click', () => {
 });
 playEvent.addEventListener('click', () => {
   if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
-    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], locationSelector.value);
+    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter]);
     updateHunterDetails();
     updateDiscards();
     updateTargetLocation();

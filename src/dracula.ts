@@ -26,6 +26,7 @@ export class Dracula {
   lastAttackedHunter: Hunter;
   repelled: boolean;
   lastPlayedEvent: string;
+  eventAwaitingApproval: string;
 
   constructor() {
     this.blood = 15;
@@ -355,7 +356,7 @@ export class Dracula {
    * @param events The pool of Events to which to discard
    */
   playEvent(eventName: string, events: Event[]) {
-    this.lastPlayedEvent= eventName;
+    this.lastPlayedEvent = eventName;
     this.discardEvent(eventName, events);
   }
 
@@ -618,11 +619,23 @@ export class Dracula {
     let canPlayCustomsSearch = false;
     if ((hunter.currentLocation.type == LocationType.largeCity || hunter.currentLocation.type == LocationType.smallCity)
       && hunter.currentLocation.seaConnections.length > 0) {
-        canPlayCustomsSearch = true;
+      canPlayCustomsSearch = true;
     }
     if ((hunter.currentLocation.domain == LocationDomain.west && previousLocation.domain == LocationDomain.east)
       || (hunter.currentLocation.domain == LocationDomain.east && previousLocation.domain == LocationDomain.west)) {
-        canPlayCustomsSearch = true;
+      canPlayCustomsSearch = true;
+    }
+    const trailCard = gameState.trail.find(trail => trail.location == hunter.currentLocation);
+    if (trailCard) {
+      if (trailCard.encounter) {
+        canPlayCustomsSearch = false;
+      }
+    }
+    const catacombsCard = gameState.catacombs.find(catacomb => catacomb.location == hunter.currentLocation);
+    if (catacombsCard) {
+      if (catacombsCard.encounter || catacombsCard.catacombEncounter) {
+        canPlayCustomsSearch = false;
+      }
     }
     if (!canPlayCustomsSearch) {
       return false;
@@ -631,6 +644,71 @@ export class Dracula {
       this.playEvent(EventName.CustomsSearch, gameState.eventDiscard);
       return true;
     }
+  }
+
+  /**
+   * Decides whether to cancel a played Event with Devilish Power
+   * @param event The Event being played
+   * @param gameState The state of the game
+   */
+  willPlayDevilishPowerToCancel(event: Event, gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (!this.eventHand.find(event => event.name == EventName.DevilishPower)) {
+      return false;
+    }
+    if (Math.random() < 0.25) {
+      this.playEvent(EventName.DevilishPower, gameState.eventDiscard);
+      return true;
+    }
+  }
+
+  /**
+   * Decides which Event, if any, to play at the start of Dracula's turn
+   * @param gameState The state of the game
+   */
+  chooseStartOfTurnEvent(gameState: Game): string {
+    // TODO: Make logical decision
+    let potentialEvents = this.eventHand.filter(card => card.name
+      == EventName.DevilishPower);
+    // || card.name == EventName.Roadblock
+    // || card.name == EventName.TimeRunsShort
+    // || card.name == EventName.UnearthlySwiftness);
+    if (potentialEvents.find(card => card.name == EventName.DevilishPower)) {
+      let canPlayDevilishPower = false;
+      if (gameState.hunterAlly || gameState.heavenlyHostLocations.length > 0) {
+        canPlayDevilishPower = true;
+      }
+      if (!canPlayDevilishPower) {
+        potentialEvents = potentialEvents.filter(card => card.name !== EventName.DevilishPower);
+      }
+    }
+    if (potentialEvents.length == 0) {
+      return null;
+    }
+    if (Math.random() < 0.2) {
+      const choice = Math.floor(Math.random() * potentialEvents.length);
+      this.playEvent(potentialEvents[choice].name, gameState.eventDiscard);
+      this.eventAwaitingApproval = potentialEvents[choice].name;
+      return `Dracula played ${potentialEvents[choice].name}`;
+    }
+  }
+
+  chooseTargetForDevilishPower(gameState: Game): string {
+    // TODO: Make logical decision
+    let options = [];
+    if (gameState.hunterAlly) {
+      options.push('discard the Hunters\' Ally');
+    }
+    if (gameState.heavenlyHostLocations.length > 0) {
+      options.push(`discard the Heavenly Host in ${gameState.heavenlyHostLocations[0]}`);
+    }
+    if (gameState.heavenlyHostLocations.length > 1) {
+      options.push(`discard the Heavenly Host in ${gameState.heavenlyHostLocations[1]}`);
+    }
+    const choice = Math.floor(Math.random() * options.length);
+    this.lastPlayedEvent = this.eventAwaitingApproval;
+    this.eventAwaitingApproval = null;
+    return `Dracula played Devilish power to ${options[choice]}`;
   }
 }
 

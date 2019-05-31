@@ -16,7 +16,7 @@ export class Game {
   eventDeck: Event[];
   eventDiscard: Event[];
   consecratedLocation: Location;
-  holyHostLocations: Location[];
+  heavenlyHostLocations: Location[];
   hunterAlly: Event;
   draculaAlly: Event;
   dracula: Dracula;
@@ -45,7 +45,7 @@ export class Game {
     this.eventDeck = initialiseEventDeck();
     this.eventDiscard = [];
     this.catacombs = [];
-    this.holyHostLocations = [];
+    this.heavenlyHostLocations = [];
     this.dracula = new Dracula();
     this.godalming = new Hunter(HunterName.godalming, 12);
     this.seward = new Hunter(HunterName.seward, 10);
@@ -178,6 +178,7 @@ export class Game {
       this.log(companion.setLocation(this.map.getLocationByName(locationName)));
       if (this.dracula.willPlayCustomsSearch(hunter, previousLocation, this)) {
         this.log(`Dracula played Customs Search on ${companion.name}`);
+        this.log(`${companion.name} must discard all items and their turn ends`)
       }
     });
   }
@@ -251,14 +252,6 @@ export class Game {
   setResolveTrack(count: number) {
     this.resolveTrack = Math.max(0, Math.min(6, count));
     this.log(`Resolve track is now on ${this.resolveTrack}`);
-  }
-
-  /**
-   * Moves the Consecrated Ground marker to the Location with the given name
-   * @param locationName The name of the Location to which to move the Consecrated Ground marker
-   */
-  moveConsecratedGroundMarker(locationName: string) {
-    this.consecratedLocation = this.map.getLocationByName(locationName);
   }
 
   /**
@@ -437,10 +430,29 @@ export class Game {
     const hunterHere = [this.godalming, this.seward, this.vanHelsing, this.mina].find(hunter => hunter.currentLocation == this.dracula.currentLocation);
     if (this.dracula.currentLocation.type !== LocationType.sea && hunterHere) {
       this.log('Dracula attacks! Resolve an encounter with Dracula');
-    } else if (this.dracula.currentLocation.type !== LocationType.castle && this.dracula.currentLocation.type !== LocationType.sea &&
-      (!this.dracula.nextMove.power || this.dracula.nextMove.power.name == 'Hide' || this.dracula.nextMove.power.name == 'Wolf Form' || this.dracula.nextMove.power.name == 'Wolf Form and Hide')) {
-      this.trail[0].encounter = this.dracula.chooseEncounterForTrail();
-      this.log('Dracula placed an encounter');
+    } else {
+      let canPlaceEncounter = true;
+      if (this.dracula.currentLocation.type == LocationType.castle) {
+        canPlaceEncounter = false;
+      }
+      if (this.dracula.currentLocation.type == LocationType.sea) {
+        canPlaceEncounter = false;
+      }
+      if (this.dracula.nextMove.power) {
+        if (this.dracula.nextMove.power.name == PowerName.DarkCall) {
+          canPlaceEncounter = false;
+        }
+        if (this.dracula.nextMove.power.name == PowerName.DoubleBack) {
+          canPlaceEncounter = false;
+        }
+        if (this.dracula.nextMove.power.name == PowerName.Feed) {
+          canPlaceEncounter = false;
+        }
+      }
+      if (canPlaceEncounter) {
+        this.trail[0].encounter = this.dracula.chooseEncounterForTrail();
+        this.log('Dracula placed an encounter');
+      }
     }
 
     if (this.dracula.droppedOffEncounter) {
@@ -588,8 +600,11 @@ export class Game {
    * @param eventName The name of the Event
    * @param hunter The Hunter playing the Event
    */
-  playHunterEvent(eventName: string, hunter: Hunter, locationName?: string) {
+  playHunterEvent(eventName: string, hunter: Hunter, locationNames?: string[]) {
     // TODO: so much
+    if (this.dracula.eventAwaitingApproval && eventName !== EventName.GoodLuck) {
+      return;
+    }
     let eventIndex = 0;
     for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
       if (hunter.events[eventIndex].name == eventName) {
@@ -603,12 +618,13 @@ export class Game {
         this.eventDiscard.push(this.hunterAlly);
       }
       this.hunterAlly = eventCardPlayed;
-    } else if (eventCardPlayed.name == EventName.ConsecratedGround) {
-      this.moveConsecratedGroundMarker(locationName);
     } else {
       this.eventDiscard.push(eventCardPlayed);
     }
-    this.log(`${hunter.name} played event ${eventName}${locationName ? ` on ${locationName}` : ''}`);
+    this.log(`${hunter.name} played event ${eventName}${locationNames ? ` on ${locationNames[0]} and ${locationNames[1]}` : ''}`);
+    if (this.dracula.willPlayDevilishPowerToCancel(eventCardPlayed, this)) {
+      this.log(`Dracula played Devilish Power to cancel ${eventCardPlayed.name}`);
+    }
   }
 
   /**
@@ -1187,7 +1203,7 @@ export class Game {
    * @param location The Location to check
    */
   cityIsConsecrated(location: Location) {
-    return location.type == LocationType.hospital || this.consecratedLocation == location || !!this.holyHostLocations.find(city => city == location);
+    return location.type == LocationType.hospital || this.consecratedLocation == location || !!this.heavenlyHostLocations.find(city => city == location);
   }
 
   /**
@@ -1200,6 +1216,45 @@ export class Game {
       this.log(`Dracula played Control Storms to move ${hunters.length == 1 ? hunters[0].name : 'the group'} to ${port.name}`);
     } else {
       return false;
+    }
+  }
+
+  /**
+   * Determines if Dracula will play a start of turn Event
+   */
+  draculaPlaysStartOfTurnEvent(): boolean {
+    let logMessage = this.dracula.chooseStartOfTurnEvent(this);
+    if (logMessage) {
+      this.log(logMessage);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Determines if Dracula will play a start of movement Event
+   */
+  draculaPlaysStartOfMovementEvent(): boolean {
+    // TODO: this is a placeholder
+    return false;
+  }
+
+  /**
+   * Determines if Dracula will play a start of action Event
+   */
+  draculaPlaysStartOfActionEvent(): boolean {
+    // TODO: this is a placeholder
+    return false;
+  }
+
+  /**
+   * Resolves an Event played by Dracula that the Hunters have not chosen to cancel
+   */
+  resolveApprovedEvent() {
+    switch (this.dracula.eventAwaitingApproval) {
+      case EventName.DevilishPower:
+        this.log(this.dracula.chooseTargetForDevilishPower(this));
+        break;
     }
   }
 }
