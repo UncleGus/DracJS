@@ -1,6 +1,6 @@
 import { GameMap, LocationType, Location, LocationName, LocationDomain } from "./map";
 import { Dracula, TrailCard, PowerName, Attack } from "./dracula";
-import { Mina, Godalming, Seward, VanHelsing, Hunter } from "./hunter";
+import { Hunter, HunterName } from "./hunter";
 import { Encounter, initialiseEncounterPool, EncounterName } from "./encounter";
 import { Item, initialiseItemDeck, ItemName } from "./item";
 import { Event, initialiseEventDeck, EventType, EventName } from "./event";
@@ -18,10 +18,10 @@ export class Game {
   hunterAlly: Event;
   draculaAlly: Event;
   dracula: Dracula;
-  godalming: Godalming;
-  seward: Seward;
-  vanHelsing: VanHelsing;
-  mina: Mina;
+  godalming: Hunter;
+  seward: Hunter;
+  vanHelsing: Hunter;
+  mina: Hunter;
   logText: string;
   timePhase: number;
   vampireTrack: number;
@@ -31,6 +31,7 @@ export class Game {
   selectedTrailEncounter: number;
   selectedCatacombEncounterA: number;
   selectedCatacombEncounterB: number;
+  selectedAmbushEncounter: boolean;
   roundsContinued: number;
 
   constructor() {
@@ -43,10 +44,10 @@ export class Game {
     this.eventDiscard = [];
     this.catacombs = [];
     this.dracula = new Dracula();
-    this.godalming = new Godalming;
-    this.seward = new Seward();
-    this.vanHelsing = new VanHelsing();
-    this.mina = new Mina();
+    this.godalming = new Hunter(HunterName.godalming, 12);
+    this.seward = new Hunter(HunterName.seward, 10);
+    this.vanHelsing = new Hunter(HunterName.vanHelsing, 8);
+    this.mina = new Hunter(HunterName.mina, 8, 1);
 
     // set initial locations to avoid null references
     this.dracula.setLocation(this.map.getLocationByName(LocationName.London));
@@ -95,7 +96,6 @@ export class Game {
    * @param hunter the Hunter searching
    */
   searchWithHunter(hunter: Hunter) {
-    // TODO: attack Dracula
     if (hunter.currentLocation.type == LocationType.sea) {
       return;
     }
@@ -194,7 +194,40 @@ export class Game {
    * @param health The value to which to set the Hunter's health
    */
   setHunterHealth(hunter: Hunter, health: number) {
-    this.log(hunter.setHealth(health));
+    if (health == 0) {
+      this.defeatHunter(hunter);
+    } else {
+      this.log(hunter.setHealth(health));
+    }
+  }
+
+  /**
+   * Sets a Hunter's bites
+   * @param hunter The Hunter to update
+   * @param bites The value to which to set the Hunter's bites
+   */
+  setHunterBites(hunter: Hunter, bites: number) {
+    if ((hunter.name == HunterName.vanHelsing && bites == 3) || (hunter.name !== HunterName.vanHelsing && bites == 2)) {
+      this.defeatHunter(hunter);
+    } else {
+      this.log(hunter.setBites(bites));
+    }
+  }
+
+  /**
+   * Handles a Hunter's defeat
+   * @param hunter The Hunter defeated
+   */
+  defeatHunter(hunter: Hunter) {
+    this.log(`${hunter.name} has been defeated`);
+    this.log(hunter.setLocation(this.map.locations.find(location => location.type == LocationType.hospital)));
+    this.log(hunter.setHealth(hunter.maxHealth));
+    this.log(`${hunter.name} must discard all items and events`);
+    if (hunter.name == HunterName.mina) {
+      this.log(hunter.setBites(1));
+    } else {
+      this.log(hunter.setBites(0));
+    }
   }
 
   /**
@@ -203,6 +236,27 @@ export class Game {
    */
   setDraculaBlood(blood: number) {
     this.log(this.dracula.setBlood(blood));
+  }
+
+  /**
+   * Sets the Vampire track value
+   * @param count The value to which to set the Vampire track
+   */
+  setVampireTrack(count: number) {
+    this.vampireTrack = Math.max(0, Math.min(6, count));
+    this.log(`Vampire track is now on ${this.vampireTrack}`);
+    if (this.vampireTrack >= 6) {
+      this.log('Dracula has spread his Vampires across Europe. The Hunters lose!');
+    }
+  }
+
+  /**
+   * Sets the Resolve track value
+   * @param count The value to which to set the Resolve track
+   */
+  setResolveTrack(count: number) {
+    this.resolveTrack = Math.max(0, Math.min(6, count));
+    this.log(`Resolve track is now on ${this.resolveTrack}`);
   }
 
   /**
@@ -232,13 +286,9 @@ export class Game {
       // handle new day
       if (this.timePhase == 6) {
         this.log('A new day dawns');
-        this.vampireTrack += 1;
+        this.setVampireTrack(this.vampireTrack + 1);
         this.resolveTrack += 1;
         this.timePhase = 0;
-
-        if (this.vampireTrack >= 6) {
-          this.log('Dracula has spread his Vampires across Europe. The Hunters lose!');
-        }
       }
     }
   }
@@ -390,10 +440,9 @@ export class Game {
    * Performs Dracula's action phase
    */
   performDraculaActionPhase() {
-    // TODO: attack the hunter(s) at this location or choose an encounter to place on the card
-    if (this.dracula.currentLocation.type !== LocationType.sea && (this.dracula.currentLocation == this.godalming.currentLocation || this.dracula.currentLocation == this.seward.currentLocation ||
-      this.dracula.currentLocation == this.vanHelsing.currentLocation || this.dracula.currentLocation == this.mina.currentLocation)) {
-      this.log('Dracula attacks!');
+    const hunterHere = [this.godalming, this.seward, this.vanHelsing, this.mina].find(hunter => hunter.currentLocation == this.dracula.currentLocation);
+    if (this.dracula.currentLocation.type !== LocationType.sea && hunterHere) {
+      this.log('Dracula attacks! Resolve an encounter with Dracula');
     } else if (this.dracula.currentLocation.type !== LocationType.castle && this.dracula.currentLocation.type !== LocationType.sea &&
       (!this.dracula.nextMove.power || this.dracula.nextMove.power.name == 'Hide' || this.dracula.nextMove.power.name == 'Wolf Form' || this.dracula.nextMove.power.name == 'Wolf Form and Hide')) {
       this.trail[0].encounter = this.dracula.chooseEncounter();
@@ -578,20 +627,50 @@ export class Game {
       return;
     }
     let currentEncounter: Encounter;
-    if (this.selectedTrailEncounter > -1) {
-      currentEncounter = this.trail[this.selectedTrailEncounter].encounter;
-      delete this.trail[this.selectedTrailEncounter].encounter;
-    }
-    if (this.selectedCatacombEncounterA > -1) {
-      currentEncounter = this.catacombs[this.selectedCatacombEncounterA].encounter;
-      delete this.catacombs[this.selectedCatacombEncounterA].encounter;
-    }
-    if (this.selectedCatacombEncounterB > -1) {
-      currentEncounter = this.catacombs[this.selectedCatacombEncounterB].encounter;
-      delete this.catacombs[this.selectedCatacombEncounterB].encounter;
+    if (encounterName !== 'Dracula') {
+      if (this.selectedTrailEncounter > -1) {
+        currentEncounter = this.trail[this.selectedTrailEncounter].encounter;
+        delete this.trail[this.selectedTrailEncounter].encounter;
+      }
+      if (this.selectedCatacombEncounterA > -1) {
+        currentEncounter = this.catacombs[this.selectedCatacombEncounterA].encounter;
+        delete this.catacombs[this.selectedCatacombEncounterA].encounter;
+      }
+      if (this.selectedCatacombEncounterB > -1) {
+        currentEncounter = this.catacombs[this.selectedCatacombEncounterB].encounter;
+        delete this.catacombs[this.selectedCatacombEncounterB].encounter;
+      }
+      if (this.selectedAmbushEncounter) {
+        currentEncounter = this.dracula.ambushEncounter;
+        this.dracula.ambushEncounter = null;
+      }
     }
 
     switch (encounterName) {
+      case 'Dracula':
+        this.dracula.availableAttacks = this.timePhase < 3 ? [
+          Attack.Claws,
+          Attack.DodgeDracula,
+          Attack.EscapeMan
+        ] : [
+            Attack.Claws,
+            Attack.DodgeDracula,
+            Attack.EscapeMan,
+            Attack.EscapeBat,
+            Attack.EscapeMist,
+            Attack.Fangs,
+            Attack.Mesmerize,
+            Attack.Strength
+          ];
+        this.dracula.lastUsedAttack = Attack.DodgeDracula;
+        this.dracula.repelled = false;
+        this.roundsContinued = 0;
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.lastUsedCombatItem = '';
+          companion.inCombat = true;
+        });
+        this.log('Resolve a combat against Dracula');
+        break;
       case EncounterName.Ambush:
         this.dracula.encounterHandSize += 1;
         this.log(this.dracula.drawUpEncounters(this.encounterPool));
@@ -867,7 +946,7 @@ export class Game {
     for (let i = 0; i < hunters.length; i++) {
       this.log(`${hunters[i].name} used ${items[i]}`);
     }
-    this.log(this.dracula.chooseCombatCard(hunters));
+    this.log(this.dracula.chooseCombatCardAndHunter(hunters));
     for (let i = 0; i < hunters.length; i++) {
       hunters[i].lastUsedCombatItem = items[i];
     }
@@ -923,13 +1002,12 @@ export class Game {
    * Decides which Hunter to whom to apply the successful attack
    * @param hunters The Hunters involved in the combat
    */
-  applyEnemyAttackSuccess(hunters: Hunter[]) {
+  applyEnemyAttackSuccess() {
     // TODO: Make logical decision
-    const choice = Math.floor(Math.random() * hunters.length);
-    const outcome = getEnemySuccessCombatOutcome(hunters[choice].lastUsedCombatItem, this.dracula.lastUsedAttack);
+    const outcome = getEnemySuccessCombatOutcome(this.dracula.lastAttackedHunter.lastUsedCombatItem, this.dracula.lastUsedAttack);
     this.dracula.repelled = false;
     outcome.forEach(effect => {
-      this.handleEffect(effect, hunters[choice]);
+      this.handleEffect(effect, this.dracula.lastAttackedHunter);
     });
   }
 
@@ -1014,6 +1092,33 @@ export class Game {
       case CombatOutcome.Invalid:
         this.log(`This is not a valid combat card combination: ${hunter.lastUsedCombatItem} and ${this.dracula.lastUsedAttack}`);
         break;
+    }
+  }
+
+  /**
+   * Resolves the Newspaper Reports effect from Resolve or an Event
+   * @param fromResolve Whether this is the Resolve power being used
+   */
+  resolveNewspaperReports(fromResolve = false) {
+    // TODO: allow Dracula to counter this with an Event card
+    if (fromResolve && this.resolveTrack < 1) {
+      this.log('No Resolve to play Newspaper Reports');
+      return;
+    }
+    let i = this.trail.length - 1;
+    for (i; i > 0; i--) {
+      if (!this.trail[i].revealed) {
+        this.trail[i].revealed = true;
+        break;
+      }
+    }
+    if (i > 0) {
+      this.log('Oldest unrevealed trail card revealed');
+      if (fromResolve) {
+        this.resolveTrack--;
+      }
+    } else {
+      this.log('No valid trail cards to reveal');
     }
   }
 }

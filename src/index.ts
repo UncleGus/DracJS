@@ -22,8 +22,8 @@ const godalming = document.getElementById('godalming');
 const seward = document.getElementById('seward');
 const vanHelsing = document.getElementById('vanHelsing');
 const mina = document.getElementById('mina');
+const dracula = document.getElementById('dracula');
 
-const actingHunter = document.getElementById('actingHunter') as HTMLSelectElement;
 const moveMethod = document.getElementById('moveMethod') as HTMLSelectElement;
 const destination = document.getElementById('destination') as HTMLSelectElement;
 const travelButton = document.getElementById('travel');
@@ -52,6 +52,7 @@ const resolveEncounter = document.getElementById('resolveEncounter');
 const discardEncounter = document.getElementById('discardEncounter');
 const startButton = document.getElementById('startButton');
 const draculaTurnButton = document.getElementById('draculaTurn');
+const newspaperReportsButton = document.getElementById('newspaperReports');
 const debugGameStateButton = document.getElementById('debugGameState');
 
 const trailLocation = [
@@ -93,12 +94,14 @@ const catacombEncounterB = [
   document.getElementById('catacombEncounter2B') as HTMLInputElement,
   document.getElementById('catacombEncounter3B') as HTMLInputElement,
 ];
-
+const ambushEncounter = document.getElementById('ambushEncounter') as HTMLInputElement;
 
 const hunters = [game.godalming, game.seward, game.vanHelsing, game.mina];
 const hunterDetails = [godalming, seward, vanHelsing, mina];
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
+let draculaSelected = false;
 let selectedEncounterName = '';
+let actingHunter = 0;
 
 // wire up webpage components
 draculaBlood.addEventListener('change', () => {
@@ -107,9 +110,21 @@ draculaBlood.addEventListener('change', () => {
   updateLog();
 });
 
+vampireTrack.addEventListener('change', () => {
+  game.setVampireTrack(parseInt(vampireTrack.value));
+  updateDraculaDetails();
+  updateLog();
+});
+
+resolveTrack.addEventListener('change', () => {
+  game.setResolveTrack(parseInt(resolveTrack.value));
+  updateDraculaDetails();
+  updateLog();
+});
+
 for (let i = 0; i < 4; i++) {
   hunterDetails[i].addEventListener('click', () => {
-    actingHunter.selectedIndex = i;
+    actingHunter = i;
     updateTargetLocation();
     updateSelectedHunter();
   });
@@ -121,6 +136,11 @@ for (let i = 0; i < 4; i++) {
     updateHunterDetails();
     updateLog();
   });
+  hunterDetails[i].querySelector('#bites').addEventListener('change', () => {
+    game.setHunterBites(hunters[i], parseInt((hunterDetails[i].querySelector('#bites') as HTMLInputElement).value));
+    updateHunterDetails();
+    updateLog();
+  });
 }
 
 for (let i = 0; i < 6; i++) {
@@ -128,6 +148,8 @@ for (let i = 0; i < 6; i++) {
     game.selectedTrailEncounter = i;
     game.selectedCatacombEncounterA = -1;
     game.selectedCatacombEncounterB = -1;
+    draculaSelected = false;
+    game.selectedAmbushEncounter = false;
     selectedEncounterName = trailEncounter[i].value;
     updateSelectedEncounter();
   });
@@ -137,6 +159,8 @@ for (let i = 0; i < 3; i++) {
     game.selectedTrailEncounter = -1;
     game.selectedCatacombEncounterA = i;
     game.selectedCatacombEncounterB = -1;
+    draculaSelected = false;
+    game.selectedAmbushEncounter = false;
     selectedEncounterName = catacombEncounterA[i].value;
     updateSelectedEncounter();
   });
@@ -144,28 +168,53 @@ for (let i = 0; i < 3; i++) {
     game.selectedTrailEncounter = -1;
     game.selectedCatacombEncounterA = -1;
     game.selectedCatacombEncounterB = i;
+    draculaSelected = false;
+    game.selectedAmbushEncounter = false;
     selectedEncounterName = catacombEncounterB[i].value;
     updateSelectedEncounter();
   });
 }
+dracula.addEventListener('click', () => {
+  game.selectedTrailEncounter = -1;
+  game.selectedCatacombEncounterA = -1;
+  game.selectedCatacombEncounterB = -1;
+  draculaSelected = true;
+  game.selectedAmbushEncounter = false;
+  selectedEncounterName = 'Dracula';
+  updateSelectedEncounter();
+});
+ambushEncounter.addEventListener('click', () => {
+  game.selectedTrailEncounter = -1;
+  game.selectedCatacombEncounterA = -1;
+  game.selectedCatacombEncounterB = -1;
+  draculaSelected = false;
+  game.selectedAmbushEncounter = true;
+  selectedEncounterName = ambushEncounter.value;
+  updateSelectedEncounter();
+});
 resolveEncounter.addEventListener('click', () => {
-  game.resolveEncounter(selectedEncounterName, hunters[actingHunter.selectedIndex]);
+  game.resolveEncounter(selectedEncounterName, hunters[actingHunter]);
+  updateAllFields();
+});
+
+newspaperReportsButton.addEventListener('click', () => {
+  game.resolveNewspaperReports(true);
   updateAllFields();
 });
 
 fight.addEventListener('click', () => {
   const huntersInCombat: Hunter[] = [];
   const chosenItems: string[] = [];
-  if (hunters[actingHunter.selectedIndex].groupNumber == 0) {
-    if ((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
-      huntersInCombat.push(hunters[actingHunter.selectedIndex]);
-      chosenItems.push((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).value);
+  if (hunters[actingHunter].groupNumber == 0) {
+    if ((hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
+      huntersInCombat.push(hunters[actingHunter]);
+      chosenItems.push((hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).value);
     } else {
       return;
     }
   } else {
     for (let i = 0; i < 4; i++) {
-      if (hunters[i].groupNumber == hunters[actingHunter.selectedIndex].groupNumber) {
+      if (hunters[i].groupNumber == hunters[actingHunter].groupNumber) {
         huntersInCombat.push(hunters[i]);
         if ((hunterDetails[i].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
           chosenItems.push((hunterDetails[i].querySelector('#items') as HTMLSelectElement).value);
@@ -180,13 +229,13 @@ fight.addEventListener('click', () => {
 });
 
 hunterWin.addEventListener('click', () => {
-  game.applyHunterAttackSuccess(hunters[actingHunter.selectedIndex].lastUsedCombatItem);
+  game.applyHunterAttackSuccess(hunters[actingHunter].lastUsedCombatItem);
   updateHunterDetails();
   updateLog();
 });
 
 enemyWin.addEventListener('click', () => {
-  game.applyEnemyAttackSuccess(game.huntersInGroup(hunters[actingHunter.selectedIndex]))
+  game.applyEnemyAttackSuccess()
   updateHunterDetails();
   updateDraculaDetails();
   updateTrail();
@@ -198,25 +247,18 @@ discardEncounter.addEventListener('click', () => {
   updateAllFields();
 });
 
-actingHunter.addEventListener('change', () => {
-  hunterDetails.forEach(details => {
-    details.classList.remove('selectedHunter');
-  });
-  hunterDetails[actingHunter.selectedIndex].classList.add('selectedHunter');
-});
-
 travelButton.addEventListener('click', () => {
   if (moveMethod.value == EncounterName.Bats) {
-    game.setHunterLocation(hunters[actingHunter.selectedIndex], game.dracula.decideBatsDestination(hunters[actingHunter.selectedIndex], game).name);
+    game.setHunterLocation(hunters[actingHunter], game.dracula.decideBatsDestination(hunters[actingHunter], game).name);
     let batsTile: Encounter;
-    game.huntersInGroup(hunters[actingHunter.selectedIndex]).forEach(companion => {
+    game.huntersInGroup(hunters[actingHunter]).forEach(companion => {
       batsTile = game.removeEncounterFromHunter(companion, EncounterName.Bats);
     });
     game.encounterPool.push(batsTile);
     game.shuffleEncounters();
   } else if (moveMethod.value == EncounterName.Fog) {
     let fogTile: Encounter;
-    game.huntersInGroup(hunters[actingHunter.selectedIndex]).forEach(companion => {
+    game.huntersInGroup(hunters[actingHunter]).forEach(companion => {
       fogTile = game.removeEncounterFromHunter(companion, EncounterName.Fog);
     });
     game.encounterPool.push(fogTile);
@@ -224,10 +266,14 @@ travelButton.addEventListener('click', () => {
 
   } else if (destination.value) {
     moveMethod.selectedIndex = 0;
-    game.setHunterLocation(hunters[actingHunter.selectedIndex], destination.value);
+    game.setHunterLocation(hunters[actingHunter], destination.value);
     if (moveMethod.value == 'Start Location') {
-      actingHunter.selectedIndex = Math.min(actingHunter.selectedIndex + 1, 3);
+      actingHunter = Math.min(actingHunter + 1, 3);
       updateSelectedHunter();
+    }
+    if (moveMethod.value == 'Sense of Emergency') {
+      game.resolveTrack--;
+      updateDraculaDetails();
     }
     updateHunterDetails();
     updateLog();
@@ -235,14 +281,14 @@ travelButton.addEventListener('click', () => {
 });
 
 startButton.addEventListener('click', () => {
-  actingHunter.selectedIndex = 0;
+  actingHunter = 0;
   startButton.parentNode.removeChild(startButton);
   game.startGame();
   draculaTurnButton.style.removeProperty('display');
   clearOptions(destination);
   for (let i = 0; i < 4; i++) {
     hunterDetails[i].addEventListener('click', () => {
-      actingHunter.selectedIndex = i;
+      actingHunter = i;
       updateMoveMethods();
     });
   }
@@ -252,11 +298,11 @@ startButton.addEventListener('click', () => {
     clearOptions(destination);
     switch (moveMethod.value) {
       case 'Road':
-        hunters[actingHunter.selectedIndex].currentLocation.roadConnections
+        hunters[actingHunter].currentLocation.roadConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         break;
       case 'Train':
-        let trainDestinations: Location[] = [hunters[actingHunter.selectedIndex].currentLocation];
+        let trainDestinations: Location[] = [hunters[actingHunter].currentLocation];
         for (let i = 0; i < 3; i++) {
           let newDestinations: Location[] = [];
           trainDestinations.forEach(location => {
@@ -268,19 +314,22 @@ startButton.addEventListener('click', () => {
         trainDestinations.forEach(dest => destination.options.add(new Option(dest.name)));
         break;
       case 'Sea':
-        hunters[actingHunter.selectedIndex].currentLocation.seaConnections
+        hunters[actingHunter].currentLocation.seaConnections
           .forEach(location => destination.options.add(new Option(location.name)));
+        break;
+      case 'Sense of Emergency':
+        game.map.locations.forEach(location => destination.options.add(new Option(location.name)));
         break;
     }
   });
   travelButton.addEventListener('click', () => {
     if (destination.value) {
       clearOptions(destination);
-      game.searchWithHunter(hunters[actingHunter.selectedIndex]);
+      game.searchWithHunter(hunters[actingHunter]);
     }
     updateAllFields();
   });
-  actingHunter.selectedIndex = 0;
+  actingHunter = 0;
   updateSelectedHunter();
   updateTrail();
   updateDraculaDetails();
@@ -309,51 +358,51 @@ draculaEvent.addEventListener('click', () => {
   updateLog();
 });
 drawItem.addEventListener('click', () => {
-  game.giveItemToHunter(itemDeck.value, hunters[actingHunter.selectedIndex]);
+  game.giveItemToHunter(itemDeck.value, hunters[actingHunter]);
   updateHunterDetails();
   updateItemDeck();
   updateLog();
 });
 drawEvent.addEventListener('click', () => {
-  game.giveEventToHunter(eventDeck.value, hunters[actingHunter.selectedIndex]);
+  game.giveEventToHunter(eventDeck.value, hunters[actingHunter]);
   updateHunterDetails();
   updateEventDeck();
   updateTargetLocation();
   updateLog();
 });
 discardItem.addEventListener('click', () => {
-  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
-    game.discardHunterItem((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex]);
+  if ((hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).selectedIndex > -1) {
+    game.discardHunterItem((hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).value, hunters[actingHunter]);
     updateHunterDetails();
     updateDiscards();
     updateLog();
   }
 });
 giveItem.addEventListener('click', () => {
-  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).selectedIndex > -1 && !game.itemInTrade) {
-    game.tradeItemFromHunter((hunterDetails[actingHunter.selectedIndex].querySelector('#items') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex]);
+  if ((hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).selectedIndex > -1 && !game.itemInTrade) {
+    game.tradeItemFromHunter((hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).value, hunters[actingHunter]);
     updateHunterDetails();
     updateLog();
   }
 });
 takeItem.addEventListener('click', () => {
   if (game.itemInTrade) {
-    game.tradeItemToHunter(hunters[actingHunter.selectedIndex]);
+    game.tradeItemToHunter(hunters[actingHunter]);
     updateHunterDetails();
     updateLog();
   }
 });
 discardEvent.addEventListener('click', () => {
-  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
-    game.discardHunterEvent((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex]);
+  if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
+    game.discardHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter]);
     updateHunterDetails();
     updateDiscards();
     updateLog();
   }
 });
 playEvent.addEventListener('click', () => {
-  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
-    game.playHunterEvent((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter.selectedIndex], locationSelector.value);
+  if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
+    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], locationSelector.value);
     updateHunterDetails();
     updateDiscards();
     updateTargetLocation();
@@ -414,7 +463,8 @@ function updateDraculaDetails() {
  */
 function updateHunterDetails() {
   for (let i = 0; i < 4; i++) {
-    (hunterDetails[i].querySelector('#health') as HTMLSelectElement).value = hunters[i].health.toString();
+    (hunterDetails[i].querySelector('#health') as HTMLInputElement).value = hunters[i].health.toString();
+    (hunterDetails[i].querySelector('#bites') as HTMLInputElement).value = hunters[i].bites.toString();
     (hunterDetails[i].querySelector('#location') as HTMLInputElement).value = hunters[i].currentLocation.name;
     clearOptions(hunterDetails[i].querySelector('#items') as HTMLSelectElement);
     hunters[i].items.forEach(item => (hunterDetails[i].querySelector('#items') as HTMLSelectElement).options.add(new Option(item.name)));
@@ -436,7 +486,7 @@ function updateSelectedHunter() {
   hunterDetails.forEach(details => {
     details.classList.remove('selectedHunter');
   });
-  hunterDetails[actingHunter.selectedIndex].classList.add('selectedHunter');
+  hunterDetails[actingHunter].classList.add('selectedHunter');
 }
 
 /**
@@ -452,6 +502,8 @@ function updateSelectedEncounter() {
   catacombEncounterB.forEach(encounter => {
     encounter.classList.remove('selectedEncounter');
   });
+  dracula.classList.remove('selectedEncounter');
+  ambushEncounter.classList.remove('selectedEncounter');
   if (game.selectedTrailEncounter > -1) {
     trailEncounter[game.selectedTrailEncounter].classList.add('selectedEncounter');
   }
@@ -461,6 +513,12 @@ function updateSelectedEncounter() {
   if (game.selectedCatacombEncounterB > -1) {
     catacombEncounterB[game.selectedCatacombEncounterB].classList.add('selectedEncounter');
   }
+  if (draculaSelected) {
+    dracula.classList.add('selectedEncounter');
+  }
+  if (game.selectedAmbushEncounter) {
+    ambushEncounter.classList.add('selectedEncounter');
+  }
 }
 
 /**
@@ -468,7 +526,7 @@ function updateSelectedEncounter() {
  */
 function updateTargetLocation() {
   clearOptions(locationSelector);
-  if ((hunterDetails[actingHunter.selectedIndex].querySelector('#events') as HTMLSelectElement).value == EventName.ConsecratedGround) {
+  if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value == EventName.ConsecratedGround) {
     game.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity)
       .forEach(location => locationSelector.options.add(new Option(location.name)));
   }
@@ -523,6 +581,7 @@ function updateTrail() {
       }
     }
   }
+  ambushEncounter.value = game.dracula.ambushEncounter ? game.dracula.ambushEncounter.name : '';
 }
 
 /**
@@ -561,20 +620,23 @@ function updateMoveMethods() {
   clearOptions(destination);
   if (moveMethod.options.length == 0 || moveMethod.options[0].text !== 'Start Location') {
     clearOptions(moveMethod);
-    if (hunters[actingHunter.selectedIndex].encounterTiles.find(encounter => encounter.name == EncounterName.Fog)) {
+    if (hunters[actingHunter].encounterTiles.find(encounter => encounter.name == EncounterName.Fog)) {
       moveMethod.options.add(new Option(EncounterName.Fog));
-    } else if (hunters[actingHunter.selectedIndex].encounterTiles.find(encounter => encounter.name == EncounterName.Bats)) {
+    } else if (hunters[actingHunter].encounterTiles.find(encounter => encounter.name == EncounterName.Bats)) {
       moveMethod.options.add(new Option(EncounterName.Bats));
     } else {
       moveMethod.options.add(new Option('No travel'));
-      if (hunters[actingHunter.selectedIndex].currentLocation.roadConnections.length > 0) {
+      if (hunters[actingHunter].currentLocation.roadConnections.length > 0) {
         moveMethod.options.add(new Option('Road'));
       }
-      if (hunters[actingHunter.selectedIndex].currentLocation.trainConnections.length > 0) {
+      if (hunters[actingHunter].currentLocation.trainConnections.length > 0) {
         moveMethod.options.add(new Option('Train'));
       }
-      if (hunters[actingHunter.selectedIndex].currentLocation.seaConnections.length > 0) {
+      if (hunters[actingHunter].currentLocation.seaConnections.length > 0) {
         moveMethod.options.add(new Option('Sea'));
+      }
+      if (game.resolveTrack > 0 && hunters[actingHunter].health > (6 - game.vampireTrack)) {
+        moveMethod.options.add(new Option('Sense of Emergency'));
       }
     }
   } else {

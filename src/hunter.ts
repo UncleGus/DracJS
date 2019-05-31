@@ -7,6 +7,7 @@ export class Hunter {
   name: string;
   maxHealth: number;
   health: number;
+  bites: number;
   currentLocation: Location;
   items: Item[];
   events: Event[];
@@ -15,12 +16,15 @@ export class Hunter {
   lastUsedCombatItem: string;
   inCombat: boolean;
 
-  constructor(newName: string) {
+  constructor(newName: string, maxHealth: number, bites: number = 0) {
     this.name = newName;
+    this.health = this.maxHealth = maxHealth;
+    this.bites = bites;
     this.items = [];
     this.events = [];
     this.encounterTiles = [];
     this.groupNumber = 0;
+    this.bites = 0;
   }
 
   /**
@@ -33,6 +37,15 @@ export class Hunter {
   }
 
   /**
+   * Sets a Hunter's bites
+   * @param newBites The value to which to set the Hunter's bites
+   */
+  setBites(newBites: number): string {
+    this.bites = Math.max(0, newBites);
+    return `${this.name} now has ${this.bites} bites`;
+  }
+
+  /**
    * Sets a Hunter's Location
    * @param newLocation The Location to which to move the Hunter
    */
@@ -42,30 +55,9 @@ export class Hunter {
   }
 }
 
-export class Godalming extends Hunter {
-  constructor() {
-    super('Lord Godalming');
-    this.health = this.maxHealth = 12;
-  }
-}
-
-export class Seward extends Hunter {
-  constructor() {
-    super('Dr. Seward');
-    this.health = this.maxHealth = 10;
-  }
-}
-
-export class VanHelsing extends Hunter {
-  constructor() {
-    super('Van Helsing');
-    this.health = this.maxHealth = 8;
-  }
-}
-
-export class Mina extends Hunter {
-  constructor() {
-    super('Mina Harker');
-    this.health = this.maxHealth = 8;
-  }
+export enum HunterName {
+  godalming = 'Lord Godalming',
+  seward = 'Dr. Seward',
+  vanHelsing = 'Van Helsing',
+  mina = 'Mina Harker'
 }

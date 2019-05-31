@@ -14,6 +14,8 @@ export class Dracula {
   eventHand: Event[];
   eventHandSize: number;
   droppedOffEncounter: Encounter;
+  ambushEncounter: Encounter;
+  ambushHunter: Hunter;
   seaBloodPaid: boolean;
   nextMove: PossibleMove;
   powers: Power[];
@@ -21,6 +23,7 @@ export class Dracula {
   possibleMoves: PossibleMove[];
   availableAttacks: string[];
   lastUsedAttack: string;
+  lastAttackedHunter: Hunter;
   repelled: boolean;
 
   constructor() {
@@ -78,7 +81,7 @@ export class Dracula {
     this.currentLocation = newLocation;
     return this.revealed ? `Dracula moved to ${this.currentLocation.name}` : 'Dracula moved to a hidden location';
   }
-  
+
   /**
    * Selects Dracula's first Location at the state of the game
    * @param gameState The state of the game
@@ -92,7 +95,7 @@ export class Dracula {
         gameState.map.distanceBetweenLocations(location, gameState.seward.currentLocation),
         gameState.map.distanceBetweenLocations(location, gameState.vanHelsing.currentLocation),
         gameState.map.distanceBetweenLocations(location, gameState.mina.currentLocation)
-      );      
+      );
     });
     const furthestDistance = distances.reduce((prev, curr) => curr > prev ? curr : prev, 0);
     const furthestDistanceIndices = [];
@@ -101,7 +104,7 @@ export class Dracula {
         furthestDistanceIndices.push(i);
       }
     }
-    const randomChoice = Math.floor(Math.random()*furthestDistanceIndices.length);
+    const randomChoice = Math.floor(Math.random() * furthestDistanceIndices.length);
     const randomIndex = furthestDistanceIndices[randomChoice];
     return validLocations[randomIndex];
   }
@@ -131,16 +134,16 @@ export class Dracula {
     }
     const validLocations = _.without(connectedLocations, ...invalidLocations, gameState.map.locations.find(location => location.type == LocationType.hospital));
     validLocations.map(location => {
-      let catacombIndex = gameState.catacombs.length -1;
+      let catacombIndex = gameState.catacombs.length - 1;
       for (catacombIndex; catacombIndex > -1; catacombIndex--) {
         if (gameState.catacombs[catacombIndex].location == location) {
           break;
         }
       }
       if (catacombIndex > -1) {
-        this.possibleMoves.push({ location, value: 1, catacombToDiscard: catacombIndex});
+        this.possibleMoves.push({ location, value: 1, catacombToDiscard: catacombIndex });
       } else {
-        this.possibleMoves.push({ location, value: 1})
+        this.possibleMoves.push({ location, value: 1 })
       }
     });
 
@@ -172,22 +175,22 @@ export class Dracula {
     validPowers.forEach(validPower => {
       let potentialDestinations: Location[] = [];
       let secondLayerDestination: Location[] = [];
-      switch(validPower.name) {
+      switch (validPower.name) {
         case PowerName.DarkCall:
           this.possibleMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.DoubleBack:
-            gameState.trail.concat(gameState.catacombs).forEach(trailCard => {
+          gameState.trail.concat(gameState.catacombs).forEach(trailCard => {
             if (gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, ['road', 'sea']) == 1) {
               this.possibleMoves.push({ location: trailCard.location, power: validPower, value: 1 });
             }
           });
           break;
         case PowerName.Feed:
-            this.possibleMoves.push({ power: validPower, value: 1 });
+          this.possibleMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.Hide:
-            this.possibleMoves.push({ power: validPower, value: 1 });
+          this.possibleMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.WolfForm:
           potentialDestinations = this.currentLocation.roadConnections;
@@ -196,7 +199,7 @@ export class Dracula {
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => !gameState.trail.find(trailCard => trailCard.location == dest) && !gameState.catacombs.find(trailCard => trailCard.location == dest));
           potentialDestinations = _.without(potentialDestinations, this.currentLocation);
-          potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1}));
+          potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndDoubleBack:
           potentialDestinations = this.currentLocation.roadConnections;
@@ -204,16 +207,16 @@ export class Dracula {
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => gameState.trail.find(trailCard => trailCard.location == dest) || gameState.catacombs.find(trailCard => trailCard.location == dest));
-          potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1}));
+          potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndHide:
-          this.possibleMoves.push({ power: validPower, value: 1});
+          this.possibleMoves.push({ power: validPower, value: 1 });
           break;
       }
     });
     if (this.possibleMoves.length > 0) {
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
-      const randomChoice = Math.floor(Math.random()*valueSum);
+      const randomChoice = Math.floor(Math.random() * valueSum);
       let index = 0;
       let cumulativeValue = 0;
       while (cumulativeValue < randomChoice) {
@@ -231,7 +234,7 @@ export class Dracula {
   chooseEncounter(): Encounter {
     // TODO: make logical decision
     // TODO: either include logic for catacombs choice here or make a second function for that case
-    const randomChoice = Math.floor(Math.random()*this.encounterHand.length);
+    const randomChoice = Math.floor(Math.random() * this.encounterHand.length);
     return this.encounterHand.splice(randomChoice, 1)[0];
   }
 
@@ -304,7 +307,7 @@ export class Dracula {
       this.encounterHand.push(encounterPool.pop());
       drawCount++;
     }
-    return drawCount > 0 ? `Dracula drew ${drawCount} encounter${drawCount > 1 ? 's': ''}` : '';
+    return drawCount > 0 ? `Dracula drew ${drawCount} encounter${drawCount > 1 ? 's' : ''}` : '';
   }
 
   /**
@@ -315,11 +318,11 @@ export class Dracula {
     // TODO: Make logical decision
     let discardCount = 0;
     while (this.encounterHand.length > this.encounterHandSize) {
-      const choice = Math.floor(Math.random()*this.encounterHand.length);
+      const choice = Math.floor(Math.random() * this.encounterHand.length);
       encounters.push(this.encounterHand.splice(choice, 1)[0]);
       discardCount++;
     }
-    return discardCount > 0 ? `Dracula discarded ${discardCount} encounter${discardCount > 1 ? 's': ''}` : '';
+    return discardCount > 0 ? `Dracula discarded ${discardCount} encounter${discardCount > 1 ? 's' : ''}` : '';
   }
 
   /**
@@ -330,11 +333,11 @@ export class Dracula {
     // TODO: Make logical decision
     let discardCount = 0;
     while (this.eventHand.length > this.eventHandSize) {
-      const choice = Math.floor(Math.random()*this.eventHand.length);
+      const choice = Math.floor(Math.random() * this.eventHand.length);
       events.push(this.eventHand.splice(choice, 1)[0]);
       discardCount++;
     }
-    return discardCount > 0 ? `Dracula discarded ${discardCount} event${discardCount > 1 ? 's': ''}` : '';
+    return discardCount > 0 ? `Dracula discarded ${discardCount} event${discardCount > 1 ? 's' : ''}` : '';
   }
 
   /**
@@ -361,7 +364,7 @@ export class Dracula {
       gameState.encounterPool.push(card.catacombEncounter);
       delete card.catacombEncounter;
       gameState.shuffleEncounters();
-    }    
+    }
     return 'Dracula kept the one encounter from the catacomb card and discarded the other';
   }
 
@@ -396,7 +399,7 @@ export class Dracula {
       catacombToDiscard = this.nextMove.catacombToDiscard || -1;
     }
     let logMessage = '';
-    for (let i = gameState.catacombs.length -1; i >= 0 ; i--) {
+    for (let i = gameState.catacombs.length - 1; i >= 0; i--) {
       if (Math.random() < 0.2 || i == catacombToDiscard || (!gameState.catacombs[i].encounter && !gameState.catacombs[i].catacombEncounter)) {
         logMessage += logMessage ? ` and position ${i + 1}` : `Dracula discarded catacomb card from position ${i + 1}`;
         if (gameState.catacombs[i].encounter) {
@@ -443,36 +446,94 @@ export class Dracula {
    */
   decideFateOfDroppedOffEncounter(gameState: Game): string {
     // TODO: Make logical decision
-    let discardEncounter = true;
-    switch(this.droppedOffEncounter.name) {
+    let logMessage = 'Dracula returned the dropped off encounter to the encounter pool';
+    switch (this.droppedOffEncounter.name) {
       case EncounterName.Ambush:
+        if (this.willMatureAmbush(gameState)) {
+          this.chooseAmbushEncounter(gameState);
+          if (this.ambushEncounter) {
+            logMessage = `Dracula matured Ambush and played ${this.ambushEncounter.name} on ${this.ambushHunter.name}`;
+            this.clearTrail(gameState, 3);
+          }
+        }
         break;
       case EncounterName.DesecratedSoil:
+        if (this.willMatureDesecratedSoil(gameState)) {
+          logMessage = 'Dracula matured Desecrated soil. Draw event cards, discarding Hunter events until two Dracula event cards have been drawn.';
+          this.clearTrail(gameState, 3);
+        }
         break;
       case EncounterName.NewVampire:
+        logMessage = 'Dracula matured New Vampire';
+        gameState.setVampireTrack(gameState.vampireTrack + 2);
+        this.clearTrail(gameState, 1);
         break;
     }
-    if (discardEncounter) {
-      gameState.encounterPool.push(this.droppedOffEncounter);
-      gameState.log(gameState.shuffleEncounters());
-      this.droppedOffEncounter = null;
-      return 'Dracula returned the dropped off encounter to the encounter pool';
+    gameState.encounterPool.push(this.droppedOffEncounter);
+    gameState.log(gameState.shuffleEncounters());
+    this.droppedOffEncounter = null;
+    return logMessage;
+  }
+
+  /**
+   * Decides whether or not to mature Ambush Soil
+   * @param gameState The state of the game
+   */
+  willMatureAmbush(gameState: Game): boolean {
+    // TODO: make logical decision
+    if (Math.random() < 0.5) {
+      return true;
+    } else {
+      return false;
     }
+  }
+
+  /**
+   * Decides whether or not to mature Desecrated Soil
+   * @param gameState The state of the game
+   */
+  willMatureDesecratedSoil(gameState: Game): boolean {
+    // TODO: make logical decision
+    if (Math.random() < 0.5) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Chooses a Hunter and an Encounter to play when maturing an Ambush Encounter
+   * @param gameState The state of the game
+   */
+  chooseAmbushEncounter(gameState: Game) {
+    const validHunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina]
+      .filter(hunter => hunter.currentLocation.type !== LocationType.sea && hunter.currentLocation.type !== LocationType.hospital);
+    if (validHunters.length == 0) {
+      this.ambushEncounter = null;
+      this.ambushHunter = null;
+      return;
+    }
+    const encounterChoice = Math.floor(Math.random() * this.encounterHand.length);
+    this.ambushEncounter = this.encounterHand.splice(encounterChoice, 1)[0];
+    const hunterChoice = Math.floor(Math.random() * validHunters.length);
+    this.ambushHunter = validHunters[hunterChoice];
   }
 
   /**
    * Chooses which combat card to use in the current round of combat
    * @param hunters The Hunters involved in the combat
    */
-  chooseCombatCard(hunters: Hunter[]): string {
+  chooseCombatCardAndHunter(hunters: Hunter[]): string {
     // TODO: Make logical descision
     let allowedAttacks = _.without(this.availableAttacks, this.lastUsedAttack);
     if (this.repelled) {
       allowedAttacks = _.without(this.availableAttacks, Attack.Claws, Attack.Fangs, Attack.Mesmerize, Attack.Strength);
     }
-    const choice = Math.floor(Math.random() * allowedAttacks.length);
-    this.lastUsedAttack = allowedAttacks[choice];
-    return `Dracula chose ${allowedAttacks[choice]}`;
+    const attackChoice = Math.floor(Math.random() * allowedAttacks.length);
+    const targetChoice = Math.floor(Math.random() * hunters.length);
+    this.lastUsedAttack = allowedAttacks[attackChoice];
+    this.lastAttackedHunter = hunters[targetChoice];
+    return `Dracula chose ${allowedAttacks[attackChoice]} against ${hunters[targetChoice]}`;
   }
 }
 
