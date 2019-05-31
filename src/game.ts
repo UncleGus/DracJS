@@ -526,6 +526,9 @@ export class Game {
             this.log(this.dracula.drawUpEncounters(this.encounterPool));
             break;
         }
+      } else {
+        this.eventDiscard.push(eventCardDrawn);
+        this.dracula.eventAwaitingApproval = eventCardDrawn.name;
       }
     }
   }
@@ -1279,6 +1282,11 @@ export class Game {
     switch (this.dracula.eventAwaitingApproval) {
       case EventName.DevilishPower:
         this.log(this.dracula.chooseTargetForDevilishPower(this));
+        break;
+      case EventName.Evasion:
+        this.dracula.revealed = false;
+        const evasionDestination = this.dracula.chooseEvasionDestination(this);
+        this.log(this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail()}));
         break;
     }
   }
