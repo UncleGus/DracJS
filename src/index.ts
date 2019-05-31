@@ -273,6 +273,7 @@ travelButton.addEventListener('click', () => {
     });
     game.encounterPool.push(fogTile);
     game.shuffleEncounters();
+  } else if (moveMethod.value == 'Train' && game.draculaPlaysFalseTipoff(game.huntersInGroup(hunters[actingHunter]))) {
 
   } else if (destination.value) {
     moveMethod.selectedIndex = 0;

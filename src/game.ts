@@ -650,7 +650,9 @@ export class Game {
       this.eventDiscard.push(eventCardPlayed);
     }
     this.log(`${hunter.name} played event ${eventName}${locationNames ? ` on ${locationNames[0]} and ${locationNames[1]}` : ''}`);
-    if (this.dracula.willPlayDevilishPowerToCancel(eventCardPlayed, this)) {
+    if (this.dracula.willPlayFalseTipOffToCancel(eventCardPlayed, this)) {
+      this.log(`Dracula played False Tip-off to cancel ${eventCardPlayed.name}`);
+    } else if (this.dracula.willPlayDevilishPowerToCancel(eventCardPlayed, this)) {
       this.log(`Dracula played Devilish Power to cancel ${eventCardPlayed.name}`);
     }
   }
@@ -1276,6 +1278,17 @@ export class Game {
   }
 
   /**
+   * Determines if Dracula will play False Tip-off
+   * @param hunter The Hunter attempting to catch a train
+   */
+  draculaPlaysFalseTipoff(hunters: Hunter[]): boolean {
+    if (this.dracula.willPlayFalseTipoff(hunters, this)) {
+      this.log('Dracula played False Tip-off');
+    }
+    return false;
+  }
+
+  /**
    * Resolves an Event played by Dracula that the Hunters have not chosen to cancel
    */
   resolveApprovedEvent() {
@@ -1286,7 +1299,7 @@ export class Game {
       case EventName.Evasion:
         this.dracula.revealed = false;
         const evasionDestination = this.dracula.chooseEvasionDestination(this);
-        this.log(this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail()}));
+        this.log(this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail() }));
         break;
     }
   }

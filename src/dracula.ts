@@ -113,7 +113,7 @@ export class Dracula {
 
   chooseEvasionDestination(gameState: Game): Location {
     // TODO: improve logic
-    const validLocations = gameState.map.locations.filter(location => 
+    const validLocations = gameState.map.locations.filter(location =>
       (location.type == LocationType.smallCity || location.type == LocationType.largeCity) && !gameState.trailContains(location));
     const distances = validLocations.map(location => {
       return Math.min(
@@ -683,6 +683,42 @@ export class Dracula {
     if (Math.random() < 0.25) {
       this.playEvent(EventName.DevilishPower, gameState.eventDiscard);
       return true;
+    }
+  }
+
+  /**
+   * Decides whether to cancel a played Event with False Tip-off
+   * @param event The Event being played
+   * @param gameState The state of the game
+   */
+  willPlayFalseTipOffToCancel(event: Event, gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (!this.eventHand.find(event => event.name == EventName.FalseTipoff)) {
+      return false;
+    }
+    if (event.name !== EventName.CharteredCarriage) {
+      return false;
+    }
+    if (Math.random() < 0.25) {
+      this.playEvent(EventName.FalseTipoff, gameState.eventDiscard);
+      return true;
+    }
+  }
+
+  /**
+   * Decides whether to play False Tip-off on a Hunter or group
+   * @param hunters The Hunters attempting to catch a train
+   * @param gameState The state of the game
+   */
+  willPlayFalseTipoff(hunters: Hunter[], gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (this.eventHand.find(event => event.name == EventName.FalseTipoff)) {
+      if (Math.random() < 0.25) {
+        this.playEvent(EventName.FalseTipoff, gameState.eventDiscard);
+        this.eventAwaitingApproval = EventName.FalseTipoff;
+        return true;
+      }
+      return false;
     }
   }
 
