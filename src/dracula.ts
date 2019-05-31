@@ -27,6 +27,7 @@ export class Dracula {
   repelled: boolean;
   lastPlayedEvent: string;
   eventAwaitingApproval: string;
+  hypnosisInEffect: boolean;
 
   constructor() {
     this.blood = 15;
@@ -145,7 +146,9 @@ export class Dracula {
    */
   chooseNextMove(gameState: Game): string {
     // TODO: make logical decision
-    this.nextMove = null;
+    if (!this.hypnosisInEffect) {
+      this.nextMove = null;
+    }
     this.possibleMoves = [];
     const connectedLocations = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
     let invalidLocations = gameState.trail.filter(trail => trail.location).map(trail => trail.location);
@@ -245,6 +248,12 @@ export class Dracula {
       }
     });
     if (this.possibleMoves.length > 0) {
+      if (this.hypnosisInEffect) {
+        if (this.possibleMoves.find(move => move.catacombToDiscard == this.nextMove.catacombToDiscard
+          && move.location == this.nextMove.location && move.power.name == this.nextMove.power.name)) {
+            return 'Dracula is bound by Hypnosis';
+          }
+      }
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
       let index = 0;
@@ -254,6 +263,9 @@ export class Dracula {
         index++;
       }
       this.nextMove = this.possibleMoves[index];
+    }
+    if (this.hypnosisInEffect) {
+      return 'Dracula is unable to perform the action declared during Hypnosis; he has chosen a new course of action';
     }
     return 'Dracula has decided what to do this turn';
   }

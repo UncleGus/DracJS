@@ -1374,4 +1374,46 @@ export class Game {
       }
     }
   }
+
+  resolveHypnosis() {
+    this.dracula.revealed = true;
+    this.log(`Dracula is at ${this.dracula.currentLocation.name}`);
+    this.trail.forEach(card => {
+      if (card.location == this.dracula.currentLocation) {
+        card.revealed = true;
+      }
+      if (card.encounter) {
+        if (card.encounter.name == EncounterName.NewVampire) {
+          card.encounter.revealed = true;
+          this.log('A New Vampire is revealed in Dracula\'s trail');
+        }
+      }
+    });
+    this.catacombs.forEach(card => {
+      if (card.encounter) {
+        if (card.encounter.name == EncounterName.NewVampire) {
+          card.encounter.revealed = true;
+          this.log('A New Vampire is revealed in Dracula\'s catacombs');
+        }
+        if (card.catacombEncounter.name == EncounterName.NewVampire) {
+          card.catacombEncounter.revealed = true;
+          this.log('A New Vampire is revealed in Dracula\'s catacombs');
+        }
+      }
+    });
+    this.timePhase = (this.timePhase + 1) % 6;
+    this.dracula.chooseNextMove(this);
+    this.timePhase = (this.timePhase + 5) % 6;
+    this.dracula.hypnosisInEffect = true;
+    if (!this.dracula.nextMove) {
+      this.log('Dracula has no legal next move');
+    } else {
+      if (this.dracula.nextMove.power) {
+        this.log(`Dracula will use power ${this.dracula.nextMove.power.name}`);
+      }
+      if (this.dracula.nextMove.location) {
+        this.log(`Dracula will move to ${this.dracula.nextMove.location.name}`)
+      }
+    }
+  }
 }

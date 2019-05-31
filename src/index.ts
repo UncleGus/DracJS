@@ -44,6 +44,7 @@ const targetLocation = document.getElementById('targetLocation');
 const locationSelector1 = document.getElementById('locationSelector1') as HTMLSelectElement;
 const locationSelector2 = document.getElementById('locationSelector2') as HTMLSelectElement;
 const consecratedGround = document.getElementById('consecratedGround') as HTMLSelectElement;
+const hypnosisButton = document.getElementById('hypnosis');
 const timePhase = document.getElementById('timePhase') as HTMLInputElement;
 const vampireTrack = document.getElementById('vampireTrack') as HTMLInputElement;
 const resolveTrack = document.getElementById('resolveTrack') as HTMLInputElement;
@@ -224,6 +225,9 @@ resolveEncounter.addEventListener('click', () => {
 newspaperReportsButton.addEventListener('click', () => {
   game.resolveNewspaperReports(true);
   updateAllFields();
+});
+hypnosisButton.addEventListener('click', () => {
+  game.resolveHypnosis();
 });
 
 fight.addEventListener('click', () => {
