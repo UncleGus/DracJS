@@ -1,4 +1,4 @@
-import { Location, LocationType } from "./map";
+import { Location, LocationType, LocationDomain } from "./map";
 import { Game } from "./game";
 import { Encounter, EncounterName } from "./encounter";
 import * as _ from 'lodash';
@@ -350,12 +350,21 @@ export class Dracula {
   }
 
   /**
-   * Discards Event of the given namefrom Dracula's hand
+   * Plays Event of the given name from Dracula's hand
+   * @param eventName The name of the Event to discard
+   * @param events The pool of Events to which to discard
+   */
+  playEvent(eventName: string, events: Event[]) {
+    this.lastPlayedEvent= eventName;
+    this.discardEvent(eventName, events);
+  }
+
+  /**
+   * Discards Event of the given name from Dracula's hand
    * @param eventName The name of the Event to discard
    * @param events The pool of Events to which to discard
    */
   discardEvent(eventName: string, events: Event[]) {
-    // TODO: Make logical decision
     let eventIndex = 0;
     for (eventIndex; eventIndex < this.eventHand.length; eventIndex++) {
       if (this.eventHand[eventIndex].name == eventName) {
@@ -587,13 +596,41 @@ export class Dracula {
         const destinations = gameState.map.portsWithinRange(hunters[0].currentLocation, 4);
         if (destinations.length > 0) {
           const choice = Math.floor(Math.random() * destinations.length);
-          this.lastPlayedEvent = EventName.ControlStorms;
-          this.discardEvent(EventName.ControlStorms, gameState.eventDiscard);
+          this.playEvent(EventName.ControlStorms, gameState.eventDiscard);
           return destinations[choice];
         }
       }
     }
     return null;
+  }
+
+  /**
+   * Decides whether or not to play Customs Search on a Hunter
+   * @param hunter The Hunter who moved
+   * @param previousLocation The previous Location of the Hunter
+   * @param gameState The state of the game
+   */
+  willPlayCustomsSearch(hunter: Hunter, previousLocation: Location, gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (!this.eventHand.find(event => event.name == EventName.CustomsSearch)) {
+      return false;
+    }
+    let canPlayCustomsSearch = false;
+    if ((hunter.currentLocation.type == LocationType.largeCity || hunter.currentLocation.type == LocationType.smallCity)
+      && hunter.currentLocation.seaConnections.length > 0) {
+        canPlayCustomsSearch = true;
+    }
+    if ((hunter.currentLocation.domain == LocationDomain.west && previousLocation.domain == LocationDomain.east)
+      || (hunter.currentLocation.domain == LocationDomain.east && previousLocation.domain == LocationDomain.west)) {
+        canPlayCustomsSearch = true;
+    }
+    if (!canPlayCustomsSearch) {
+      return false;
+    }
+    if (Math.random() < 0.5) {
+      this.playEvent(EventName.CustomsSearch, gameState.eventDiscard);
+      return true;
+    }
   }
 }
 

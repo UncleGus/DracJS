@@ -173,22 +173,13 @@ export class Game {
    * @param locationName The name of the Location to which to move the Hunter
    */
   setHunterLocation(hunter: Hunter, locationName: string) {
-    if (hunter.groupNumber == 0) {
-      this.log(hunter.setLocation(this.map.getLocationByName(locationName)));
-    } else {
-      if (this.godalming.groupNumber == hunter.groupNumber) {
-        this.log(this.godalming.setLocation(this.map.getLocationByName(locationName)));
+    this.huntersInGroup(hunter).forEach(companion => {
+      const previousLocation = companion.currentLocation;
+      this.log(companion.setLocation(this.map.getLocationByName(locationName)));
+      if (this.dracula.willPlayCustomsSearch(hunter, previousLocation, this)) {
+        this.log(`Dracula played Customs Search on ${companion.name}`);
       }
-      if (this.seward.groupNumber == hunter.groupNumber) {
-        this.log(this.seward.setLocation(this.map.getLocationByName(locationName)));
-      }
-      if (this.vanHelsing.groupNumber == hunter.groupNumber) {
-        this.log(this.vanHelsing.setLocation(this.map.getLocationByName(locationName)));
-      }
-      if (this.mina.groupNumber == hunter.groupNumber) {
-        this.log(this.mina.setLocation(this.map.getLocationByName(locationName)));
-      }
-    }
+    });
   }
 
   /**
