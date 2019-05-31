@@ -714,6 +714,9 @@ export class Game {
           this.log(`Dracula has ${card.name}`);
         });
         break;
+      case EventName.NewspaperReports:
+        this.resolveNewspaperReports();
+        break;
     }
   }
 
