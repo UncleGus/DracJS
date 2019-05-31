@@ -504,7 +504,7 @@ export class Game {
     }
     const eventCardDrawn = this.eventDeck.splice(draculaEventIndex, 1)[0];
     if (eventCardDrawn.type == EventType.Keep) {
-      this.dracula.eventHand.push();
+      this.dracula.eventHand.push(eventCardDrawn);
       this.log('Keep event card given to Dracula');
       this.log(this.dracula.discardDownEvents(this.eventDiscard));
     } else {
@@ -708,6 +708,12 @@ export class Game {
             }
           }
         });
+        break;
+      case EventName.MysticResearch:
+        this.dracula.eventHand.forEach(card => {
+          this.log(`Dracula has ${card.name}`);
+        });
+        break;
     }
   }
 
@@ -1362,6 +1368,7 @@ export class Game {
         this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail() });
         break;
     }
+    this.dracula.eventAwaitingApproval = null;
   }
 
   /**
