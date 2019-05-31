@@ -500,9 +500,34 @@ export class Game {
         break;
       }
     }
-    this.dracula.eventHand.push(this.eventDeck.splice(draculaEventIndex, 1)[0]);
-    this.log('Event card given to Dracula');
-    this.log(this.dracula.discardDownEvents(this.eventDiscard));
+    const eventCardDrawn = this.eventDeck.splice(draculaEventIndex, 1)[0];
+    if (eventCardDrawn.type == EventType.Keep) {
+      this.dracula.eventHand.push();
+      this.log('Event card given to Dracula');
+      this.log(this.dracula.discardDownEvents(this.eventDiscard));
+    } else {
+      this.log(`Dracula drew ${eventCardDrawn.name}`);
+      if (eventCardDrawn.type == EventType.Ally) {
+        if (!this.draculaAlly) {
+          this.draculaAlly = eventCardDrawn;
+        } else {
+          if (this.dracula.replaceExistingAlly(eventCardDrawn, this)) {
+            this.log(`Dracula chose to discard ${this.draculaAlly.name} in favour of ${eventCardDrawn.name}`);
+            this.eventDiscard.push(this.draculaAlly);
+            this.draculaAlly = eventCardDrawn;
+          } else {
+            this.eventDiscard.push(eventCardDrawn);
+            this.log(`Dracula chose to keep ${this.draculaAlly.name}`);
+          }
+        }
+        switch (this.draculaAlly.name) {
+          case EventName.DraculasBrides:
+            this.dracula.encounterHandSize = 7;
+            this.log(this.dracula.drawUpEncounters(this.encounterPool));
+            break;
+        }
+      }
+    }
   }
 
   /**

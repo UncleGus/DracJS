@@ -693,6 +693,10 @@ export class Dracula {
     }
   }
 
+  /**
+   * Used when playing the Devilish Power card to remove a game component
+   * @param gameState The state of the game
+   */
   chooseTargetForDevilishPower(gameState: Game): string {
     // TODO: Make logical decision
     let options = [];
@@ -709,6 +713,15 @@ export class Dracula {
     this.lastPlayedEvent = this.eventAwaitingApproval;
     this.eventAwaitingApproval = null;
     return `Dracula played Devilish power to ${options[choice]}`;
+  }
+
+  replaceExistingAlly(ally: Event, gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (Math.random() < 0.5) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 
