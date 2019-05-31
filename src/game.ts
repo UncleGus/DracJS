@@ -699,6 +699,15 @@ export class Game {
           }
         });
         break;
+      case EventName.MoneyTrail:
+        this.trail.forEach(card => {
+          if (card.location) {
+            if (card.location.type == LocationType.sea) {
+              card.revealed = true;
+              this.log(`${card.location.name} revealed by Money Trail`);
+            }
+          }
+        });
     }
   }
 
@@ -1041,12 +1050,14 @@ export class Game {
    * Adds a card to the head of the trail
    * @param newTrailCard The card to add to the head of the trail
    */
-  pushToTrail(newTrailCard: TrailCard){
+  pushToTrail(newTrailCard: TrailCard) {
     this.trail.unshift(newTrailCard);
     this.log('Dracula added a card to the trail');
-    if (this.hunterAlly.name == EventName.JonathanHarker && this.trail.length > 5) {
-      this.trail[5].revealed = true;
-      this.log('Jonathan Harker revealed the last card in Dracula\'s trail');
+    if (this.hunterAlly) {
+      if (this.hunterAlly.name == EventName.JonathanHarker && this.trail.length > 5) {
+        this.trail[5].revealed = true;
+        this.log('Jonathan Harker revealed the last card in Dracula\'s trail');
+      }
     }
   }
 
