@@ -461,7 +461,7 @@ takeItem.addEventListener('click', () => {
   }
 });
 discardEvent.addEventListener('click', () => {
-  if (draculaAllySelected && draculaAlly.value != '') {
+  if (draculaAllySelected && draculaAlly.value !== '') {
     game.discardDraculaAlly();
     updateHunterDetails();
     updateDiscards();
