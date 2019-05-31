@@ -1198,4 +1198,17 @@ export class Game {
   cityIsConsecrated(location: Location) {
     return location.type == LocationType.hospital || this.consecratedLocation == location || !!this.holyHostLocations.find(city => city == location);
   }
+
+  /**
+   * Checks if Dracula wants to play Control Storms on a Hunter and handles it if so
+   * @param hunters The Hunters in this group
+   */
+  checkForControlStorms(hunters: Hunter[]): boolean {
+    const port = this.dracula.chooseControlStormsDestination(hunters, this);
+    if (port) {
+      this.log(`Dracula played Control Storms to move ${hunters.length == 1 ? hunters[0].name : 'the group'} to ${port.name}`);
+    } else {
+      return false;
+    }
+  }
 }

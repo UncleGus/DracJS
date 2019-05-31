@@ -2,7 +2,7 @@ import { Location, LocationType } from "./map";
 import { Game } from "./game";
 import { Encounter, EncounterName } from "./encounter";
 import * as _ from 'lodash';
-import { Event } from "./event";
+import { Event, EventName } from "./event";
 import { Hunter } from "./hunter";
 
 export class Dracula {
@@ -25,6 +25,7 @@ export class Dracula {
   lastUsedAttack: string;
   lastAttackedHunter: Hunter;
   repelled: boolean;
+  lastPlayedEvent: string;
 
   constructor() {
     this.blood = 15;
@@ -349,6 +350,25 @@ export class Dracula {
   }
 
   /**
+   * Discards Event of the given namefrom Dracula's hand
+   * @param eventName The name of the Event to discard
+   * @param events The pool of Events to which to discard
+   */
+  discardEvent(eventName: string, events: Event[]) {
+    // TODO: Make logical decision
+    let eventIndex = 0;
+    for (eventIndex; eventIndex < this.eventHand.length; eventIndex++) {
+      if (this.eventHand[eventIndex].name == eventName) {
+        break;
+      }
+    }
+    if (eventIndex > this.eventHand.length) {
+      return;
+    }
+    events.push(this.eventHand.splice(eventIndex, 1)[0]);
+  }
+
+  /**
    * Decides which Encounter to keep on a Catacomb card to which Dracula has Doubled Back
    * @param card The catacomb card
    * @param gameState The state of the game
@@ -553,6 +573,27 @@ export class Dracula {
     // TODO: Make logical decision
     const choice = Math.floor(Math.random() * possibleDestinations.length);
     return possibleDestinations[choice];
+  }
+
+  /**
+   * Chooses whether to play Control Storms on the set of Hunters
+   * @param hunters The Hunters potentially affected
+   * @param gameState The state of the game
+   */
+  chooseControlStormsDestination(hunters: Hunter[], gameState: Game): Location {
+    // TODO: Make logical decision
+    if (this.eventHand.find(event => event.name == EventName.ControlStorms)) {
+      if (Math.random() < 0.5) {
+        const destinations = gameState.map.portsWithinRange(hunters[0].currentLocation, 4);
+        if (destinations.length > 0) {
+          const choice = Math.floor(Math.random() * destinations.length);
+          this.lastPlayedEvent = EventName.ControlStorms;
+          this.discardEvent(EventName.ControlStorms, gameState.eventDiscard);
+          return destinations[choice];
+        }
+      }
+    }
+    return null;
   }
 }
 

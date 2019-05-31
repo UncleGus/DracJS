@@ -762,6 +762,22 @@ export class GameMap {
 
     return _.uniq(connectedLocations);
   }
+
+  /**
+   * Finds all ports within a given range of a Location
+   * @param origin The starting point of the search
+   * @param range The maximum range of the search
+   */
+  portsWithinRange(origin: Location, range: number): Location[] {
+    let connectedLocations: Location[] = [origin];
+    for (let i = 0; i < range; i++) {
+      let nextLayer: Location[] = [];
+      connectedLocations.forEach(location => nextLayer.push(...location.seaConnections));
+      connectedLocations.push(...nextLayer);
+      connectedLocations = _.uniq(connectedLocations);
+    }
+    return connectedLocations.filter(location => location.type !== LocationType.sea);
+  }
 }
 
 export interface Location {

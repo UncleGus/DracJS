@@ -316,6 +316,11 @@ startButton.addEventListener('click', () => {
       case 'Sea':
         hunters[actingHunter].currentLocation.seaConnections
           .forEach(location => destination.options.add(new Option(location.name)));
+        if (hunters[actingHunter].currentLocation.type == LocationType.sea) {
+          if (game.checkForControlStorms(game.huntersInGroup(hunters[actingHunter]))) {
+            updateAllFields();
+          };
+        }
         break;
       case 'Sense of Emergency':
         game.map.locations.forEach(location => destination.options.add(new Option(location.name)));
