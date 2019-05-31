@@ -535,6 +535,17 @@ export class Dracula {
     this.lastAttackedHunter = hunters[targetChoice];
     return `Dracula chose ${allowedAttacks[attackChoice]} against ${hunters[targetChoice]}`;
   }
+
+  /**
+   * Selects a destination for Escape as Bat
+   * @param possibleDestinations The list of possible Locations
+   * @gameState The state of the game
+   */
+  chooseBatDestination(possibleDestinations: Location[], gameState: Game): Location {
+    // TODO: Make logical decision
+    const choice = Math.floor(Math.random() * possibleDestinations.length);
+    return possibleDestinations[choice];
+  }
 }
 
 export interface TrailCard {

@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { GameMap, LocationType, Location, LocationName, LocationDomain } from "./map";
 import { Dracula, TrailCard, PowerName, Attack } from "./dracula";
 import { Hunter, HunterName } from "./hunter";
@@ -1003,7 +1004,6 @@ export class Game {
    * @param hunters The Hunters involved in the combat
    */
   applyEnemyAttackSuccess() {
-    // TODO: Make logical decision
     const outcome = getEnemySuccessCombatOutcome(this.dracula.lastAttackedHunter.lastUsedCombatItem, this.dracula.lastUsedAttack);
     this.dracula.repelled = false;
     outcome.forEach(effect => {
@@ -1067,8 +1067,7 @@ export class Game {
         this.log(`${hunter.name} is bitten`);
         break;
       case CombatOutcome.EscapeAsBat:
-        // TODO: apply Escape As Bat move
-        this.log('Dracula escapes in the form of a bat');
+        this.resolveEscapeAsBat();
         break;
       case CombatOutcome.Continue:
         this.roundsContinued++;
@@ -1120,5 +1119,47 @@ export class Game {
     } else {
       this.log('No valid trail cards to reveal');
     }
+  }
+
+  /**
+   * Resolve Dracula's Escape as Bat ability
+   */
+  resolveEscapeAsBat() {
+    let possibleDestinations = this.dracula.currentLocation.roadConnections.filter(road => this.consecratedLocation !== road);
+    for (let i = 0; i < 2; i++) {
+      this.dracula.currentLocation.roadConnections.forEach(road2 => possibleDestinations.push(...road2.roadConnections
+        .filter(road => !this.hunterIsIn(road) && this.consecratedLocation !== road && !this.trail.find(trail => trail.location == road) && !this.catacombs.find(catacombs => catacombs.location == road))));
+      possibleDestinations = _.uniq(possibleDestinations);
+    }
+    if (possibleDestinations.length == 0) {
+      this.log('Dracula has nowhere to go');
+    } else {
+      const destination = this.dracula.chooseBatDestination(possibleDestinations, this);
+      let trailIndex = 0;
+      for (trailIndex; trailIndex < this.trail.length; trailIndex++) {
+        if (this.trail[trailIndex].location == this.dracula.currentLocation) {
+          break;
+        }
+      }
+      if (trailIndex > this.trail.length) {
+        this.log('Dracula\'s current location card is not in the trail, adding it');
+        this.trail[0].location = destination;
+        this.trail[0].revealed = true;
+        this.dracula.revealed = true;
+      } else {
+        this.trail[trailIndex].location = destination;
+        this.trail[trailIndex].revealed = false;
+        this.dracula.revealed = false;
+        this.log('Dracula escaped in the form of a Bat');
+      }
+    }
+  }
+
+  /**
+   * Determines if a Hunter is present in the given location
+   * @param location The Location to query
+   */
+  hunterIsIn(location: Location) {
+    return !![this.godalming, this.seward, this.vanHelsing, this.mina].find(hunter => hunter.currentLocation == location);
   }
 }
