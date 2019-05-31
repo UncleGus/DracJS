@@ -92,7 +92,7 @@ export class Game {
   startGame() {
     const startLocation = this.dracula.chooseStartLocation(this);
     this.log(this.dracula.setLocation(startLocation));
-    this.log(this.pushToTrail({ location: startLocation, revealed: false }));
+    this.pushToTrail({ location: startLocation, revealed: false });
     this.log('It is now Dracula\'s turn');
   }
 
@@ -387,7 +387,7 @@ export class Game {
       this.pushToTrail(doubleBackedCard);
       this.dracula.revealed = doubleBackedCard.revealed;
     } else {
-      this.log(this.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, power: this.dracula.nextMove.power }));
+      this.pushToTrail({ revealed: this.dracula.revealed, location: nextLocation, power: this.dracula.nextMove.power });
     }
     if (this.trail.length == 7) {
       this.log('A card has dropped off the end of the trail');
@@ -1041,9 +1041,13 @@ export class Game {
    * Adds a card to the head of the trail
    * @param newTrailCard The card to add to the head of the trail
    */
-  pushToTrail(newTrailCard: TrailCard): string {
+  pushToTrail(newTrailCard: TrailCard){
     this.trail.unshift(newTrailCard);
-    return 'Dracula added a card to the trail';
+    this.log('Dracula added a card to the trail');
+    if (this.hunterAlly.name == EventName.JonathanHarker && this.trail.length > 5) {
+      this.trail[5].revealed = true;
+      this.log('Jonathan Harker revealed the last card in Dracula\'s trail');
+    }
   }
 
   /**
@@ -1344,7 +1348,7 @@ export class Game {
       case EventName.Evasion:
         this.dracula.revealed = false;
         const evasionDestination = this.dracula.chooseEvasionDestination(this);
-        this.log(this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail() }));
+        this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail() });
         break;
     }
   }
