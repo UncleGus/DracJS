@@ -1197,6 +1197,10 @@ export class Game {
           this.seward.inCombat = false;
           this.vanHelsing.inCombat = false;
           this.mina.inCombat = false;
+          if (this.dracula.willPlayRelentlessMinion(this)) {
+            this.log('Dracula played Relentless Minion');
+            this.log('Resolve another combat with the same minion');
+          }
         } else {
           this.log('Combat continues another round');
         }

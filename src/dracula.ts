@@ -848,12 +848,32 @@ export class Dracula {
     }
   }
 
+  /**
+   * Chooses a target for Rage
+   * @param gameState The state of the game
+   */
   chooseRageVictim(gameState: Game): string {
     // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
     const hunterChoice = Math.floor(Math.random() * this.potentialTargetHunters.length);
     const targetHunter = this.potentialTargetHunters[hunterChoice];
     const itemChoice = Math.floor(Math.random() * targetHunter.items.length);
     return `Dracula played Rage against ${targetHunter.name} and discarded ${targetHunter.items[itemChoice].name}`;
+  }
+
+  /**
+   * Decides whether or not to play Relentless Minion
+   * @param gameState The state of the game
+   */
+  willPlayRelentlessMinion(gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (![Attack.DodgeMinion, Attack.Knife, Attack.Pistol, Attack.Punch, Attack.Rifle].find(attack => attack == this.lastUsedAttack)) {
+      return false;
+    } else {
+      if (Math.random() < 0.5) {
+        this.playEvent(EventName.RelentlessMinion, gameState.eventDiscard);
+        return true;
+      }
+    }
   }
 }
 
