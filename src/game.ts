@@ -37,6 +37,9 @@ export class Game {
   roundsContinued: number;
   rageRounds: number;
   roadBlock: Location[];
+  hunterEventPendingResolution: string;
+  draculaEventPendingResolution: string;
+  hiredScoutsToResolve: boolean;
 
   constructor() {
     // construct game components
@@ -531,6 +534,7 @@ export class Game {
         this.updateAllyEffects();
       } else {
         this.eventDiscard.push(eventCardDrawn);
+        this.draculaEventPendingResolution = eventCardDrawn.name;
         this.dracula.eventAwaitingApproval = eventCardDrawn.name;
       }
     }
@@ -633,77 +637,50 @@ export class Game {
    */
   playHunterEvent(eventName: string, hunter: Hunter, locationNames: string[] = [], allySelected?: boolean, roadblockSelected?: boolean) {
     // TODO: so much
-    if (this.dracula.eventAwaitingApproval && eventName !== EventName.GoodLuck) {
-      return;
-    }
-    if (eventName == EventName.HiredScouts && locationNames.length < 2) {
-      this.log('Choose two cities to investigate with Hired Scouts');
-      return;
-    }
     let eventIndex = 0;
     for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
       if (hunter.events[eventIndex].name == eventName) {
         break;
       }
     }
-    const eventCardPlayed = hunter.events.splice(eventIndex, 1)[0];
+    const eventCardPlayed = hunter.events[eventIndex];
+
+    // If this is an Ally, just play it and return
     if (eventCardPlayed.type == EventType.Ally) {
       if (this.hunterAlly) {
         this.log(`Hunters discarded Ally ${this.hunterAlly.name}`);
         this.eventDiscard.push(this.hunterAlly);
       }
       this.hunterAlly = eventCardPlayed;
+      hunter.events.splice(eventIndex, 1);
+      return;
+    }
+
+    // If a cancellation tug-of-war hasn't been started, this is the start of one
+    if (!this.hunterEventPendingResolution) {
+      this.hunterEventPendingResolution = eventName;
+    }
+
+    // If Dracula doesn't cancel this, it's either the original event that he didn't cancel
+    // or a cancellation of his cancellation that he didn't cancel, so the original event resolves
+    const cancelCardPlayedByDracula = this.dracula.cardPlayedToCancel(eventName, this);
+    if (cancelCardPlayedByDracula) {
+      this.dracula.eventAwaitingApproval = cancelCardPlayedByDracula.name;
+      // If he did cancel it, then set a Dracula event card for the Hunters to consider cancelling and return
+      return;
     } else {
-      this.eventDiscard.push(eventCardPlayed);
+      this.resolveOutstandingEvent();
+      return;
     }
-    // TODO: This is only necessary if Dracula needs to know the Hunters' intent
-    // if (eventName == EventName.GoodLuck) {
-    //   if (allySelected && this.draculaAlly) {
-    //     this.log(`${hunter.name} played Good Luck to discard ${this.draculaAlly.name}`);
-    //   } else if (roadblockSelected && this.roadBlock.length == 2) {
-    //     this.log(`${hunter.name} played Good Luck to discard the roadblock between ${this.roadBlock[0].name} and ${this.roadBlock[0].name}`);
-    //   }
-    // }
-    // if (locationNames.length > 0) {
-    //   this.log(`${hunter.name} played event ${eventName} on ${locationNames[0]}${locationNames.length > 1 ? `and ${locationNames[1]}` : ''}`);
-    // }
-    if (this.dracula.willPlayFalseTipOffToCancel(eventCardPlayed, this)) {
-      this.log(`Dracula played False Tip-off to cancel ${eventCardPlayed.name}`);
-    } else if (this.dracula.willPlayDevilishPowerToCancel(eventCardPlayed, this)) {
-      this.log(`Dracula played Devilish Power to cancel ${eventCardPlayed.name}`);
-    }
-    switch (eventCardPlayed.name) {
+  }
+
+  /**
+   * Resolves the Event played at the start of a cancellation tug-of-war
+   */
+  resolveOutstandingEvent() {
+    switch (this.hunterEventPendingResolution) {
       case EventName.HiredScouts:
-        locationNames.forEach(name => {
-          const trailCard = this.trail.find(card => card.location == this.map.getLocationByName(name));
-          if (trailCard) {
-            this.log(`${name} is in Dracula's trail`);
-            trailCard.revealed = true;
-            if (trailCard.encounter) {
-              trailCard.encounter.revealed = true;
-            }
-            if (this.dracula.currentLocation == trailCard.location) {
-              this.dracula.revealed = true;
-            }
-          } else {
-            this.log(`${name} is not in Dracula's trail`);
-          }
-        });
-        locationNames.forEach(name => {
-          const catacombCard = this.catacombs.find(card => card.location == this.map.getLocationByName(name));
-          if (catacombCard) {
-            this.log(`${name} is in Dracula's trail`);
-            catacombCard.revealed = true;
-            if (catacombCard.encounter) {
-              catacombCard.encounter.revealed = true;
-            }
-            if (catacombCard.catacombEncounter) {
-              catacombCard.catacombEncounter.revealed = true;
-            }
-          } else {
-            this.log(`${name} is not in Dracula's catacombs`);
-          }
-        });
+        this.hiredScoutsToResolve = true;
         break;
       case EventName.MoneyTrail:
         this.trail.forEach(card => {
@@ -724,6 +701,45 @@ export class Game {
         this.resolveNewspaperReports();
         break;
     }
+    this.hunterEventPendingResolution = null;
+  }
+
+  /**
+   * Resolves Hired Scouts
+   * @param locationNames The names of the Locations to query
+   */
+  resolveHiredScouts(locationNames: string[]) {
+    this.hiredScoutsToResolve = false;
+    locationNames.forEach(name => {
+      const trailCard = this.trail.find(card => card.location == this.map.getLocationByName(name));
+      if (trailCard) {
+        this.log(`${name} is in Dracula's trail`);
+        trailCard.revealed = true;
+        if (trailCard.encounter) {
+          trailCard.encounter.revealed = true;
+        }
+        if (this.dracula.currentLocation == trailCard.location) {
+          this.dracula.revealed = true;
+        }
+      } else {
+        this.log(`${name} is not in Dracula's trail`);
+      }
+    });
+    locationNames.forEach(name => {
+      const catacombCard = this.catacombs.find(card => card.location == this.map.getLocationByName(name));
+      if (catacombCard) {
+        this.log(`${name} is in Dracula's trail`);
+        catacombCard.revealed = true;
+        if (catacombCard.encounter) {
+          catacombCard.encounter.revealed = true;
+        }
+        if (catacombCard.catacombEncounter) {
+          catacombCard.catacombEncounter.revealed = true;
+        }
+      } else {
+        this.log(`${name} is not in Dracula's catacombs`);
+      }
+    });
   }
 
   /**
@@ -1381,7 +1397,13 @@ export class Game {
    * Resolves an Event played by Dracula that the Hunters have not chosen to cancel
    */
   resolveApprovedEvent() {
-    switch (this.dracula.eventAwaitingApproval) {
+    if (this.hunterEventPendingResolution) {
+      // If the cancellation tug-of-war was initiated by the Hunters, but Dracula played an Event card
+      // pending approval, then it was a cancellation, so by approving it, their original Event is cancelled
+      this.hunterEventPendingResolution = null;
+      return;
+    }    
+    switch (this.draculaEventPendingResolution) {
       case EventName.DevilishPower:
         this.log(this.dracula.chooseTargetForDevilishPower(this));
         break;
@@ -1417,6 +1439,7 @@ export class Game {
         this.dracula.discardDownEncounters(this.encounterPool);
         break;
     }
+    this.draculaEventPendingResolution = null;
     this.dracula.eventAwaitingApproval = null;
   }
 

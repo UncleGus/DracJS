@@ -57,6 +57,8 @@ const draculaTurnButton = document.getElementById('draculaTurn');
 const newspaperReportsButton = document.getElementById('newspaperReports');
 const approvalButton = document.getElementById('approval');
 const roadblock = document.getElementById('roadblock') as HTMLInputElement;
+const hiredScouts = document.getElementById('hiredScouts');
+const sendScouts = document.getElementById('sendScouts');
 const debugGameStateButton = document.getElementById('debugGameState');
 
 const trailLocation = [
@@ -229,6 +231,10 @@ newspaperReportsButton.addEventListener('click', () => {
 });
 hypnosisButton.addEventListener('click', () => {
   game.resolveHypnosis();
+  updateAllFields();
+});
+sendScouts.addEventListener('click', () => {
+  game.resolveHiredScouts([(hiredScouts.querySelector('#location1') as HTMLSelectElement).value, (hiredScouts.querySelector('#location2') as HTMLSelectElement).value]);
 });
 
 fight.addEventListener('click', () => {
@@ -254,21 +260,17 @@ fight.addEventListener('click', () => {
     }
   }
   game.resolveCombatRound(huntersInCombat, chosenItems);
-  updateLog();
+  updateAllFields();
 });
 
 hunterWin.addEventListener('click', () => {
   game.applyHunterAttackSuccess(hunters[actingHunter].lastUsedCombatItem);
-  updateHunterDetails();
-  updateLog();
+  updateAllFields();
 });
 
 enemyWin.addEventListener('click', () => {
   game.applyEnemyAttackSuccess()
-  updateHunterDetails();
-  updateDraculaDetails();
-  updateTrail();
-  updateLog();
+  updateAllFields();
 });
 
 discardEncounter.addEventListener('click', () => {
@@ -396,8 +398,6 @@ draculaTurnButton.addEventListener('click', () => {
       }
       draculaTurnButton.textContent = 'Perform Movement phase';
       game.performTimeKeepingPhase();
-      updateCatacombs();
-      updateDraculaDetails();
       updateAllFields();
       break;
     case 'Perform Movement phase':
@@ -408,10 +408,7 @@ draculaTurnButton.addEventListener('click', () => {
       }
       draculaTurnButton.textContent = 'Perform Action phase';
       game.performDraculaMovementPhase();
-      updateTrail();
-      updateCatacombs();
-      updateDraculaDetails();
-      updateLog();
+      updateAllFields();
       break;
     case 'Perform Action phase':
       game.draculaPlaysStartOfActionEvent();
@@ -421,10 +418,7 @@ draculaTurnButton.addEventListener('click', () => {
       }
       draculaTurnButton.textContent = 'Perform Timekeeping phase';
       game.performDraculaActionPhase();
-      updateTrail();
-      updateCatacombs();
-      updateDraculaDetails();
-      updateLog();
+      updateAllFields();
       break;
   }
 });
@@ -772,6 +766,19 @@ function updateDiscards() {
 function updateMarkers() {
   consecratedGround.value = game.consecratedLocation ? game.consecratedLocation.name : '';
   roadblock.value = game.roadBlock.length > 0 ? `${game.roadBlock[0]} <==> ${game.roadBlock[1]}` : '';
+  if (game.hiredScoutsToResolve) {
+    hiredScouts.style.display = null;
+    const location1 = (hiredScouts.querySelector('#location1') as HTMLSelectElement);
+    const location2 = (hiredScouts.querySelector('#location2') as HTMLSelectElement);
+    clearOptions(location1);
+    clearOptions(location2);
+    game.map.locations.forEach(location => {
+      location1.options.add(new Option(location.name));
+      location2.options.add(new Option(location.name));
+    });    
+  } else {
+    hiredScouts.style.display = 'none';
+  }
 }
 
 /**

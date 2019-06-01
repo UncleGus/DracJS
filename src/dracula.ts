@@ -773,6 +773,7 @@ export class Dracula {
       const choice = Math.floor(Math.random() * potentialEvents.length);
       this.playEvent(potentialEvents[choice].name, gameState.eventDiscard);
       this.eventAwaitingApproval = potentialEvents[choice].name;
+      gameState.draculaEventPendingResolution = potentialEvents[choice].name;
       return `Dracula played ${potentialEvents[choice].name}`;
     }
   }
@@ -835,6 +836,11 @@ export class Dracula {
     return `Quincey has targeted ${hunters[choice].name}, who must show Dracula a Heavenly Host or Crucifix or suffer 1 health loss`;
   }
 
+  /**
+   * Decides whether or not to play Rage
+   * @param hunters The potential targets
+   * @param gameState The state of the game
+   */
   willPlayRage(hunters: Hunter[], gameState: Game): string {
     // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
     if (!this.eventHand.find(event => event.name == EventName.Rage)) {
@@ -843,6 +849,7 @@ export class Dracula {
     if (Math.random() < 0.5) {
       this.playEvent(EventName.Rage, gameState.eventDiscard);
       this.eventAwaitingApproval = EventName.Rage;
+      gameState.draculaEventPendingResolution = EventName.Rage;
       this.potentialTargetHunters = hunters;
       return 'Dracula played Rage';
     }
@@ -897,11 +904,45 @@ export class Dracula {
     // TODO: Make logical decision; spoiler: always do this
     if (this.eventHand.find(event => event.name == EventName.Seduction)) {
       this.eventAwaitingApproval = EventName.Seduction;
+      gameState.draculaEventPendingResolution = EventName.Seduction;
       this.potentialTargetHunters = hunters;
       this.playEvent(EventName.Seduction, gameState.eventDiscard);
       return true;
     }
     return false;
+  }
+
+  /**
+   * Chooses a card to play to cancel the Hunter card just played
+   * @param eventJustPlayed The Hunter Event just played
+   * @param gameState The state of the game
+   */
+  cardPlayedToCancel(eventJustPlayed: string, gameState: Game): Event {
+    // TODO: Make logical decision
+    // check if the event just played can be cancelled
+    const possibleCancellationCards: string[] = [];
+    if (this.eventHand.find(event => event.name == EventName.DevilishPower)) {
+      possibleCancellationCards.push(EventName.DevilishPower);
+    }
+    if (eventJustPlayed == EventName.CharteredCarriage && this.eventHand.find(event => event.name == EventName.FalseTipoff)) {
+      possibleCancellationCards.push(EventName.FalseTipoff);
+    }
+    if (possibleCancellationCards.length == 0) {
+      return null;
+    }
+    if (Math.random() > 0.5) {
+      return null;
+    }
+    const choice = Math.floor(Math.random() * possibleCancellationCards.length);
+    let eventIndex = 0;
+    for (eventIndex; eventIndex < this.eventHand.length; eventIndex++) {
+      if (this.eventHand[eventIndex].name == possibleCancellationCards[choice]) {
+        break;
+      }
+    }
+    const cancelCard = this.eventHand.splice(eventIndex, 1)[0];
+    gameState.eventDiscard.push(cancelCard);
+    return cancelCard;
   }
 }
 
