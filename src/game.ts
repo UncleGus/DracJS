@@ -984,16 +984,20 @@ export class Game {
             this.log('The Hunter group found a vampire during the day and killed it');
           }
         } else {
-          if (hunter.groupNumber == 0) {
-            this.log(`${hunter.name} has encountered a vampire at night and must roll a die`);
-            this.log(`On a roll of 1-3, ${hunter.name} is bitten, unless they show Dracula a Heavenly Host or Crucifix item`);
-            this.log(`On a roll of 4-6, the vampire escapes unless ${hunter.name} discards a Knife or a Stake item`);
-            this.log(`If the vampire escapes, leave it here and ${hunter.name}'s turn ends, otherwise discard it`);
+          if (this.dracula.willPlaySeduction(this.huntersInGroup(hunter), this)) {
+            this.log('Dracula played Seduction');
           } else {
-            this.log('The Hunter group has encountered a vampire at night and must roll a die');
-            this.log('On a roll of 1-3, each Hunter is bitten, unless they show Dracula a Heavenly Host or Crucifix item');
-            this.log('On a roll of 4-6, the vampire escapes unless one Hunter discards a Knife or a Stake item');
-            this.log('If the vampire escapes, leave it here and the group\'s turn ends, otherwise discard it');
+            if (hunter.groupNumber == 0) {
+              this.log(`${hunter.name} has encountered a vampire at night and must roll a die`);
+              this.log(`On a roll of 1-3, ${hunter.name} is bitten, unless they show Dracula a Heavenly Host or Crucifix item`);
+              this.log(`On a roll of 4-6, the vampire escapes unless ${hunter.name} discards a Knife or a Stake item`);
+              this.log(`If the vampire escapes, leave it here and ${hunter.name}'s turn ends, otherwise discard it`);
+            } else {
+              this.log('The Hunter group has encountered a vampire at night and must roll a die');
+              this.log('On a roll of 1-3, each Hunter is bitten, unless they show Dracula a Heavenly Host or Crucifix item');
+              this.log('On a roll of 4-6, the vampire escapes unless one Hunter discards a Knife or a Stake item');
+              this.log('If the vampire escapes, leave it here and the group\'s turn ends, otherwise discard it');
+            }
           }
         }
         break;
@@ -1396,6 +1400,21 @@ export class Game {
       case EventName.Roadblock:
         this.roadBlock = this.dracula.chooseRoadBlockTarget(this);
         this.log(`Dracula chose to move the Roadblock to the road between ${this.roadBlock[0]} and ${this.roadBlock[1]}`);
+        break;
+      case EventName.Seduction:
+        if (this.dracula.potentialTargetHunters.length > 1) {
+          this.log('The New Vampire bites each member of the group before returning to Dracula');
+        } else {
+          this.log(`The New Vampire bites ${this.dracula.potentialTargetHunters[0].name} before returning to Dracula`);
+        }
+        let vampireIndex = 0;
+        for (vampireIndex; vampireIndex < this.encounterPool.length; vampireIndex++) {
+          if (this.encounterPool[vampireIndex].name == EncounterName.NewVampire) {
+            break;
+          }
+        }
+        this.dracula.encounterHand.push(this.encounterPool.splice(vampireIndex, 1)[0]);
+        this.dracula.discardDownEncounters(this.encounterPool);
         break;
     }
     this.dracula.eventAwaitingApproval = null;

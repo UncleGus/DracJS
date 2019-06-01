@@ -889,6 +889,20 @@ export class Dracula {
     const target2 = target1.roadConnections[choice2];
     return [target1, target2];
   }
+
+  /**
+   * Decides whether or not to play Seduction when a Hunter group encounters a New Vampire at night
+   */
+  willPlaySeduction(hunters: Hunter[], gameState: Game): boolean {
+    // TODO: Make logical decision; spoiler: always do this
+    if (this.eventHand.find(event => event.name == EventName.Seduction)) {
+      this.eventAwaitingApproval = EventName.Seduction;
+      this.potentialTargetHunters = hunters;
+      this.playEvent(EventName.Seduction, gameState.eventDiscard);
+      return true;
+    }
+    return false;
+  }
 }
 
 export interface TrailCard {
