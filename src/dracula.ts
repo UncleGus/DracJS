@@ -159,7 +159,7 @@ export class Dracula {
       if (this.currentLocation.type !== LocationType.sea) {
         seaIsInvalid = true;
       }
-      if (!this.seaBloodPaid) {
+      if (!this.seaBloodPaid || gameState.hunterAlly.name == EventName.RufusSmith) {
         seaIsInvalid = true;
       }
     }

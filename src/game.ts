@@ -380,7 +380,7 @@ export class Game {
       this.log(this.dracula.setLocation(nextLocation));
 
       // pay blood for sea travel
-      if (nextLocation.type == LocationType.sea && !this.dracula.seaBloodPaid) {
+      if (nextLocation.type == LocationType.sea && (!this.dracula.seaBloodPaid || this.hunterAlly.name == EventName.RufusSmith)) {
         this.log(this.dracula.setBlood(this.dracula.blood - 1));
         this.dracula.seaBloodPaid = true;
       } else {
