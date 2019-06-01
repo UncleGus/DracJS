@@ -1393,6 +1393,10 @@ export class Game {
         this.log(this.dracula.chooseRageVictim(this));
         this.rageRounds = 3;
         break;
+      case EventName.Roadblock:
+        this.roadBlock = this.dracula.chooseRoadBlockTarget(this);
+        this.log(`Dracula chose to move the Roadblock to the road between ${this.roadBlock[0]} and ${this.roadBlock[1]}`);
+        break;
     }
     this.dracula.eventAwaitingApproval = null;
   }

@@ -753,8 +753,8 @@ export class Dracula {
       return;
     }
     let potentialEvents = this.eventHand.filter(card => card.name
-      == EventName.DevilishPower);
-    // || card.name == EventName.Roadblock
+      == EventName.DevilishPower
+    || card.name == EventName.Roadblock);
     // || card.name == EventName.TimeRunsShort
     // || card.name == EventName.UnearthlySwiftness);
     if (potentialEvents.find(card => card.name == EventName.DevilishPower)) {
@@ -874,6 +874,20 @@ export class Dracula {
         return true;
       }
     }
+  }
+
+  /**
+   * Chooses a road to block with Roadblock
+   * @param gameState The state of the game
+   */
+  chooseRoadBlockTarget(gameState: Game): Location[] {
+    // TODO: Make logical decision
+    const landLocations = gameState.map.locations.filter(location => location.type != LocationType.sea && location.roadConnections.length > 0);
+    const choice1 = Math.floor(Math.random() * landLocations.length);
+    const target1 = landLocations[choice1];
+    const choice2 = Math.floor(Math.random() * target1.roadConnections.length);
+    const target2 = target1.roadConnections[choice2];
+    return [target1, target2];
   }
 }
 

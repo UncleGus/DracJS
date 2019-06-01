@@ -56,6 +56,7 @@ const startButton = document.getElementById('startButton');
 const draculaTurnButton = document.getElementById('draculaTurn');
 const newspaperReportsButton = document.getElementById('newspaperReports');
 const approvalButton = document.getElementById('approval');
+const roadblock = document.getElementById('roadblock') as HTMLInputElement;
 const debugGameStateButton = document.getElementById('debugGameState');
 
 const trailLocation = [
@@ -770,6 +771,7 @@ function updateDiscards() {
  */
 function updateMarkers() {
   consecratedGround.value = game.consecratedLocation ? game.consecratedLocation.name : '';
+  roadblock.value = game.roadBlock.length > 0 ? `${game.roadBlock[0]} <==> ${game.roadBlock[1]}` : '';
 }
 
 /**
