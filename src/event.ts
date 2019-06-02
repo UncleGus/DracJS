@@ -1,4 +1,6 @@
 import { Game } from "./game";
+import { EncounterName } from "./encounter";
+import { LocationType } from "./map";
 
 export class Event {
   name: string;
@@ -149,77 +151,192 @@ export function initialiseEventDeck(): Event[] {
 export function resolveEvent(eventName: string, gameState: Game) {
   switch (eventName) {
     case EventName.AdvancePlanning:
+      gameState.log('One Hunter receives +1 to all combat rolls until the end of the combat')
       break;
     case EventName.BloodTransfusion:
+      gameState.log('One Hunter loses 1 health and the other is cured of a bite')
       break;
     case EventName.CharteredCarriage:
+      gameState.log('You automatically catch a Fast/Express train')
       break;
     case EventName.ConsecratedGround:
+      gameState.consecratedGroundInEffect = true;
+      gameState.log('Choose a location to move the Consecrated Ground marker')
       break;
-    case EventName.ControlStorms:
-      break;
-    case EventName.CustomsSearch:
-      break;
+    // Handled in game.draculaChooseControlStormsDestination()
+    // case EventName.ControlStorms:
+    //   break;
+    // Handled in game.setHunterLocation()
+    // case EventName.CustomsSearch:
+    //   break;
     case EventName.DevilishPower:
+      gameState.log(gameState.dracula.chooseTargetForDevilishPower(gameState));
       break;
-    case EventName.DraculasBrides:
-      break;
+    // Ally
+    // case EventName.DraculasBrides:
+    //   break;
     case EventName.EscapeRoute:
+      gameState.log('The combat is cancelled but an encounter has still occurred');
       break;
     case EventName.Evasion:
+      gameState.dracula.revealed = false;
+      const evasionDestination = gameState.dracula.chooseEvasionDestination(gameState);
+      gameState.pushToTrail({ revealed: false, location: evasionDestination, encounter: gameState.dracula.chooseEncounterForTrail() });
       break;
     case EventName.ExcellentWeather:
+      gameState.log('You may make up to four sea moves');
       break;
-    case EventName.FalseTipoff:
-      break;
+    // Handle in game.playHunterEvent()
+    // case EventName.FalseTipoff:
+    //   break;
     case EventName.Forewarned:
+      gameState.log('Discard the encounter instead of resolving it');
       break;
     case EventName.GoodLuck:
+      gameState.goodLuckInEffect = true;
+      gameState.log('Choose a target for Good luck, Dracula\'s Ally or the Roadblock token');
       break;
     case EventName.GreatStrength:
+      gameState.log('The Health loss or bite is cancelled');
       break;
     case EventName.HeroicLeap:
+      gameState.log('The combat is cancelled. Roll a die and deduct that amount from your Health and Dracula\'s blood');
       break;
     case EventName.HiredScouts:
+      gameState.hiredScoutsInEffect = true;
+      gameState.log('Choose two cities to investigate with Hired Scouts');
       break;
     case EventName.Hypnosis:
+      gameState.dracula.revealed = true;
+      gameState.log(`Dracula is at ${gameState.dracula.currentLocation.name}`);
+      let trailIndex = 0;
+      for (trailIndex; trailIndex < gameState.trail.length; trailIndex++) {
+        if (gameState.trail[trailIndex].location == gameState.dracula.currentLocation) {
+          gameState.trailCardsToBeRevealed.push(trailIndex);
+        }
+        if (gameState.trail[trailIndex].encounter) {
+          if (gameState.trail[trailIndex].encounter.name == EncounterName.NewVampire) {
+            gameState.trail[trailIndex].encounter.revealed = true;
+            gameState.log('A New Vampire is revealed in Dracula\'s trail');
+          }
+        }
+      }
+      gameState.catacombs.forEach(card => {
+        if (card.encounter) {
+          if (card.encounter.name == EncounterName.NewVampire) {
+            card.encounter.revealed = true;
+            gameState.log('A New Vampire is revealed in Dracula\'s catacombs');
+          }
+          if (card.catacombEncounter.name == EncounterName.NewVampire) {
+            card.catacombEncounter.revealed = true;
+            gameState.log('A New Vampire is revealed in Dracula\'s catacombs');
+          }
+        }
+      });
+      gameState.revealCatacombCards();
+      gameState.revealCatacombCards();
+      gameState.timePhase = (gameState.timePhase + 1) % 6;
+      gameState.dracula.chooseNextMove(gameState);
+      gameState.timePhase = (gameState.timePhase + 5) % 6;
+      gameState.dracula.hypnosisInEffect = true;
+      if (!gameState.dracula.nextMove) {
+        gameState.log('Dracula has no legal next move');
+      } else {
+        if (gameState.dracula.nextMove.power) {
+          gameState.log(`Dracula will use power ${gameState.dracula.nextMove.power.name}`);
+        }
+        if (gameState.dracula.nextMove.location) {
+          gameState.log(`Dracula will move to ${gameState.dracula.nextMove.location.name}`)
+        }
+      }
       break;
-    case EventName.ImmanuelHildesheim:
-      break;
-    case EventName.JonathanHarker:
-      break;
+    // Ally
+    // case EventName.ImmanuelHildesheim:
+    //   break;
+    // Ally
+    // case EventName.JonathanHarker:
+    //   break;
     case EventName.LongDay:
+      gameState.log('Move the Time marker backwards one space');
       break;
     case EventName.MoneyTrail:
+      let moneyTrailIndex = 0;
+      for (moneyTrailIndex; moneyTrailIndex < gameState.trail.length; moneyTrailIndex++) {
+        if (gameState.trail[moneyTrailIndex].location) {
+          if (gameState.trail[moneyTrailIndex].location.type == LocationType.sea) {
+            gameState.trailCardsToBeRevealed.push(moneyTrailIndex);
+          }
+        }
+      }
+      gameState.revealTrailCards();
       break;
     case EventName.MysticResearch:
+      gameState.dracula.eventHand.forEach(card => {
+        gameState.log(`Dracula has ${card.name}`);
+      });
       break;
     case EventName.NewspaperReports:
+      let i = gameState.trail.length - 1;
+      for (i; i > 0; i--) {
+        if (!gameState.trail[i].revealed) {
+          gameState.trailCardsToBeRevealed.push(i);
+          break;
+        }
+      }
+      gameState.revealTrailCards();
       break;
     case EventName.NightVisit:
+      gameState.log(gameState.dracula.chooseHunterToNightVisit(gameState));
       break;
-    case EventName.QuinceyPMorris:
-      break;
+    // Ally
+    // case EventName.QuinceyPMorris:
+    //   break;
     case EventName.Rage:
+      gameState.log(gameState.dracula.chooseRageVictim(gameState));
+      gameState.rageRounds = 3;
       break;
     case EventName.ReEquip:
+      gameState.log('Discard one item and drew a new one from the deck');
       break;
-    case EventName.RelentlessMinion:
-      break;
+    // Handled in game.handleCombatEffect()
+    // case EventName.RelentlessMinion:
+    //   break;
     case EventName.Roadblock:
+      gameState.roadBlock = gameState.dracula.chooseRoadBlockTarget(gameState);
+      gameState.log(`Dracula chose to move the Roadblock to the road between ${gameState.roadBlock[0]} and ${gameState.roadBlock[1]}`);
       break;
-    case EventName.RufusSmith:
-      break;
+    // Ally
+    // case EventName.RufusSmith:
+    //   break;
     case EventName.SecretWeapon:
+      gameState.log('Discard one item and retrieve one item from the discard pile');
       break;
     case EventName.Seduction:
+      if (gameState.dracula.potentialTargetHunters.length > 1) {
+        gameState.log('The New Vampire bites each member of the group before returning to Dracula');
+      } else {
+        gameState.log(`The New Vampire bites ${gameState.dracula.potentialTargetHunters[0].name} before returning to Dracula`);
+      }
+      let vampireIndex = 0;
+      for (vampireIndex; vampireIndex < gameState.encounterPool.length; vampireIndex++) {
+        if (gameState.encounterPool[vampireIndex].name == EncounterName.NewVampire) {
+          break;
+        }
+      }
+      gameState.dracula.encounterHand.push(gameState.encounterPool.splice(vampireIndex, 1)[0]);
+      gameState.dracula.discardDownEncounters(gameState.encounterPool);
       break;
     case EventName.SensationalistPress:
+      gameState.dracula.chooseLocationForSensationalistPress(gameState);
+      gameState.revealTrailCards();
+      gameState.revealCatacombCards();
       break;
     case EventName.SenseofEmergency:
+      gameState.log(`Lose ${6 - gameState.vampireTrack} Health and move to your chosen destination`);
       break;
-    case EventName.SisterAgatha:
-      break;
+    // Ally
+    // case EventName.SisterAgatha:
+    //   break;
     case EventName.StormySeas:
       break;
     case EventName.SurprisingReturn:

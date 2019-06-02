@@ -252,8 +252,8 @@ export class Dracula {
       if (this.hypnosisInEffect) {
         if (this.possibleMoves.find(move => move.catacombToDiscard == this.nextMove.catacombToDiscard
           && move.location == this.nextMove.location && move.power.name == this.nextMove.power.name)) {
-            return 'Dracula is bound by Hypnosis';
-          }
+          return 'Dracula is bound by Hypnosis';
+        }
       }
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
@@ -502,19 +502,23 @@ export class Dracula {
   clearTrail(gameState: Game, remainingCards: number): string {
     let cardsCleared = 0;
     let encountersCleared = 0;
+    let cardIndex = gameState.trail.length - 1;
     while (gameState.trail.length > remainingCards) {
-      const cardToClear = gameState.trail.pop();
-      cardsCleared++;
-      if (cardToClear.location) {
-      }
-      if (cardToClear.power) {
+      if ((gameState.trail[cardIndex].location !== this.currentLocation)) {
+        const cardToClear = gameState.trail.splice(cardIndex, 1)[0];
         cardsCleared++;
+        if (cardToClear.location) {
+        }
+        if (cardToClear.power) {
+          cardsCleared++;
+        }
+        if (cardToClear.encounter) {
+          encountersCleared++;
+          gameState.encounterPool.push(cardToClear.encounter);
+          gameState.shuffleEncounters();
+        }
       }
-      if (cardToClear.encounter) {
-        encountersCleared++;
-        gameState.encounterPool.push(cardToClear.encounter);
-        gameState.shuffleEncounters();
-      }
+      cardIndex--;
     }
     return `Returned ${cardsCleared} cards and ${encountersCleared} encounters`;
   }
@@ -754,7 +758,7 @@ export class Dracula {
     }
     let potentialEvents = this.eventHand.filter(card => card.name
       == EventName.DevilishPower
-    || card.name == EventName.Roadblock);
+      || card.name == EventName.Roadblock);
     // || card.name == EventName.TimeRunsShort
     // || card.name == EventName.UnearthlySwiftness);
     if (potentialEvents.find(card => card.name == EventName.DevilishPower)) {
@@ -943,6 +947,37 @@ export class Dracula {
     const cancelCard = this.eventHand.splice(eventIndex, 1)[0];
     gameState.eventDiscard.push(cancelCard);
     return cancelCard;
+  }
+
+  /**
+   * Decides whether to play Sensationalist Press
+   * @param gameState The state of the game
+   */
+  willPlaySensationalistPress(gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (!this.eventHand.find(event => event.name == EventName.SensationalistPress)) {
+      return false;
+    }
+    if (Math.random() < 0.5) {
+      this.playEvent(EventName.SensationalistPress, gameState.eventDiscard);
+      this.eventAwaitingApproval = EventName.SensationalistPress;
+      gameState.eventPendingResolution = EventName.SensationalistPress;
+      return true;
+    }
+  }
+
+  /**
+   * Chooses which Location to keep hidden with Sensationalist Press
+   * @param gameState The state of the game
+   */
+  chooseLocationForSensationalistPress(gameState: Game) {
+    // TODO: Make logical decision
+    const choice = Math.floor(Math.random() * (gameState.trailCardsToBeRevealed.length + gameState.catacombCardsToBeRevealed.length));
+    if (choice < gameState.trailCardsToBeRevealed.length) {
+      gameState.trailCardsToBeRevealed.splice(choice, 1);
+    } else {
+      gameState.catacombCardsToBeRevealed.splice(choice - gameState.trailCardsToBeRevealed.length, 1);
+    }
   }
 }
 

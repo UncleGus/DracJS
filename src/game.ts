@@ -38,7 +38,11 @@ export class Game {
   rageRounds: number;
   roadBlock: Location[];
   eventPendingResolution: string;
-  hiredScoutsToResolve: boolean;
+  hiredScoutsInEffect: boolean;
+  consecratedGroundInEffect: boolean;
+  goodLuckInEffect: boolean;
+  trailCardsToBeRevealed: number[];
+  catacombCardsToBeRevealed: number[];
 
   constructor() {
     // construct game components
@@ -51,6 +55,8 @@ export class Game {
     this.catacombs = [];
     this.roadBlock = [];
     this.heavenlyHostLocations = [];
+    this.trailCardsToBeRevealed = [];
+    this.catacombCardsToBeRevealed = [];
     this.dracula = new Dracula();
     this.godalming = new Hunter(HunterName.godalming, 12);
     this.seward = new Hunter(HunterName.seward, 10);
@@ -102,18 +108,6 @@ export class Game {
     return false;
   }
 
-  /**
-   * Checks if Dracula wants to play Control Storms on a Hunter and handles it if so
-   * @param hunters The Hunters in this group
-   */
-  checkForControlStorms(hunters: Hunter[]): boolean {
-    const port = this.dracula.chooseControlStormsDestination(hunters, this);
-    if (port) {
-      this.log(`Dracula played Control Storms to move ${hunters.length == 1 ? hunters[0].name : 'the group'} to ${port.name}`);
-    } else {
-      return false;
-    }
-  }
 
   /**
    * Determines if a Location is blocked to Dracula due to Consecrated Ground or one of the Heavenly Hosts or by being the Hospital
@@ -204,6 +198,19 @@ export class Game {
     }
     this.itemDiscard.push(hunter.items.splice(itemIndex, 1)[0]);
     this.log(`${hunter.name} discarded item ${itemName}`);
+  }
+
+  /**
+   * Checks if Dracula wants to play Control Storms on a Hunter and handles it if so
+   * @param hunters The Hunters in this group
+   */
+  draculaChooseControlStormsDestination(hunters: Hunter[]): boolean {
+    const port = this.dracula.chooseControlStormsDestination(hunters, this);
+    if (port) {
+      this.log(`Dracula played Control Storms to move ${hunters.length == 1 ? hunters[0].name : 'the group'} to ${port.name}`);
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -778,41 +785,6 @@ export class Game {
     }
     resolveEvent(this.eventPendingResolution, this);
 
-    //   case EventName.DevilishPower:
-    //     this.log(this.dracula.chooseTargetForDevilishPower(this));
-    //     break;
-    //   case EventName.Evasion:
-    //     this.dracula.revealed = false;
-    //     const evasionDestination = this.dracula.chooseEvasionDestination(this);
-    //     this.pushToTrail({ revealed: false, location: evasionDestination, encounter: this.dracula.chooseEncounterForTrail() });
-    //     break;
-    //   case EventName.NightVisit:
-    //     this.log(this.dracula.chooseHunterToNightVisit(this));
-    //     break;
-    //   case EventName.Rage:
-    //     this.log(this.dracula.chooseRageVictim(this));
-    //     this.rageRounds = 3;
-    //     break;
-    //   case EventName.Roadblock:
-    //     this.roadBlock = this.dracula.chooseRoadBlockTarget(this);
-    //     this.log(`Dracula chose to move the Roadblock to the road between ${this.roadBlock[0]} and ${this.roadBlock[1]}`);
-    //     break;
-    //   case EventName.Seduction:
-    //     if (this.dracula.potentialTargetHunters.length > 1) {
-    //       this.log('The New Vampire bites each member of the group before returning to Dracula');
-    //     } else {
-    //       this.log(`The New Vampire bites ${this.dracula.potentialTargetHunters[0].name} before returning to Dracula`);
-    //     }
-    //     let vampireIndex = 0;
-    //     for (vampireIndex; vampireIndex < this.encounterPool.length; vampireIndex++) {
-    //       if (this.encounterPool[vampireIndex].name == EncounterName.NewVampire) {
-    //         break;
-    //       }
-    //     }
-    //     this.dracula.encounterHand.push(this.encounterPool.splice(vampireIndex, 1)[0]);
-    //     this.dracula.discardDownEncounters(this.encounterPool);
-    //     break;
-    // }
     this.eventPendingResolution = null;
     this.dracula.eventAwaitingApproval = null;
   }
@@ -1100,7 +1072,7 @@ export class Game {
               this.log(`If the vampire escapes, leave it here and ${hunter.name}'s turn ends, otherwise discard it`);
             } else {
               this.log('The Hunter group has encountered a vampire at night and must roll a die');
-              this.log('On a roll of 1-3, each Hunter is bitten, unless they show Dracula a Heavenly Host or Crucifix item');
+              this.log('On a roll of 1-3, each Hunter is bitten, unless someone in the group shows Dracula a Heavenly Host or Crucifix item');
               this.log('On a roll of 4-6, the vampire escapes unless one Hunter discards a Knife or a Stake item');
               this.log('If the vampire escapes, leave it here and the group\'s turn ends, otherwise discard it');
             }
@@ -1155,79 +1127,55 @@ export class Game {
   }
 
   /**
-   * Resolves the Hypnosis Event
+   * Takes an Item of the given name from the Item discard and gives it to the given Hunter
+   * @param itemName The name of the Item
+   * @param hunter The Hunter to whom to give the Item
    */
-  resolveHypnosis() {
-    this.dracula.revealed = true;
-    this.log(`Dracula is at ${this.dracula.currentLocation.name}`);
-    this.trail.forEach(card => {
-      if (card.location == this.dracula.currentLocation) {
-        card.revealed = true;
-      }
-      if (card.encounter) {
-        if (card.encounter.name == EncounterName.NewVampire) {
-          card.encounter.revealed = true;
-          this.log('A New Vampire is revealed in Dracula\'s trail');
-        }
-      }
-    });
-    this.catacombs.forEach(card => {
-      if (card.encounter) {
-        if (card.encounter.name == EncounterName.NewVampire) {
-          card.encounter.revealed = true;
-          this.log('A New Vampire is revealed in Dracula\'s catacombs');
-        }
-        if (card.catacombEncounter.name == EncounterName.NewVampire) {
-          card.catacombEncounter.revealed = true;
-          this.log('A New Vampire is revealed in Dracula\'s catacombs');
-        }
-      }
-    });
-    this.timePhase = (this.timePhase + 1) % 6;
-    this.dracula.chooseNextMove(this);
-    this.timePhase = (this.timePhase + 5) % 6;
-    this.dracula.hypnosisInEffect = true;
-    if (!this.dracula.nextMove) {
-      this.log('Dracula has no legal next move');
-    } else {
-      if (this.dracula.nextMove.power) {
-        this.log(`Dracula will use power ${this.dracula.nextMove.power.name}`);
-      }
-      if (this.dracula.nextMove.location) {
-        this.log(`Dracula will move to ${this.dracula.nextMove.location.name}`)
+  retrieveItemForHunter(itemName: string, hunter: Hunter) {
+    if (!itemName) {
+      return;
+    }
+    let itemIndex = 0;
+    for (itemIndex; itemIndex < this.itemDiscard.length; itemIndex++) {
+      if (this.itemDeck[itemIndex].name == itemName) {
+        break;
       }
     }
+    hunter.items.push(this.itemDeck.splice(itemIndex, 1)[0]);
+    this.log(`${hunter.name} took item ${itemName} from the discard pile`);
   }
 
-  // /**
-  //  * Resolves the Event played at the start of a cancellation tug-of-war
-  //  */
-  // resolveOutstandingEvent() {
-  //   switch (this.eventPendingResolution) {
-  //     case EventName.HiredScouts:
-  //       this.hiredScoutsToResolve = true;
-  //       break;
-  //     case EventName.MoneyTrail:
-  //       this.trail.forEach(card => {
-  //         if (card.location) {
-  //           if (card.location.type == LocationType.sea) {
-  //             card.revealed = true;
-  //             this.log(`${card.location.name} revealed by Money Trail`);
-  //           }
-  //         }
-  //       });
-  //       break;
-  //     case EventName.MysticResearch:
-  //       this.dracula.eventHand.forEach(card => {
-  //         this.log(`Dracula has ${card.name}`);
-  //       });
-  //       break;
-  //     case EventName.NewspaperReports:
-  //       this.resolveNewspaperReports();
-  //       break;
-  //   }
-  //   this.eventPendingResolution = null;
-  // }
+  /**
+   * Reveals cards in Dracula's catacombs by effect of an Event
+   */
+  revealCatacombCards() {
+    if (this.dracula.willPlaySensationalistPress(this)) {
+      return;
+    }
+    this.catacombCardsToBeRevealed.forEach(index => {
+      this.catacombs[index].revealed = true;
+      this.log(`${this.catacombs[index].location.name} is revealed`)
+    });
+    this.catacombCardsToBeRevealed = [];
+  }
+
+  /**
+   * Reveals cards in Dracula's trail by effect of an Event
+   */
+  revealTrailCards() {
+    if (this.dracula.willPlaySensationalistPress(this)) {
+      return;
+    }
+    this.trailCardsToBeRevealed.forEach(index => {
+      this.trail[index].revealed = true;
+      if (this.trail[index].location) {
+        this.log(`${this.trail[index].location.name} is revealed`);
+      } else if (this.trail[index].power) {
+        this.log(`${this.trail[index].power.name} is revealed`);
+      }
+    });
+    this.trailCardsToBeRevealed = [];
+  }
 
   /**
    * Searches at a Hunter's current location for Dracula, his trail and his catacombs
@@ -1545,14 +1493,4 @@ export class Game {
   //     this.log('No valid trail cards to reveal');
   //   }
   // }
-
-
-
-
-
-
-
-
-
-
 }

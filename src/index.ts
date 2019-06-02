@@ -60,6 +60,7 @@ const roadblock = document.getElementById('roadblock') as HTMLInputElement;
 const hiredScouts = document.getElementById('hiredScouts');
 const sendScouts = document.getElementById('sendScouts');
 const debugGameStateButton = document.getElementById('debugGameState');
+const retrieveItem = document.getElementById('retrieveItem');
 
 const trailLocation = [
   document.getElementById('trail1') as HTMLInputElement,
@@ -229,10 +230,6 @@ resolveEncounter.addEventListener('click', () => {
 //   game.resolveNewspaperReports(true);
 //   updateAllFields();
 // });
-hypnosisButton.addEventListener('click', () => {
-  game.resolveHypnosis();
-  updateAllFields();
-});
 // sendScouts.addEventListener('click', () => {
 //   game.resolveHiredScouts([(hiredScouts.querySelector('#location1') as HTMLSelectElement).value, (hiredScouts.querySelector('#location2') as HTMLSelectElement).value]);
 // });
@@ -358,7 +355,7 @@ startButton.addEventListener('click', () => {
         hunters[actingHunter].currentLocation.seaConnections
           .forEach(location => destination.options.add(new Option(location.name)));
         if (hunters[actingHunter].currentLocation.type == LocationType.sea) {
-          if (game.checkForControlStorms(game.huntersInGroup(hunters[actingHunter]))) {
+          if (game.draculaChooseControlStormsDestination(game.huntersInGroup(hunters[actingHunter]))) {
             updateAllFields();
           };
         }
@@ -434,6 +431,12 @@ draculaEvent.addEventListener('click', () => {
 });
 drawItem.addEventListener('click', () => {
   game.giveItemToHunter(itemDeck.value, hunters[actingHunter]);
+  updateHunterDetails();
+  updateItemDeck();
+  updateLog();
+});
+retrieveItem.addEventListener('click', () => {
+  game.retrieveItemForHunter(itemDiscard.value, hunters[actingHunter]);
   updateHunterDetails();
   updateItemDeck();
   updateLog();
@@ -766,7 +769,7 @@ function updateDiscards() {
 function updateMarkers() {
   consecratedGround.value = game.consecratedLocation ? game.consecratedLocation.name : '';
   roadblock.value = game.roadBlock.length > 0 ? `${game.roadBlock[0]} <==> ${game.roadBlock[1]}` : '';
-  if (game.hiredScoutsToResolve) {
+  if (game.hiredScoutsInEffect) {
     hiredScouts.style.display = null;
     const location1 = (hiredScouts.querySelector('#location1') as HTMLSelectElement);
     const location2 = (hiredScouts.querySelector('#location2') as HTMLSelectElement);
