@@ -692,6 +692,9 @@ export class Dracula {
     }
     if (Math.random() < 0.5) {
       this.playEvent(EventName.CustomsSearch, gameState.eventDiscard);
+      gameState.eventPendingResolution = EventName.CustomsSearch;
+      this.eventAwaitingApproval = EventName.CustomsSearch;
+      this.potentialTargetHunters = [hunter];
       return true;
     }
   }
@@ -978,6 +981,46 @@ export class Dracula {
     } else {
       gameState.catacombCardsToBeRevealed.splice(choice - gameState.trailCardsToBeRevealed.length, 1);
     }
+  }
+
+  /**
+   * Chooses which bitten Hunter to influence with Vampiric Influence
+   * @param gameState The state of the Game
+   */
+  chooseHunterToInfluence(gameState: Game): Hunter {
+    // TODO: Make logical decision
+    const bittenHunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina].filter(hunter => hunter.bites > 0);
+    const choice = Math.floor(Math.random() * bittenHunters.length);
+    return bittenHunters[choice];
+  }
+
+  /**
+   * Decides whether to play Wild horses on a Hunter
+   * @param hunters The Hunters entering combat with Dracula
+   * @param gameState The state of the game
+   */
+  willPlayWildHorses(hunters: Hunter[], gameState: Game): boolean {
+    // TODO: Make logical decision
+    if (!this.eventHand.find(event => event.name == EventName.WildHorses)) {
+      return false;
+    }
+    if (Math.random() < 0.5) {
+      gameState.eventPendingResolution = EventName.WildHorses;
+      this.eventAwaitingApproval = EventName.WildHorses;
+      this.potentialTargetHunters = hunters;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Chooses where to send a Hunter with Wild Horses
+   * @param gameState The state of the Game
+   */
+  chooseWildHorsesLocation(gameState: Game): Location {
+    // TODO: Make logical decision
+    const choice = Math.floor(Math.random() * this.potentialTargetHunters[0].currentLocation.roadConnections.length);
+    return this.potentialTargetHunters[0].currentLocation.roadConnections[choice];
   }
 }
 

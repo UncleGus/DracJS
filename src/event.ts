@@ -151,17 +151,17 @@ export function initialiseEventDeck(): Event[] {
 export function resolveEvent(eventName: string, gameState: Game) {
   switch (eventName) {
     case EventName.AdvancePlanning:
-      gameState.log('One Hunter receives +1 to all combat rolls until the end of the combat')
+      gameState.log('One Hunter receives +1 to all combat rolls until the end of the combat');
       break;
     case EventName.BloodTransfusion:
-      gameState.log('One Hunter loses 1 health and the other is cured of a bite')
+      gameState.log('One Hunter loses 1 health and the other is cured of a bite');
       break;
     case EventName.CharteredCarriage:
-      gameState.log('You automatically catch a Fast/Express train')
+      gameState.log(`${gameState.hunterWhoPlayedEvent.name} automatically catches a Fast/Express train`);
       break;
     case EventName.ConsecratedGround:
       gameState.consecratedGroundInEffect = true;
-      gameState.log('Choose a location to move the Consecrated Ground marker')
+      gameState.log('Choose a location to move the Consecrated Ground marker');
       break;
     // Handled in game.draculaChooseControlStormsDestination()
     // case EventName.ControlStorms:
@@ -184,7 +184,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
       gameState.pushToTrail({ revealed: false, location: evasionDestination, encounter: gameState.dracula.chooseEncounterForTrail() });
       break;
     case EventName.ExcellentWeather:
-      gameState.log('You may make up to four sea moves');
+      gameState.log(`${gameState.hunterWhoPlayedEvent.name} may make up to four sea moves`);
       break;
     // Handle in game.playHunterEvent()
     // case EventName.FalseTipoff:
@@ -200,15 +200,13 @@ export function resolveEvent(eventName: string, gameState: Game) {
       gameState.log('The Health loss or bite is cancelled');
       break;
     case EventName.HeroicLeap:
-      gameState.log('The combat is cancelled. Roll a die and deduct that amount from your Health and Dracula\'s blood');
+      gameState.log(`The combat is cancelled. Roll a die and deduct that amount from ${gameState.hunterWhoPlayedEvent.name}'s Health and Dracula's blood`);
       break;
     case EventName.HiredScouts:
       gameState.hiredScoutsInEffect = true;
       gameState.log('Choose two cities to investigate with Hired Scouts');
       break;
     case EventName.Hypnosis:
-      gameState.dracula.revealed = true;
-      gameState.log(`Dracula is at ${gameState.dracula.currentLocation.name}`);
       let trailIndex = 0;
       for (trailIndex; trailIndex < gameState.trail.length; trailIndex++) {
         if (gameState.trail[trailIndex].location == gameState.dracula.currentLocation) {
@@ -233,7 +231,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
           }
         }
       });
-      gameState.revealCatacombCards();
+      gameState.revealTrailCards();
       gameState.revealCatacombCards();
       gameState.timePhase = (gameState.timePhase + 1) % 6;
       gameState.dracula.chooseNextMove(gameState);
@@ -338,22 +336,52 @@ export function resolveEvent(eventName: string, gameState: Game) {
     // case EventName.SisterAgatha:
     //   break;
     case EventName.StormySeas:
+      gameState.stormySeasInEffect = true;
+      gameState.log('Choose a sea location for Stormy Seas');
       break;
     case EventName.SurprisingReturn:
+      gameState.log('Choose a Keep event from the discard pile to retrieve');
       break;
     case EventName.TelegraphAhead:
+      let telegraphTrailIndex = 0;
+      for (telegraphTrailIndex; telegraphTrailIndex < gameState.trail.length; telegraphTrailIndex++) {
+        if (gameState.hunterWhoPlayedEvent.currentLocation.roadConnections.find(road => road == gameState.trail[telegraphTrailIndex].location)) {
+          gameState.trailCardsToBeRevealed.push(telegraphTrailIndex);
+        }
+      }
+      gameState.revealTrailCards();
       break;
     case EventName.TimeRunsShort:
+      gameState.log('Time marches on...');
+      gameState.timePhase++;
+      if (this.timePhase == 6) {
+        this.log('A new day dawns');
+        this.setVampireTrack(this.vampireTrack + 1);
+        this.resolveTrack += 1;
+        this.timePhase = 0;
+      }
       break;
     case EventName.Trap:
+      gameState.log('Dracula receives +1 to all combat rolls this combat');
       break;
     case EventName.UnearthlySwiftness:
+      gameState.unearthlySwiftnessInEffect = true;
       break;
     case EventName.VampireLair:
+      if (gameState.vampireTrack == 0) {
+        gameState.log('No Vampire to fight');
+        break;
+      }
+      gameState.vampireLairInEffect = true;
+      gameState.resolveEncounter(EncounterName.VampireLair, gameState.hunterWhoPlayedEvent);
       break;
     case EventName.VampiricInfluence:
+      const hunterToInfluence = gameState.dracula.chooseHunterToInfluence(gameState);
+      gameState.log(`${hunterToInfluence.name} must show Dracula all event and item cards and declare their next move to Dracula`);
       break;
     case EventName.WildHorses:
+      const wildHorsesLocation = gameState.dracula.chooseWildHorsesLocation(gameState);
+      gameState.setHunterLocation(gameState.dracula.potentialTargetHunters[0], wildHorsesLocation.name);
       break;
   }
 }

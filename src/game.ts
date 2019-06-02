@@ -43,6 +43,11 @@ export class Game {
   goodLuckInEffect: boolean;
   trailCardsToBeRevealed: number[];
   catacombCardsToBeRevealed: number[];
+  stormySeasInEffect: boolean;
+  stormRounds: number;
+  hunterWhoPlayedEvent: Hunter;
+  unearthlySwiftnessInEffect: boolean;
+  vampireLairInEffect: boolean;
 
   constructor() {
     // construct game components
@@ -57,6 +62,7 @@ export class Game {
     this.heavenlyHostLocations = [];
     this.trailCardsToBeRevealed = [];
     this.catacombCardsToBeRevealed = [];
+    this.stormRounds = 0;
     this.dracula = new Dracula();
     this.godalming = new Hunter(HunterName.godalming, 12);
     this.seward = new Hunter(HunterName.seward, 10);
@@ -710,6 +716,7 @@ export class Game {
     // If a cancellation tug-of-war hasn't been started, this is the start of one
     if (!this.eventPendingResolution) {
       this.eventPendingResolution = eventName;
+      this.hunterWhoPlayedEvent = hunter;
     } else {
       // Otherwise the only valid card for a Hunter to play is Good Luck, to cancel Dracula's Event
       if (eventName !== EventName.GoodLuck) {
@@ -835,6 +842,10 @@ export class Game {
 
     switch (encounterName) {
       case EncounterName.Dracula:
+        if (this.dracula.willPlayWildHorses(this.huntersInGroup(hunter), this)) {
+          return;
+        }
+      case EncounterName.VampireLair:
         this.dracula.availableAttacks = this.timePhase < 3 ? [
           Attack.Claws,
           Attack.DodgeDracula,
@@ -1170,6 +1181,10 @@ export class Game {
       this.trail[index].revealed = true;
       if (this.trail[index].location) {
         this.log(`${this.trail[index].location.name} is revealed`);
+        if (this.trail[index].location == this.dracula.currentLocation) {
+          this.log(`Dracula is revealed at ${this.trail[index].location.name}`);
+          this.dracula.revealed == true;
+        }
       } else if (this.trail[index].power) {
         this.log(`${this.trail[index].power.name} is revealed`);
       }
