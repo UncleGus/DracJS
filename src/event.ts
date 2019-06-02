@@ -1,3 +1,5 @@
+import { Game } from "./game";
+
 export class Event {
   name: string;
   draculaCard: boolean;
@@ -142,4 +144,99 @@ export function initialiseEventDeck(): Event[] {
     new Event(EventName.VampiricInfluence, true, EventType.PlayImmediately),
     new Event(EventName.WildHorses, true, EventType.Keep),
   ];
+}
+
+export function resolveEvent(eventName: string, gameState: Game) {
+  switch (eventName) {
+    case EventName.AdvancePlanning:
+      break;
+    case EventName.BloodTransfusion:
+      break;
+    case EventName.CharteredCarriage:
+      break;
+    case EventName.ConsecratedGround:
+      break;
+    case EventName.ControlStorms:
+      break;
+    case EventName.CustomsSearch:
+      break;
+    case EventName.DevilishPower:
+      break;
+    case EventName.DraculasBrides:
+      break;
+    case EventName.EscapeRoute:
+      break;
+    case EventName.Evasion:
+      break;
+    case EventName.ExcellentWeather:
+      break;
+    case EventName.FalseTipoff:
+      break;
+    case EventName.Forewarned:
+      break;
+    case EventName.GoodLuck:
+      break;
+    case EventName.GreatStrength:
+      break;
+    case EventName.HeroicLeap:
+      break;
+    case EventName.HiredScouts:
+      break;
+    case EventName.Hypnosis:
+      break;
+    case EventName.ImmanuelHildesheim:
+      break;
+    case EventName.JonathanHarker:
+      break;
+    case EventName.LongDay:
+      break;
+    case EventName.MoneyTrail:
+      break;
+    case EventName.MysticResearch:
+      break;
+    case EventName.NewspaperReports:
+      break;
+    case EventName.NightVisit:
+      break;
+    case EventName.QuinceyPMorris:
+      break;
+    case EventName.Rage:
+      break;
+    case EventName.ReEquip:
+      break;
+    case EventName.RelentlessMinion:
+      break;
+    case EventName.Roadblock:
+      break;
+    case EventName.RufusSmith:
+      break;
+    case EventName.SecretWeapon:
+      break;
+    case EventName.Seduction:
+      break;
+    case EventName.SensationalistPress:
+      break;
+    case EventName.SenseofEmergency:
+      break;
+    case EventName.SisterAgatha:
+      break;
+    case EventName.StormySeas:
+      break;
+    case EventName.SurprisingReturn:
+      break;
+    case EventName.TelegraphAhead:
+      break;
+    case EventName.TimeRunsShort:
+      break;
+    case EventName.Trap:
+      break;
+    case EventName.UnearthlySwiftness:
+      break;
+    case EventName.VampireLair:
+      break;
+    case EventName.VampiricInfluence:
+      break;
+    case EventName.WildHorses:
+      break;
+  }
 }

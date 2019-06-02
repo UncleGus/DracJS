@@ -225,17 +225,17 @@ resolveEncounter.addEventListener('click', () => {
   updateAllFields();
 });
 
-newspaperReportsButton.addEventListener('click', () => {
-  game.resolveNewspaperReports(true);
-  updateAllFields();
-});
+// newspaperReportsButton.addEventListener('click', () => {
+//   game.resolveNewspaperReports(true);
+//   updateAllFields();
+// });
 hypnosisButton.addEventListener('click', () => {
   game.resolveHypnosis();
   updateAllFields();
 });
-sendScouts.addEventListener('click', () => {
-  game.resolveHiredScouts([(hiredScouts.querySelector('#location1') as HTMLSelectElement).value, (hiredScouts.querySelector('#location2') as HTMLSelectElement).value]);
-});
+// sendScouts.addEventListener('click', () => {
+//   game.resolveHiredScouts([(hiredScouts.querySelector('#location1') as HTMLSelectElement).value, (hiredScouts.querySelector('#location2') as HTMLSelectElement).value]);
+// });
 
 fight.addEventListener('click', () => {
   const huntersInCombat: Hunter[] = [];
@@ -397,7 +397,7 @@ draculaTurnButton.addEventListener('click', () => {
         return;
       }
       draculaTurnButton.textContent = 'Perform Movement phase';
-      game.performTimeKeepingPhase();
+      game.performDraculaTimeKeepingPhase();
       updateAllFields();
       break;
     case 'Perform Movement phase':

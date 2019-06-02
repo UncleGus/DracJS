@@ -773,7 +773,7 @@ export class Dracula {
       const choice = Math.floor(Math.random() * potentialEvents.length);
       this.playEvent(potentialEvents[choice].name, gameState.eventDiscard);
       this.eventAwaitingApproval = potentialEvents[choice].name;
-      gameState.draculaEventPendingResolution = potentialEvents[choice].name;
+      gameState.eventPendingResolution = potentialEvents[choice].name;
       return `Dracula played ${potentialEvents[choice].name}`;
     }
   }
@@ -849,7 +849,7 @@ export class Dracula {
     if (Math.random() < 0.5) {
       this.playEvent(EventName.Rage, gameState.eventDiscard);
       this.eventAwaitingApproval = EventName.Rage;
-      gameState.draculaEventPendingResolution = EventName.Rage;
+      gameState.eventPendingResolution = EventName.Rage;
       this.potentialTargetHunters = hunters;
       return 'Dracula played Rage';
     }
@@ -904,7 +904,7 @@ export class Dracula {
     // TODO: Make logical decision; spoiler: always do this
     if (this.eventHand.find(event => event.name == EventName.Seduction)) {
       this.eventAwaitingApproval = EventName.Seduction;
-      gameState.draculaEventPendingResolution = EventName.Seduction;
+      gameState.eventPendingResolution = EventName.Seduction;
       this.potentialTargetHunters = hunters;
       this.playEvent(EventName.Seduction, gameState.eventDiscard);
       return true;
