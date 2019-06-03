@@ -8,46 +8,61 @@
 <body>
   <div class="container-fluid bg-3 text-left">
     <div class="row">
-      <h3 style="text-align:center">Trail</h3>
-      <% include partials/trail %>
+      <div class="col-md-12">
+        <% include partials/trail %>
+      </div>
     </div>
     <div class="row">
       <div class="col-md-6">
-        <h3 style="text-align:center">Dracula And Board Details</h3>
-        <% include partials/dracula %>
-        <% include partials/track %>
-        <% include partials/time %>
+        <div class="col-md-4">
+          <% include partials/dracula %>
+        </div>
+        <div class="col-md-4">
+          <% include partials/track %>
+          <% include partials/time %>
+        </div>
+        <div class="col-md-4">
+          <% include partials/allies %>
+        </div>
       </div>
       <div class="col-md-6">
-        <h3 style="text-align:center">Catacombs</h3>
         <% include partials/catacombs %>
       </div>
     </div>
     <div class="row">
-    </div>
-    <div class="row">
       <div class="col-md-8">
-        <h3 style="text-align:center">Hunter Details</h3>
         <% include partials/hunter %>
       </div>
       <div class="col-md-4">
-        <h3 style="text-align:center">Discard Piles</h3>
-        <% include partials/discards %>
-        <h3 style="text-align:center">Markers</h3>
+        <% include partials/discard %>
         <% include partials/markers %>
       </div>
     </div>
     <div class="row">
-      <% include partials/actions %>
-    </div>
-    <div class="row">
-      <button id="debugGameState">Debug game state</button>
+      <div class="col-md-2">
+        <% include partials/movement %>
+      </div>
+      <div class="col-md-2">
+        <% include partials/action %>
+      </div>
+      <div class="col-md-2">
+        <% include partials/events %>
+      </div>
+      <div class="col-md-2">
+        <% include partials/encounters %>
+      </div>
+      <div class="col-md-2">
+        <% include partials/combat %>
+      </div>
     </div>
     <div class="row">
       <div class="col-sm-12" id="log">
         <textarea id="logBox" style="height: 0px; width: 100%; min-height: 295px; max-height: 370px;"
           readonly></textarea>
       </div>
+    </div>
+    <div class="row">
+      <button id="debugGameState">Debug game state</button>
     </div>
   </div>
 </body>

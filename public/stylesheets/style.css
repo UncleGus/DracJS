@@ -13,8 +13,7 @@ input[type="number"] {
   float: right; }
 
 .wide {
-  width: 180px;
-  float: right; }
+  width: 180px; }
 
 .selectedHunter {
   background-color: lightskyblue; }

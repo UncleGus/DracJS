@@ -474,6 +474,19 @@ export class Game {
   }
 
   /**
+   * Resolve Newspaper Reports from resolve
+   */
+  newspaperReportsResolve() {
+    let i = this.trail.length - 1;
+    for (i; i > 0; i--) {
+      if (!this.trail[i].revealed) {
+        this.trail[i].revealed = true;
+        break;
+      }
+    }
+  }
+
+  /**
    * Performs Dracula's action phase
    */
   performDraculaActionPhase() {
@@ -1138,6 +1151,60 @@ export class Game {
   }
 
   /**
+   * Resolves Hired Scouts
+   * @param locationNames The names of the Locations to query
+   */
+  resolveHiredScouts(locationNames: string[]) {
+    this.hiredScoutsInEffect = false;
+    let trailIndex = 0;
+    for (trailIndex; trailIndex < this.trail.length; trailIndex++) {
+      if (this.trail[trailIndex].location) {
+        if (this.trail[trailIndex].location.name == locationNames[0] || this.trail[trailIndex].location.name == locationNames[1]) {
+          this.trailCardsToBeRevealed.push(trailIndex);
+          if (this.trail[trailIndex].encounter) {
+            this.trail[trailIndex].encounter.revealed = true;
+          }
+        }
+      }
+    }
+    let catacombIndex = 0;
+    for (catacombIndex; catacombIndex < this.catacombs.length; catacombIndex++) {
+      if (this.catacombs[catacombIndex].location) {
+        if (this.catacombs[catacombIndex].location.name == locationNames[0] || this.catacombs[catacombIndex].location.name == locationNames[1]) {
+          this.catacombCardsToBeRevealed.push(catacombIndex);
+          if (this.catacombs[catacombIndex].encounter) {
+            this.catacombs[catacombIndex].encounter.revealed = true;
+          }
+          if (this.catacombs[catacombIndex].catacombEncounter) {
+            this.catacombs[catacombIndex].catacombEncounter.revealed = true;
+          }
+        }
+      }
+    }
+    this.revealTrailCards();
+    this.revealCatacombCards();
+  }
+
+  /**
+   * Takes an Event of the given name from the Item discard and gives it to the given Hunter
+   * @param eventName The name of the Event
+   * @param hunter The Hunter to whom to give the Item
+   */
+  retrieveEventForHunter(eventName: string, hunter: Hunter) {
+    if (!eventName) {
+      return;
+    }
+    let eventIndex = 0;
+    for (eventIndex; eventIndex < this.eventDiscard.length; eventIndex++) {
+      if (this.eventDeck[eventIndex].name == eventName) {
+        break;
+      }
+    }
+    hunter.events.push(this.eventDeck.splice(eventIndex, 1)[0]);
+    this.log(`${hunter.name} took event ${eventName} from the discard pile`);
+  }
+
+  /**
    * Takes an Item of the given name from the Item discard and gives it to the given Hunter
    * @param itemName The name of the Item
    * @param hunter The Hunter to whom to give the Item
@@ -1431,48 +1498,15 @@ export class Game {
     this.log(this.dracula.discardDownEvents(this.eventDiscard));
   }
 
+  /**
+   * Uses an Item from a Hunter
+   * @param hunter The Hunter with the Item
+   * @param itemName The Item name
+   */
+  useItem(hunter: Hunter, itemName: string) {
+    // TODO: wire this up
+  }
 
-
-
-
-
-  // /**
-  //  * Resolves Hired Scouts
-  //  * @param locationNames The names of the Locations to query
-  //  */
-  // resolveHiredScouts(locationNames: string[]) {
-  //   this.hiredScoutsToResolve = false;
-  //   locationNames.forEach(name => {
-  //     const trailCard = this.trail.find(card => card.location == this.map.getLocationByName(name));
-  //     if (trailCard) {
-  //       this.log(`${name} is in Dracula's trail`);
-  //       trailCard.revealed = true;
-  //       if (trailCard.encounter) {
-  //         trailCard.encounter.revealed = true;
-  //       }
-  //       if (this.dracula.currentLocation == trailCard.location) {
-  //         this.dracula.revealed = true;
-  //       }
-  //     } else {
-  //       this.log(`${name} is not in Dracula's trail`);
-  //     }
-  //   });
-  //   locationNames.forEach(name => {
-  //     const catacombCard = this.catacombs.find(card => card.location == this.map.getLocationByName(name));
-  //     if (catacombCard) {
-  //       this.log(`${name} is in Dracula's trail`);
-  //       catacombCard.revealed = true;
-  //       if (catacombCard.encounter) {
-  //         catacombCard.encounter.revealed = true;
-  //       }
-  //       if (catacombCard.catacombEncounter) {
-  //         catacombCard.catacombEncounter.revealed = true;
-  //       }
-  //     } else {
-  //       this.log(`${name} is not in Dracula's catacombs`);
-  //     }
-  //   });
-  // }
 
 
 
