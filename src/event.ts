@@ -160,7 +160,6 @@ export function resolveEvent(eventName: string, gameState: Game) {
       gameState.log(`${gameState.hunterWhoPlayedEvent.name} automatically catches a Fast/Express train`);
       break;
     case EventName.ConsecratedGround:
-      gameState.consecratedGroundInEffect = true;
       gameState.log('Choose a location to move the Consecrated Ground marker');
       break;
     // Handled in game.draculaChooseControlStormsDestination()
@@ -255,7 +254,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
     // case EventName.JonathanHarker:
     //   break;
     case EventName.LongDay:
-      gameState.log('Move the Time marker backwards one space');
+      gameState.timePhase--;
       break;
     case EventName.MoneyTrail:
       let moneyTrailIndex = 0;

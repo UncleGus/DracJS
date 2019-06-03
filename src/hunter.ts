@@ -15,6 +15,7 @@ export class Hunter {
   groupNumber: number;
   lastUsedCombatItem: string;
   inCombat: boolean;
+  usingFastHorse: boolean;
 
   constructor(newName: string, maxHealth: number, bites: number = 0) {
     this.name = newName;

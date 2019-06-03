@@ -764,6 +764,21 @@ export class GameMap {
   }
 
   /**
+   * Returns all Locations within 1 move by Fast Horse from the given Location
+   * @param origin The origination point
+   */
+  locationsConnectedByFastHorse(origin: Location): Location[] {
+    let connectedLocations: Location[] = [];
+    const routes1 = origin.roadConnections.map(road => [origin, road]);
+    const routes2: Location[][] = [];
+    routes1.forEach(route => route[1].roadConnections.filter(conn => conn !== route[0]).map(road => routes2.push([...route, road])));
+    routes1.forEach(route => connectedLocations.push(route[1]));
+    routes2.forEach(route => connectedLocations.push(route[2]));
+
+    return _.uniq(connectedLocations);
+  }
+
+  /**
    * Finds all ports within a given range of a Location
    * @param origin The starting point of the search
    * @param range The maximum range of the search
@@ -986,6 +1001,7 @@ export enum TravelMethod {
   road = 'Road',
   train = 'Train',
   sea = 'Sea',
+  fastHorse = 'Fast Horse',
   senseOfEmergency = 'Sense of Emergency',
   bats = 'Bats',
   fog = 'Fog'

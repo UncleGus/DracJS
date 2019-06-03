@@ -3,7 +3,7 @@ import { GameMap, LocationType, Location, LocationName, LocationDomain } from ".
 import { Dracula, TrailCard, PowerName, Attack } from "./dracula";
 import { Hunter, HunterName } from "./hunter";
 import { Encounter, initialiseEncounterPool, EncounterName } from "./encounter";
-import { Item, initialiseItemDeck } from "./item";
+import { Item, initialiseItemDeck, ItemName } from "./item";
 import { Event, initialiseEventDeck, EventType, EventName, resolveEvent } from "./event";
 import { getHunterSuccessCombatOutcome, CombatOutcome, getEnemySuccessCombatOutcome } from "./combat";
 
@@ -39,7 +39,6 @@ export class Game {
   roadBlock: Location[];
   eventPendingResolution: string;
   hiredScoutsInEffect: boolean;
-  consecratedGroundInEffect: boolean;
   goodLuckInEffect: boolean;
   trailCardsToBeRevealed: number[];
   catacombCardsToBeRevealed: number[];
@@ -48,6 +47,7 @@ export class Game {
   hunterWhoPlayedEvent: Hunter;
   unearthlySwiftnessInEffect: boolean;
   vampireLairInEffect: boolean;
+  opponent: string;
 
   constructor() {
     // construct game components
@@ -259,6 +259,14 @@ export class Game {
   }
 
   /**
+   * Finds all Locations that can be reached from the starting point by Fast Horse
+   * @param origin The starting Location
+   */
+  getLocationsByFastHorse(origin: Location): Location[] {
+    return this.map.locationsConnectedByFastHorse(origin);
+  }
+
+  /**
    * Used when the Hunters draw an Event card and it is for Dracula
    */
   giveEventToDracula() {
@@ -447,6 +455,13 @@ export class Game {
       }
       return huntersInGroup;
     }
+  }
+
+  /**
+   * Checks if any Hunter has a Good Luck event card in hand
+   */
+  huntersHaveGoodLuck(): boolean {
+    return !!this.godalming.events.concat(this.seward.events).concat(this.vanHelsing.events).concat(this.mina.events).find(event => event.name == EventName.GoodLuck);
   }
 
   /**
@@ -858,30 +873,11 @@ export class Game {
         if (this.dracula.willPlayWildHorses(this.huntersInGroup(hunter), this)) {
           return;
         }
+        this.setUpCombat(EncounterName.Dracula, hunter);
+        this.log(this.dracula.willPlayRage(this.huntersInGroup(hunter), this));
+        break;
       case EncounterName.VampireLair:
-        this.dracula.availableAttacks = this.timePhase < 3 ? [
-          Attack.Claws,
-          Attack.DodgeDracula,
-          Attack.EscapeMan
-        ] : [
-            Attack.Claws,
-            Attack.DodgeDracula,
-            Attack.EscapeMan,
-            Attack.EscapeBat,
-            Attack.EscapeMist,
-            Attack.Fangs,
-            Attack.Mesmerize,
-            Attack.Strength
-          ];
-        this.dracula.lastUsedAttack = Attack.DodgeDracula;
-        this.dracula.repelled = false;
-        this.roundsContinued = 0;
-        this.rageRounds = 0;
-        this.huntersInGroup(hunter).forEach(companion => {
-          companion.lastUsedCombatItem = '';
-          companion.inCombat = true;
-        });
-        this.log('Resolve a combat against Dracula');
+        this.setUpCombat(EncounterName.VampireLair, hunter);
         this.log(this.dracula.willPlayRage(this.huntersInGroup(hunter), this));
         break;
       case EncounterName.Ambush:
@@ -894,25 +890,12 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Assassin:
-        this.dracula.availableAttacks = [
-          Attack.DodgeMinion,
-          Attack.Punch,
-          Attack.Knife,
-          Attack.Pistol,
-          Attack.Rifle
-        ];
-        this.dracula.lastUsedAttack = Attack.DodgeMinion;
-        this.dracula.repelled = false;
-        this.roundsContinued = 0;
-        this.rageRounds = 0;
-        this.huntersInGroup(hunter).forEach(companion => {
-          companion.lastUsedCombatItem = '';
-          companion.inCombat = true;
-        });
-        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife} - an escape result means no further encounters are resolved`);
+      case EncounterName.MinionWithKnife:
+      case EncounterName.MinionWithKnifeAndPistol:
+      case EncounterName.MinionWithKnifeAndRifle:
+        this.setUpCombat(encounterName, hunter);
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
-        this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Bats:
         this.huntersInGroup(hunter).forEach(companion => {
@@ -931,65 +914,6 @@ export class Game {
           companion.encounterTiles.push(currentEncounter);
           this.log(`Fog has ended ${companion.name}'s turn`);
         });
-        break;
-      case EncounterName.MinionWithKnife:
-        this.dracula.availableAttacks = [
-          Attack.DodgeMinion,
-          Attack.Punch,
-          Attack.Knife
-        ];
-        this.dracula.lastUsedAttack = Attack.DodgeMinion;
-        this.dracula.repelled = false;
-        this.roundsContinued = 0;
-        this.rageRounds = 0;
-        this.huntersInGroup(hunter).forEach(companion => {
-          companion.lastUsedCombatItem = '';
-          companion.inCombat = true;
-        });
-        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
-        this.encounterPool.push(currentEncounter);
-        this.log(this.shuffleEncounters());
-        this.log(`${encounterName} resolved`);
-        break;
-      case EncounterName.MinionWithKnifeAndPistol:
-        this.dracula.availableAttacks = [
-          Attack.DodgeMinion,
-          Attack.Punch,
-          Attack.Knife,
-          Attack.Pistol
-        ];
-        this.dracula.lastUsedAttack = Attack.DodgeMinion;
-        this.dracula.repelled = false;
-        this.roundsContinued = 0;
-        this.rageRounds = 0;
-        this.huntersInGroup(hunter).forEach(companion => {
-          companion.lastUsedCombatItem = '';
-          companion.inCombat = true;
-        });
-        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
-        this.encounterPool.push(currentEncounter);
-        this.log(this.shuffleEncounters());
-        this.log(`${encounterName} resolved`);
-        break;
-      case EncounterName.MinionWithKnifeAndRifle:
-        this.dracula.availableAttacks = [
-          Attack.DodgeMinion,
-          Attack.Punch,
-          Attack.Knife,
-          Attack.Rifle
-        ];
-        this.dracula.lastUsedAttack = Attack.DodgeMinion;
-        this.dracula.repelled = false;
-        this.roundsContinued = 0;
-        this.rageRounds = 0;
-        this.huntersInGroup(hunter).forEach(companion => {
-          companion.lastUsedCombatItem = '';
-          companion.inCombat = true;
-        });
-        this.log(`Resolve a combat against ${EncounterName.MinionWithKnife}`);
-        this.encounterPool.push(currentEncounter);
-        this.log(this.shuffleEncounters());
-        this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Hoax:
         this.huntersInGroup(hunter).forEach(companion => {
@@ -1333,11 +1257,41 @@ export class Game {
   }
 
   /**
+   * Moves the Consecrated Ground marker to the Location with the given name
+   * @param locationName The name of the Location to which to move the marker
+   */
+  setConsecratedGround(locationName: string) {
+    this.consecratedLocation = this.map.locations.find(location => location.name == locationName);
+    if (this.consecratedLocation) {
+      this.log(`Consecrated Ground marker moved to ${this.consecratedLocation.name}`);
+    } else {
+      this.log('Consecrated Ground marker removed');
+    }
+  }
+
+  /**
    * Sets Dracula's blood
    * @param blood The value to which to set Dracula's blood
    */
   setDraculaBlood(blood: number) {
     this.log(this.dracula.setBlood(blood));
+  }
+
+  /**
+   * Sets the Locations where Heavenly Host markers are located
+   * @param location1 The name of the first Location
+   * @param location2 The name of the second Location
+   */
+  setHeavenlyHostLocations(location1: string, location2: string) {
+    this.heavenlyHostLocations = [];
+    const hostLocation1 = this.map.locations.find(location => location.name == location1);
+    const hostLocation2 = this.map.locations.find(location => location.name == location2);
+    if (hostLocation1) {
+      this.heavenlyHostLocations.push(hostLocation1);
+    }
+    if (hostLocation2) {
+      this.heavenlyHostLocations.push(hostLocation2);
+    }
   }
 
   /**
@@ -1389,6 +1343,82 @@ export class Game {
   setResolveTrack(count: number) {
     this.resolveTrack = Math.max(0, Math.min(6, count));
     this.log(`Resolve track is now on ${this.resolveTrack}`);
+  }
+
+  /**
+   * Sets up combat cards for the given opponent
+   * @param opponentName The name of the opponent fighting the Hunter
+   * @param hunter The Hunter fighting the opponent
+   */
+  setUpCombat(opponentName: string, hunter: Hunter) {
+    if (opponentName == 'None') {
+      this.opponent = null;
+    } else {
+      this.opponent = opponentName;
+      switch (opponentName) {
+        case EncounterName.Assassin:
+          this.dracula.availableAttacks = [
+            Attack.DodgeMinion,
+            Attack.Punch,
+            Attack.Knife,
+            Attack.Pistol,
+            Attack.Rifle
+          ];
+          this.dracula.lastUsedAttack = Attack.DodgeMinion;
+          break;
+        case EncounterName.MinionWithKnife:
+          this.dracula.availableAttacks = [
+            Attack.DodgeMinion,
+            Attack.Punch,
+            Attack.Knife,
+          ];
+          this.dracula.lastUsedAttack = Attack.DodgeMinion;
+          break;
+        case EncounterName.MinionWithKnifeAndPistol:
+          this.dracula.availableAttacks = [
+            Attack.DodgeMinion,
+            Attack.Punch,
+            Attack.Knife,
+            Attack.Pistol,
+          ];
+          this.dracula.lastUsedAttack = Attack.DodgeMinion;
+          break;
+        case EncounterName.MinionWithKnifeAndRifle:
+          this.dracula.availableAttacks = [
+            Attack.DodgeMinion,
+            Attack.Punch,
+            Attack.Knife,
+            Attack.Rifle
+          ];
+          this.dracula.lastUsedAttack = Attack.DodgeMinion;
+          break;
+        case EncounterName.Dracula:
+        case EncounterName.NewVampire:
+          this.dracula.availableAttacks = this.timePhase < 3 ? [
+            Attack.Claws,
+            Attack.DodgeDracula,
+            Attack.EscapeMan
+          ] : [
+              Attack.Claws,
+              Attack.DodgeDracula,
+              Attack.EscapeMan,
+              Attack.EscapeBat,
+              Attack.EscapeMist,
+              Attack.Fangs,
+              Attack.Mesmerize,
+              Attack.Strength
+            ];
+          this.dracula.lastUsedAttack = Attack.DodgeDracula;
+          break;
+      }
+      this.dracula.repelled = false;
+      this.roundsContinued = 0;
+      this.rageRounds = 0;
+      this.huntersInGroup(hunter).forEach(companion => {
+        companion.lastUsedCombatItem = '';
+        companion.inCombat = true;
+      });
+    }
   }
 
   /**
@@ -1504,7 +1534,41 @@ export class Game {
    * @param itemName The Item name
    */
   useItem(hunter: Hunter, itemName: string) {
-    // TODO: wire this up
+    switch(itemName) {
+      case ItemName.Dogs:
+        // TODO: treat this as turning it face up
+        break;
+      case ItemName.FastHorse:
+        hunter.usingFastHorse = true;
+        this.discardHunterItem(itemName, hunter);
+        break;
+      case ItemName.Garlic:
+        this.rageRounds = 3;
+        this.discardHunterItem(itemName, hunter);
+        break;
+      case ItemName.HeavenlyHost:
+        this.log('Move one of the Heavenly Host makers');
+        this.discardHunterItem(itemName, hunter);
+        break;
+      case ItemName.HolyWater:
+        this.log('Roll the die to determine outcome and apply results');
+        this.discardHunterItem(itemName, hunter);
+        break;
+      case ItemName.LocalRumors:
+        if (this.selectedTrailEncounter && this.trail[this.selectedTrailEncounter].encounter) {
+          this.trail[this.selectedTrailEncounter].encounter.revealed = true;
+          this.discardHunterItem(itemName, hunter);
+        } else if (this.selectedCatacombEncounterA && this.catacombs[this.selectedCatacombEncounterA].encounter) {
+          this.catacombs[this.selectedCatacombEncounterA].encounter.revealed = true;
+          this.discardHunterItem(itemName, hunter);
+        } else if (this.selectedCatacombEncounterB && this.catacombs[this.selectedCatacombEncounterB].catacombEncounter) {
+          this.catacombs[this.selectedCatacombEncounterB].catacombEncounter.revealed = true;
+          this.discardHunterItem(itemName, hunter);
+        } else {
+          this.log('Select an Encounter to reveal to use this item');
+        }
+        break;
+      }
   }
 
 
