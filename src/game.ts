@@ -176,6 +176,22 @@ export class Game {
   }
 
   /**
+   * Discards a Hunter Event when it has been drawn due to rest or other effects
+   * @param eventName The Event to discard
+   */
+  discardEventFromRest(eventName: string) {
+    let draculaEventIndex = 0;
+    for (draculaEventIndex; draculaEventIndex < this.eventDeck.length; draculaEventIndex++) {
+      if (this.eventDeck[draculaEventIndex].draculaCard) {
+        break;
+      }
+    }
+    const eventCardDrawn = this.eventDeck.splice(draculaEventIndex, 1)[0];
+    this.eventDiscard.push(eventCardDrawn);
+    this.log(`${eventCardDrawn.name} discarded`);
+  }
+
+  /**
    * Removes an Event of the given name from the given Hunter
    * @param eventName The name of the Event
    * @param hunter The Hunter from whom to remove the Event

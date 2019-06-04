@@ -63,6 +63,7 @@ const travelButton = document.getElementById('travel');
 // action
 const eventDeck = document.getElementById('eventDeck') as HTMLSelectElement;
 const drawEvent = document.getElementById('drawEvent');
+const rest = document.getElementById('drawEvent');
 const itemDeck = document.getElementById('itemDeck') as HTMLSelectElement;
 const drawItem = document.getElementById('drawItem');
 const useItem = document.getElementById('useItem');
@@ -379,6 +380,15 @@ drawEvent.addEventListener('click', () => {
     updateAllFields();
   } else {
     game.giveEventToHunter(eventDeck.value, hunters[actingHunter]);
+    updateAllFields();
+  }
+});
+rest.addEventListener('click', () => {
+  if (eventDeck.value == 'Dracula Event') {
+    game.giveEventToDracula();
+    updateAllFields();
+  } else {
+    game.discardEventFromRest(eventDeck.value);
     updateAllFields();
   }
 });
