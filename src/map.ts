@@ -488,7 +488,7 @@ export class GameMap {
       {
         ...sea,
         name: LocationName.AtlanticOcean,
-        seaConnections_: [LocationName.NorthSea, LocationName.IrishSea, LocationName.EnglishChannel, LocationName.BayOfBiscay, LocationName.MediterraneanSea, LocationName.Galway, LocationName.Lisbon, LocationName.Cadiz]
+        seaConnections_: [LocationName.IrishSea, LocationName.EnglishChannel, LocationName.BayOfBiscay, LocationName.MediterraneanSea, LocationName.Galway, LocationName.Lisbon, LocationName.Cadiz]
       },
       {
         ...sea,
@@ -503,7 +503,7 @@ export class GameMap {
       {
         ...sea,
         name: LocationName.NorthSea,
-        seaConnections_: [LocationName.AtlanticOcean, LocationName.EnglishChannel, LocationName.Edinburgh, LocationName.Amsterdam, LocationName.Hamburg]
+        seaConnections_: [LocationName.EnglishChannel, LocationName.Edinburgh, LocationName.Amsterdam, LocationName.Hamburg]
       },
       {
         ...sea,

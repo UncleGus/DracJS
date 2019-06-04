@@ -79,8 +79,10 @@ const retrieveEvent = document.getElementById('retrieveEvent');
 const discardEvent = document.getElementById('discardEvent');
 const playEvent = document.getElementById('playEvent');
 const approvalButton = document.getElementById('approval');
+const hiredScoutsSelectors = document.getElementById('hiredScoutsSelectors');
 const hiredScoutsLocation1 = document.getElementById('hiredScoutsLocation1') as HTMLSelectElement;
 const hiredScoutsLocation2 = document.getElementById('hiredScoutsLocation2') as HTMLSelectElement;
+const stormySeasSelectors = document.getElementById('stormySeasSelectors');
 const sendScouts = document.getElementById('sendScouts');
 const stormySeasLocation = document.getElementById('stormySeasLocation') as HTMLSelectElement;
 const sendStorm = document.getElementById('sendStorm');
@@ -209,6 +211,10 @@ draculaTurnButton.addEventListener('click', () => {
               .forEach(location => destination.options.add(new Option(location.name)));
             break;
           case TravelMethod.train:
+            if (game.draculaPlaysFalseTipoff(game.huntersInGroup(hunters[actingHunter]))) {
+              updateEvents();
+            }
+
             let trainDestinations: Location[] = [hunters[actingHunter].currentLocation];
             for (let i = 0; i < 3; i++) {
               let newDestinations: Location[] = [];
@@ -280,6 +286,7 @@ draculaTurnButton.addEventListener('click', () => {
       }
       draculaTurnButton.textContent = 'Perform Timekeeping phase';
       game.performDraculaActionPhase();
+      actingHunter = 0;
       updateAllFields();
       break;
   }
@@ -347,8 +354,6 @@ travelButton.addEventListener('click', () => {
     });
     game.encounterPool.push(fogTile);
     game.shuffleEncounters();
-  } else if (moveMethod.value == TravelMethod.train && game.draculaPlaysFalseTipoff(game.huntersInGroup(hunters[actingHunter]))) {
-    updateEvents();
   } else if (destination.value) {
     moveMethod.selectedIndex = 0;
     game.setHunterLocation(hunters[actingHunter], destination.value);
@@ -371,16 +376,10 @@ console.log('Wiring up action');
 drawEvent.addEventListener('click', () => {
   if (eventDeck.value == 'Dracula Event') {
     game.giveEventToDracula();
-    updateDracula();
-    updateDiscards();
-    updateEvents();
-    updateLog();
+    updateAllFields();
   } else {
     game.giveEventToHunter(eventDeck.value, hunters[actingHunter]);
-    updateHunter();
-    updateEventDeck();
-    updateEvents();
-    updateLog();
+    updateAllFields();
   }
 });
 drawItem.addEventListener('click', () => {
@@ -789,30 +788,24 @@ function updateDiscards() {
  */
 function updateEvents() {
   if (game.hiredScoutsInEffect) {
-    hiredScoutsLocation1.style.removeProperty('display');
-    hiredScoutsLocation2.style.removeProperty('display');
-    sendScouts.style.removeProperty('display');
+    hiredScoutsSelectors.style.setProperty('visibility', 'visible');
   } else {
-    hiredScoutsLocation1.style.display = 'none';
-    hiredScoutsLocation2.style.display = 'none';
-    sendScouts.style.display = 'none';
+    hiredScoutsSelectors.style.setProperty('visibility', 'hidden');
   }
   if (game.stormySeasInEffect) {
-    stormySeasLocation.style.removeProperty('display');
-    sendStorm.style.removeProperty('display');
+    stormySeasSelectors.style.setProperty('visibility', 'visible');
   } else {
-    stormySeasLocation.style.display = 'none';
-    sendStorm.style.display = 'none';
+    stormySeasSelectors.style.setProperty('visibility', 'hidden');
   }
   if (game.dracula.eventAwaitingApproval) {
     if (game.huntersHaveGoodLuck()) {
-      approvalButton.style.removeProperty('display');
+      approvalButton.style.setProperty('visibility', 'visible');
     } else {
-      approvalButton.style.setProperty('display', 'none');
+      approvalButton.style.setProperty('visibility', 'hidden');
       game.resolveApprovedEvent();
     }
   } else {
-    approvalButton.style.setProperty('display', 'none');
+    approvalButton.style.setProperty('visibility', 'hidden');
   }
 }
 
@@ -821,9 +814,9 @@ function updateEvents() {
  */
 function updateEncounters() {
   if (ambushEncounter.value == '') {
-    ambush.style.setProperty('display', 'none');
+    ambush.style.setProperty('visibility', 'hidden');
   } else {
-    ambush.style.removeProperty('display');
+    ambush.style.setProperty('visibility', 'visible');
   }
 }
 
@@ -832,13 +825,13 @@ function updateEncounters() {
  */
 function updateCombat() {
   if (opponent.value == 'None') {
-    fight.style.display = 'none';
-    hunterWin.style.display = 'none';
-    enemyWin.style.display = 'none';
+    fight.style.setProperty('visibility', 'hidden');
+    hunterWin.style.setProperty('visibility', 'hidden');
+    enemyWin.style.setProperty('visibility', 'hidden');
   } else {
-    fight.style.removeProperty('display');
-    hunterWin.style.removeProperty('display');
-    enemyWin.style.removeProperty('display');
+    fight.style.setProperty('visibility', 'visible');
+    hunterWin.style.setProperty('visibility', 'visible');
+    enemyWin.style.setProperty('visibility', 'visible');
   }
 }
 

@@ -107,8 +107,8 @@ export function initialiseEventDeck(): Event[] {
     new Event(EventName.LongDay, false, EventType.Keep),
     new Event(EventName.LongDay, false, EventType.Keep),
     new Event(EventName.MoneyTrail, false, EventType.Keep),
-    new Event(EventName.MysticResearch, false, EventType.Keep),
-    new Event(EventName.MysticResearch, false, EventType.Keep),
+    new Event(EventName.MysticResearch, false, EventType.PlayImmediately),
+    new Event(EventName.MysticResearch, false, EventType.PlayImmediately),
     new Event(EventName.NewspaperReports, false, EventType.PlayImmediately),
     new Event(EventName.NewspaperReports, false, EventType.PlayImmediately),
     new Event(EventName.NewspaperReports, false, EventType.PlayImmediately),
@@ -180,6 +180,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
     case EventName.Evasion:
       gameState.dracula.revealed = false;
       const evasionDestination = gameState.dracula.chooseEvasionDestination(gameState);
+      gameState.dracula.currentLocation = evasionDestination;
       gameState.pushToTrail({ revealed: false, location: evasionDestination, encounter: gameState.dracula.chooseEncounterForTrail() });
       break;
     case EventName.ExcellentWeather:

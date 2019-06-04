@@ -703,41 +703,6 @@ export class Dracula {
   }
 
   /**
-   * Decides whether to cancel a played Event with Devilish Power
-   * @param event The Event being played
-   * @param gameState The state of the game
-   */
-  willPlayDevilishPowerToCancel(event: Event, gameState: Game): boolean {
-    // TODO: Make logical decision
-    if (!this.eventHand.find(event => event.name == EventName.DevilishPower)) {
-      return false;
-    }
-    if (Math.random() < 0.25) {
-      this.playEvent(EventName.DevilishPower, gameState.eventDiscard);
-      return true;
-    }
-  }
-
-  /**
-   * Decides whether to cancel a played Event with False Tip-off
-   * @param event The Event being played
-   * @param gameState The state of the game
-   */
-  willPlayFalseTipOffToCancel(event: Event, gameState: Game): boolean {
-    // TODO: Make logical decision
-    if (!this.eventHand.find(event => event.name == EventName.FalseTipoff)) {
-      return false;
-    }
-    if (event.name !== EventName.CharteredCarriage) {
-      return false;
-    }
-    if (Math.random() < 0.25) {
-      this.playEvent(EventName.FalseTipoff, gameState.eventDiscard);
-      return true;
-    }
-  }
-
-  /**
    * Decides whether to play False Tip-off on a Hunter or group
    * @param hunters The Hunters attempting to catch a train
    * @param gameState The state of the game
@@ -764,9 +729,9 @@ export class Dracula {
     }
     let potentialEvents = this.eventHand.filter(card => card.name
       == EventName.DevilishPower
-      || card.name == EventName.Roadblock);
-    // || card.name == EventName.TimeRunsShort
-    // || card.name == EventName.UnearthlySwiftness);
+      || card.name == EventName.Roadblock
+      || card.name == EventName.TimeRunsShort
+      || card.name == EventName.UnearthlySwiftness);
     if (potentialEvents.find(card => card.name == EventName.DevilishPower)) {
       let canPlayDevilishPower = false;
       if (gameState.hunterAlly || gameState.heavenlyHostLocations.length > 0) {

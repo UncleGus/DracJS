@@ -25,7 +25,7 @@ export class Hunter {
     this.events = [];
     this.encounterTiles = [];
     this.groupNumber = 0;
-    this.bites = 0;
+    this.bites = bites;
   }
 
   /**

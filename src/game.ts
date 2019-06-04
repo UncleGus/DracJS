@@ -318,8 +318,13 @@ export class Game {
         break;
       }
     }
-    hunter.events.push(this.eventDeck.splice(eventIndex, 1)[0]);
-    this.log(`${hunter.name} took event ${eventName}`);
+    const cardDrawn = this.eventDeck.splice(eventIndex, 1)[0];
+    hunter.events.push(cardDrawn);
+    if (cardDrawn.type != EventType.Keep) {
+      this.playHunterEvent(eventName, hunter);
+    } else {
+      this.log(`${hunter.name} took event ${eventName}`);
+    }
   }
 
   /**
@@ -766,8 +771,10 @@ export class Game {
     // or a cancellation of his cancellation that he didn't cancel, so the original event resolves
     const cancelCardPlayedByDracula = this.dracula.cardPlayedToCancel(eventName, this);
     if (cancelCardPlayedByDracula) {
-      this.dracula.eventAwaitingApproval = cancelCardPlayedByDracula.name;
       // If he did cancel it, then set a Dracula event card for the Hunters to consider cancelling and return
+      this.dracula.eventAwaitingApproval = cancelCardPlayedByDracula.name;
+      this.eventPendingResolution = cancelCardPlayedByDracula.name;
+      this.log(`Dracula played ${cancelCardPlayedByDracula.name}`);
       return;
     } else {
       const originalEventCard = this.eventDiscard.find(event => event.name == this.eventPendingResolution);
@@ -781,6 +788,7 @@ export class Game {
       }
       // Otherwise the Hunters initiated this and their Event is resolved
       resolveEvent(this.eventPendingResolution, this);
+      this.eventPendingResolution = null;
       return;
     }
   }
@@ -1089,6 +1097,7 @@ export class Game {
    */
   resolveHiredScouts(locationNames: string[]) {
     this.hiredScoutsInEffect = false;
+    this.eventPendingResolution = null;
     let trailIndex = 0;
     for (trailIndex; trailIndex < this.trail.length; trailIndex++) {
       if (this.trail[trailIndex].location) {
@@ -1116,6 +1125,7 @@ export class Game {
     }
     this.revealTrailCards();
     this.revealCatacombCards();
+    this.log('Hired Scouts resolved');
   }
 
   /**
@@ -1361,6 +1371,7 @@ export class Game {
   setStormLocation(stormLocation: string) {
     this.stormLocation = this.map.locations.find(location => location.name == stormLocation);
     this.stormRounds = 3;
+    this.eventPendingResolution = null;
   }
 
   /**
@@ -1540,11 +1551,16 @@ export class Game {
     switch (this.draculaAlly.name) {
       case EventName.DraculasBrides:
         this.dracula.encounterHandSize = 7;
+        this.log('Dracula\'s encounter hand size is 7')
         this.log(this.dracula.drawUpEncounters(this.encounterPool));
         break;
       case EventName.ImmanuelHildesheim:
         this.dracula.eventHandSize = 6;
+        this.log('Dracula\'s event hand size is 6')
         break;
+      case EventName.QuinceyPMorris:
+        this.log('Dracula can target one Hunter each turn for 1 Health loss');
+        break;      
     }
     this.log(this.dracula.discardDownEncounters(this.encounterPool));
     this.log(this.dracula.discardDownEvents(this.eventDiscard));
