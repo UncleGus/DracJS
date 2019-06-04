@@ -127,7 +127,6 @@ export class Dracula {
    * @param gameState The state of the game
    */
   chooseNextMove(gameState: Game): string {
-    // TODO: make logical decision
     if (!this.hypnosisInEffect) {
       this.nextMove = null;
     }
@@ -232,6 +231,7 @@ export class Dracula {
           break;
       }
     });
+    this.possibleMoves.forEach(move => move.value = this.evaluateMove(move, gameState));
     if (this.possibleMoves.length > 0) {
       if (this.hypnosisInEffect) {
         if (this.possibleMoves.find(move => move.catacombToDiscard == this.nextMove.catacombToDiscard
