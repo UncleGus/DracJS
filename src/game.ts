@@ -751,11 +751,14 @@ export class Game {
     if (!this.eventPendingResolution) {
       this.eventPendingResolution = eventName;
       this.hunterWhoPlayedEvent = hunter;
+      this.discardHunterEvent(eventName, hunter);
     } else {
       // Otherwise the only valid card for a Hunter to play is Good Luck, to cancel Dracula's Event
       if (eventName !== EventName.GoodLuck) {
         this.log('Resolve the current pending event first');
         return;
+      } else {
+        this.discardHunterEvent(eventName, hunter);
       }
     }
 
@@ -1578,7 +1581,7 @@ export class Game {
         this.discardHunterItem(itemName, hunter);
         break;
       case ItemName.LocalRumors:
-        if (this.selectedTrailEncounter > 0 && this.trail.length > this.selectedTrailEncounter) {
+        if (this.selectedTrailEncounter > -1 && this.trail.length > this.selectedTrailEncounter) {
           if (this.trail[this.selectedTrailEncounter].encounter) {
             this.trail[this.selectedTrailEncounter].encounter.revealed = true;
             this.discardHunterItem(itemName, hunter);
@@ -1586,7 +1589,7 @@ export class Game {
           } else {
             this.log('Select an Encounter to reveal to use this item');
           }
-        } else if (this.selectedCatacombEncounterA > 0 && this.catacombs.length > this.selectedCatacombEncounterA) {
+        } else if (this.selectedCatacombEncounterA > -1 && this.catacombs.length > this.selectedCatacombEncounterA) {
           if (this.catacombs[this.selectedCatacombEncounterA].encounter) {
             this.catacombs[this.selectedCatacombEncounterA].encounter.revealed = true;
             this.discardHunterItem(itemName, hunter);
@@ -1594,7 +1597,7 @@ export class Game {
           } else {
             this.log('Select an Encounter to reveal to use this item');
           }
-        } else if (this.selectedCatacombEncounterB > 0 && this.catacombs.length > this.selectedCatacombEncounterA) {
+        } else if (this.selectedCatacombEncounterB > -1 && this.catacombs.length > this.selectedCatacombEncounterA) {
           if (this.catacombs[this.selectedCatacombEncounterB].catacombEncounter) {
             this.catacombs[this.selectedCatacombEncounterB].catacombEncounter.revealed = true;
             this.discardHunterItem(itemName, hunter);
