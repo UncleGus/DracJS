@@ -79,6 +79,7 @@ const retrieveEvent = document.getElementById('retrieveEvent');
 // events
 const discardEvent = document.getElementById('discardEvent');
 const playEvent = document.getElementById('playEvent');
+const showItem = document.getElementById('showItem');
 const approvalButton = document.getElementById('approval');
 const hiredScoutsSelectors = document.getElementById('hiredScoutsSelectors');
 const hiredScoutsLocation1 = document.getElementById('hiredScoutsLocation1') as HTMLSelectElement;
@@ -464,6 +465,10 @@ playEvent.addEventListener('click', () => {
     game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], [hiredScoutsLocation1.value, hiredScoutsLocation2.value], draculaAllySelected, roadBlockSelected);
     updateAllFields();
   }
+});
+showItem.addEventListener('click', () => {
+  game.showItemToDracula(hunters[actingHunter], (hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).value);
+  updateLog();
 });
 approvalButton.addEventListener('click', () => {
   if (game.dracula.eventAwaitingApproval) {

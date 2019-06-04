@@ -865,11 +865,10 @@ export class Game {
   resolveCombatRound(hunters: Hunter[], items: string[]) {
     for (let i = 0; i < hunters.length; i++) {
       this.log(`${hunters[i].name} used ${items[i]}`);
+      hunters[i].lastUsedCombatItem = items[i];
+      this.dracula.updateItemTrackingFromCombat(hunters, items);
     }
     this.log(this.dracula.chooseCombatCardAndHunter(hunters, this));
-    for (let i = 0; i < hunters.length; i++) {
-      hunters[i].lastUsedCombatItem = items[i];
-    }
   }
 
   /**
@@ -1480,6 +1479,15 @@ export class Game {
     if (this.vampireTrack >= 6) {
       this.log('Dracula has spread his Vampires across Europe. The Hunters lose!');
     }
+  }
+
+  /**
+   * Shows Dracula an Item in a Hunter's hand
+   * @param hunter The Hunter showing the Item
+   * @param itemName The name of the Item shown
+   */
+  showItemToDracula(hunter: Hunter, itemName: string) {
+    this.dracula.updateItemTrackingFromShown(hunter, itemName);
   }
 
   /**

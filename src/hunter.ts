@@ -16,6 +16,9 @@ export class Hunter {
   lastUsedCombatItem: string;
   inCombat: boolean;
   usingFastHorse: boolean;
+  knownItems: string[];
+  knownEvents: string[];
+  possibleItems: { item: string, chance: number }[];
 
   constructor(newName: string, maxHealth: number, bites: number = 0) {
     this.name = newName;
@@ -26,6 +29,9 @@ export class Hunter {
     this.encounterTiles = [];
     this.groupNumber = 0;
     this.bites = bites;
+    this.knownItems = [];
+    this.knownEvents = [];
+    this.possibleItems = [];
   }
 
   /**

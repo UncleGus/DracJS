@@ -987,6 +987,36 @@ export class Dracula {
     );
     return Math.pow(possibleMove.value * distanceToNearestHunter / 3, 1.2);
   }
+
+  /**
+   * Updates the Items that Dracula knows a Hunter has after they show him one
+   * @param hunter The Hunter showing Dracula an Item
+   * @param itemName The name of the Item shown
+   */
+  updateItemTrackingFromShown(hunter: Hunter, itemName: string) {
+    if (!hunter.knownItems.find(item => item == itemName)) {
+      hunter.knownItems.push(itemName);
+    }
+  }
+
+  /**
+   * Updates the Items the Dracula knows the Hunters have after a round of combat
+   * @param hunters The Hunters in combat
+   * @param items The Items used by the Hunters
+   */
+  updateItemTrackingFromCombat(hunters: Hunter[], items: string[]) {
+    for (let i = 0; i < hunters.length; i++) {
+      if (items[i] == 'Dodge' || items[i] == 'Punch' || items[i] == 'Escape') {
+        continue;
+      }
+      this.updateItemTrackingFromShown(hunters[i], items[i]);
+      if (hunters[i].lastUsedCombatItem == items[i]) {
+        if (hunters[i].knownItems.find(item => item == items[i]).length < 2) {
+          hunters[i].knownItems.push(items[i]);
+        }
+      }
+    }
+  }
 }
 
 export interface TrailCard {
