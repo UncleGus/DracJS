@@ -91,26 +91,23 @@ export class Dracula {
    * @param gameState The state of the game
    */
   chooseStartLocation(gameState: Game): Location {
-    // TODO: improve logic
     const validLocations = gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
     const distances = validLocations.map(location => {
-      return Math.min(
+      return Math.pow((Math.min(
         gameState.map.distanceBetweenLocations(location, gameState.godalming.currentLocation),
         gameState.map.distanceBetweenLocations(location, gameState.seward.currentLocation),
         gameState.map.distanceBetweenLocations(location, gameState.vanHelsing.currentLocation),
         gameState.map.distanceBetweenLocations(location, gameState.mina.currentLocation)
-      );
+      ) / 3), 1.2);
     });
-    const furthestDistance = distances.reduce((prev, curr) => curr > prev ? curr : prev, 0);
-    const furthestDistanceIndices = [];
-    for (let i = 0; i < distances.length; i++) {
-      if (distances[i] == furthestDistance) {
-        furthestDistanceIndices.push(i);
-      }
+    const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
+    const randomChoice = Math.random()*totalValue;
+    let currentValue = 0;
+    let index = 0;
+    while (currentValue < randomChoice) {
+      currentValue += distances[index];
     }
-    const randomChoice = Math.floor(Math.random() * furthestDistanceIndices.length);
-    const randomIndex = furthestDistanceIndices[randomChoice];
-    return validLocations[randomIndex];
+    return validLocations[index];
   }
 
   /**
