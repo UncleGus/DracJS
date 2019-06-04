@@ -92,14 +92,7 @@ export class Dracula {
    */
   chooseStartLocation(gameState: Game): Location {
     const validLocations = gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
-    const distances = validLocations.map(location => {
-      return Math.pow((Math.min(
-        gameState.map.distanceBetweenLocations(location, gameState.godalming.currentLocation),
-        gameState.map.distanceBetweenLocations(location, gameState.seward.currentLocation),
-        gameState.map.distanceBetweenLocations(location, gameState.vanHelsing.currentLocation),
-        gameState.map.distanceBetweenLocations(location, gameState.mina.currentLocation)
-      ) / 3), 1.2);
-    });
+    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState ));
     const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
     const randomChoice = Math.random()*totalValue;
     let currentValue = 0;
@@ -115,28 +108,19 @@ export class Dracula {
    * @param gameState 
    */
   chooseEvasionDestination(gameState: Game): Location {
-    // TODO: improve logic
     const validLocations = gameState.map.locations.filter(location =>
-      (location.type == LocationType.smallCity || location.type == LocationType.largeCity) && !gameState.trailContains(location));
-    const distances = validLocations.map(location => {
-      return Math.min(
-        gameState.map.distanceBetweenLocations(location, gameState.godalming.currentLocation),
-        gameState.map.distanceBetweenLocations(location, gameState.seward.currentLocation),
-        gameState.map.distanceBetweenLocations(location, gameState.vanHelsing.currentLocation),
-        gameState.map.distanceBetweenLocations(location, gameState.mina.currentLocation)
-      );
-    });
-    const furthestDistance = distances.reduce((prev, curr) => curr > prev ? curr : prev, 0);
-    const furthestDistanceIndices = [];
-    for (let i = 0; i < distances.length; i++) {
-      if (distances[i] == furthestDistance) {
-        furthestDistanceIndices.push(i);
+      (location.type == LocationType.smallCity || location.type == LocationType.largeCity) && !gameState.trailContains(location)
+      && !gameState.hunterIsIn(location));
+      const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState ));
+      const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
+      const randomChoice = Math.random()*totalValue;
+      let currentValue = 0;
+      let index = 0;
+      while (currentValue < randomChoice) {
+        currentValue += distances[index];
       }
+      return validLocations[index];
     }
-    const randomChoice = Math.floor(Math.random() * furthestDistanceIndices.length);
-    const randomIndex = furthestDistanceIndices[randomChoice];
-    return validLocations[randomIndex];
-  }
 
   /**
    * Decides Dracula's next move based on the current state of the game
@@ -986,6 +970,22 @@ export class Dracula {
     // TODO: Make logical decision
     const choice = Math.floor(Math.random() * this.potentialTargetHunters[0].currentLocation.roadConnections.length);
     return this.potentialTargetHunters[0].currentLocation.roadConnections[choice];
+  }
+
+  /**
+   * Calculates a value for a given possible move
+   * @param possibleMove The move to evaluate
+   * @param gameState The state of the game
+   */
+  evaluateMove(possibleMove: PossibleMove, gameState: Game): number {
+    const location = possibleMove.location || this.currentLocation;
+    const distanceToNearestHunter = Math.min(
+      gameState.map.distanceBetweenLocations(location, gameState.godalming.currentLocation),
+      gameState.map.distanceBetweenLocations(location, gameState.seward.currentLocation),
+      gameState.map.distanceBetweenLocations(location, gameState.vanHelsing.currentLocation),
+      gameState.map.distanceBetweenLocations(location, gameState.mina.currentLocation)
+    );
+    return Math.pow(possibleMove.value * distanceToNearestHunter / 3, 1.2);
   }
 }
 
