@@ -154,6 +154,9 @@ export class Dracula {
     const connectedLocations = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
     let invalidLocations = gameState.trail.filter(trail => trail.location).map(trail => trail.location);
     invalidLocations.push(gameState.map.locations.find(location => location.type == LocationType.hospital), gameState.consecratedLocation);
+    if (gameState.stormRounds > 0) {
+      invalidLocations.push(gameState.stormLocation);
+    }
     let seaIsInvalid = false;
     if (this.blood == 1) {
       if (this.currentLocation.type !== LocationType.sea) {

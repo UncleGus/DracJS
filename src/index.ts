@@ -196,7 +196,6 @@ draculaTurnButton.addEventListener('click', () => {
       clearOptions(destination);
       for (let i = 0; i < 4; i++) {
         hunterDetails[i].addEventListener('click', () => {
-          actingHunter = i;
           updateMovement();
         });
       }
@@ -233,6 +232,7 @@ draculaTurnButton.addEventListener('click', () => {
           case TravelMethod.fastHorse:
             game.getLocationsByFastHorse(hunters[actingHunter].currentLocation)
               .forEach(location => destination.options.add(new Option(location.name)));
+            break;
           case TravelMethod.senseOfEmergency:
             game.map.locations.forEach(location => destination.options.add(new Option(location.name)));
             break;
@@ -398,11 +398,12 @@ discardItem.addEventListener('click', () => {
   }
 });
 useItem.addEventListener('click', () => {
-  game.useItem(hunters[actingHunter], itemDeck.value);
+  game.useItem(hunters[actingHunter], (hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).value);
   updateHunter();
   updateDiscards();
   updateTrail();
   updateCatacombs();
+  updateMovement();
   updateLog();
 });
 tradeItem.addEventListener('click', () => {
@@ -464,6 +465,9 @@ approvalButton.addEventListener('click', () => {
 sendScouts.addEventListener('click', () => {
   game.resolveHiredScouts([hiredScoutsLocation1.value, hiredScoutsLocation2.value]);
   updateAllFields();
+});
+sendStorm.addEventListener('click', () => {
+  game.setStormLocation(stormySeasLocation.value);
 });
 
 // encounters
@@ -570,6 +574,9 @@ debugGameStateButton.addEventListener('click', () => {
 [EncounterName.MinionWithKnife, EncounterName.MinionWithKnifeAndPistol, EncounterName.MinionWithKnifeAndRifle, EncounterName.Assassin,
 EncounterName.Dracula, EncounterName.VampireLair].forEach(enemy => {
   opponent.options.add(new Option(enemy));
+});
+game.map.locations.filter(location => location.type == LocationType.sea).forEach(location => {
+  stormySeasLocation.options.add(new Option(location.name));
 });
 game.initialiseGameState();
 game.log('Hunters set starting locations then press Start button');

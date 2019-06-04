@@ -44,6 +44,7 @@ export class Game {
   catacombCardsToBeRevealed: number[];
   stormySeasInEffect: boolean;
   stormRounds: number;
+  stormLocation: Location;
   hunterWhoPlayedEvent: Hunter;
   unearthlySwiftnessInEffect: boolean;
   vampireLairInEffect: boolean;
@@ -393,7 +394,9 @@ export class Game {
         this.log(`${hunter.name} is bitten`);
         break;
       case CombatOutcome.EscapeAsBat:
-        this.resolveEscapeAsBat();
+        if (this.opponent == EncounterName.Dracula) {
+          this.resolveEscapeAsBat();
+        }
         break;
       case CombatOutcome.Continue:
         this.roundsContinued++;
@@ -417,6 +420,10 @@ export class Game {
         this.seward.inCombat = false;
         this.vanHelsing.inCombat = false;
         this.mina.inCombat = false;
+        if (this.dracula.willPlayRelentlessMinion(this)) {
+          this.log('Dracula played Relentless Minion');
+          this.log('Resolve another combat with the same minion');
+        }
         break;
       case CombatOutcome.Invalid:
         this.log(`This is not a valid combat card combination: ${hunter.lastUsedCombatItem} and ${this.dracula.lastUsedAttack}`);
@@ -721,7 +728,6 @@ export class Game {
    * @param hunter The Hunter playing the Event
    */
   playHunterEvent(eventName: string, hunter: Hunter, locationNames: string[] = [], allySelected?: boolean, roadblockSelected?: boolean) {
-    // TODO: so much
     let eventIndex = 0;
     for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
       if (hunter.events[eventIndex].name == eventName) {
@@ -1346,6 +1352,15 @@ export class Game {
   }
 
   /**
+   * Sets the Location for Stormy Seas
+   * @param stormLocation The Location where Stormy Seas will take effect
+   */
+  setStormLocation(stormLocation: string) {
+    this.stormLocation = this.map.locations.find(location => location.name == stormLocation);
+    this.stormRounds = 3;
+  }
+
+  /**
    * Sets up combat cards for the given opponent
    * @param opponentName The name of the opponent fighting the Hunter
    * @param hunter The Hunter fighting the opponent
@@ -1353,6 +1368,10 @@ export class Game {
   setUpCombat(opponentName: string, hunter: Hunter) {
     if (opponentName == 'None') {
       this.opponent = null;
+      this.huntersInGroup(hunter).forEach(companion => {
+        companion.lastUsedCombatItem = '';
+        companion.inCombat = false;
+      });
     } else {
       this.opponent = opponentName;
       switch (opponentName) {
@@ -1534,76 +1553,62 @@ export class Game {
    * @param itemName The Item name
    */
   useItem(hunter: Hunter, itemName: string) {
-    switch(itemName) {
+    switch (itemName) {
       case ItemName.Dogs:
-        // TODO: treat this as turning it face up
+        this.log(`${hunter.name} has placed Dogs face up`);
         break;
       case ItemName.FastHorse:
         hunter.usingFastHorse = true;
         this.discardHunterItem(itemName, hunter);
+        this.log(`${hunter.name} is using a Fast Horse`);
         break;
       case ItemName.Garlic:
         this.rageRounds = 3;
         this.discardHunterItem(itemName, hunter);
+        this.log(`${hunter.name} is using Garlic`);
         break;
       case ItemName.HeavenlyHost:
+        this.log(`${hunter.name} is using Heavenly Host`);
         this.log('Move one of the Heavenly Host makers');
         this.discardHunterItem(itemName, hunter);
         break;
       case ItemName.HolyWater:
+        this.log(`${hunter.name} is using Holy Water`);
         this.log('Roll the die to determine outcome and apply results');
         this.discardHunterItem(itemName, hunter);
         break;
       case ItemName.LocalRumors:
-        if (this.selectedTrailEncounter && this.trail[this.selectedTrailEncounter].encounter) {
-          this.trail[this.selectedTrailEncounter].encounter.revealed = true;
-          this.discardHunterItem(itemName, hunter);
-        } else if (this.selectedCatacombEncounterA && this.catacombs[this.selectedCatacombEncounterA].encounter) {
-          this.catacombs[this.selectedCatacombEncounterA].encounter.revealed = true;
-          this.discardHunterItem(itemName, hunter);
-        } else if (this.selectedCatacombEncounterB && this.catacombs[this.selectedCatacombEncounterB].catacombEncounter) {
-          this.catacombs[this.selectedCatacombEncounterB].catacombEncounter.revealed = true;
-          this.discardHunterItem(itemName, hunter);
+        if (this.selectedTrailEncounter > 0 && this.trail.length > this.selectedTrailEncounter) {
+          if (this.trail[this.selectedTrailEncounter].encounter) {
+            this.trail[this.selectedTrailEncounter].encounter.revealed = true;
+            this.discardHunterItem(itemName, hunter);
+            this.log(`${hunter.name} is using Local Rumors`);
+          } else {
+            this.log('Select an Encounter to reveal to use this item');
+          }
+        } else if (this.selectedCatacombEncounterA > 0 && this.catacombs.length > this.selectedCatacombEncounterA) {
+          if (this.catacombs[this.selectedCatacombEncounterA].encounter) {
+            this.catacombs[this.selectedCatacombEncounterA].encounter.revealed = true;
+            this.discardHunterItem(itemName, hunter);
+            this.log(`${hunter.name} is using Local Rumors`);
+          } else {
+            this.log('Select an Encounter to reveal to use this item');
+          }
+        } else if (this.selectedCatacombEncounterB > 0 && this.catacombs.length > this.selectedCatacombEncounterA) {
+          if (this.catacombs[this.selectedCatacombEncounterB].catacombEncounter) {
+            this.catacombs[this.selectedCatacombEncounterB].catacombEncounter.revealed = true;
+            this.discardHunterItem(itemName, hunter);
+            this.log(`${hunter.name} is using Local Rumors`);
+          } else {
+            this.log('Select an Encounter to reveal to use this item');
+          }
         } else {
           this.log('Select an Encounter to reveal to use this item');
         }
         break;
-      }
+      default:
+        this.log(`Not applicable for ${hunter.name} to use ${itemName} at this time`);
+        break;
+    }
   }
-
-
-
-
-
-
-
-
-
-
-  // /**
-  //  * Resolves the Newspaper Reports effect from Resolve or an Event
-  //  * @param fromResolve Whether this is the Resolve power being used
-  //  */
-  // resolveNewspaperReports(fromResolve = false) {
-  //   // TODO: allow Dracula to counter this with an Event card
-  //   if (fromResolve && this.resolveTrack < 1) {
-  //     this.log('No Resolve to play Newspaper Reports');
-  //     return;
-  //   }
-  //   let i = this.trail.length - 1;
-  //   for (i; i > 0; i--) {
-  //     if (!this.trail[i].revealed) {
-  //       this.trail[i].revealed = true;
-  //       break;
-  //     }
-  //   }
-  //   if (i > 0) {
-  //     this.log('Oldest unrevealed trail card revealed');
-  //     if (fromResolve) {
-  //       this.resolveTrack--;
-  //     }
-  //   } else {
-  //     this.log('No valid trail cards to reveal');
-  //   }
-  // }
 }
