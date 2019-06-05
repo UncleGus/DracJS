@@ -230,7 +230,7 @@ export class Game {
    * @param hunters The Hunters in this group
    */
   draculaChooseControlStormsDestination(hunters: Hunter[]): boolean {
-    const port = this.dracula.chooseControlStormsDestination(hunters, this);
+    const port = this.dracula.chooseControlStormsDestination(hunters);
     if (port) {
       this.log(`Dracula played Control Storms to move ${hunters.length == 1 ? hunters[0].name : 'the group'} to ${port.name}`);
     } else {
@@ -243,7 +243,7 @@ export class Game {
    * @param hunter The Hunter attempting to catch a train
    */
   draculaPlaysFalseTipoff(hunters: Hunter[]): boolean {
-    if (this.dracula.willPlayFalseTipoff(hunters, this)) {
+    if (this.dracula.willPlayFalseTipoff(hunters)) {
       this.log('Dracula played False Tip-off');
       return true;
     }
@@ -270,7 +270,7 @@ export class Game {
    * Determines if Dracula will play a start of turn Event
    */
   draculaChooseStartOfTurnEvent() {
-    let logMessage = this.dracula.chooseStartOfTurnEvent(this);
+    let logMessage = this.dracula.chooseStartOfTurnEvent();
     if (logMessage) {
       this.log(logMessage);
       return true;
@@ -306,7 +306,7 @@ export class Game {
         if (!this.draculaAlly) {
           this.draculaAlly = eventCardDrawn;
         } else {
-          if (this.dracula.replaceExistingAlly(eventCardDrawn, this)) {
+          if (this.dracula.replaceExistingAlly(eventCardDrawn)) {
             this.log(`Dracula chose to discard ${this.draculaAlly.name} in favour of ${eventCardDrawn.name}`);
             this.eventDiscard.push(this.draculaAlly);
             this.draculaAlly = eventCardDrawn;
@@ -429,7 +429,7 @@ export class Game {
           this.seward.inCombat = false;
           this.vanHelsing.inCombat = false;
           this.mina.inCombat = false;
-          if (this.dracula.willPlayRelentlessMinion(this)) {
+          if (this.dracula.willPlayRelentlessMinion()) {
             this.log('Dracula played Relentless Minion');
             this.log('Resolve another combat with the same minion');
           }
@@ -443,7 +443,7 @@ export class Game {
         this.seward.inCombat = false;
         this.vanHelsing.inCombat = false;
         this.mina.inCombat = false;
-        if (this.dracula.willPlayRelentlessMinion(this)) {
+        if (this.dracula.willPlayRelentlessMinion()) {
           this.log('Dracula played Relentless Minion');
           this.log('Resolve another combat with the same minion');
         }
@@ -564,7 +564,7 @@ export class Game {
     }
 
     if (this.dracula.droppedOffEncounter) {
-      this.log(this.dracula.decideFateOfDroppedOffEncounter(this));
+      this.log(this.dracula.decideFateOfDroppedOffEncounter());
     }
 
     // Refill encounter hand
@@ -578,10 +578,10 @@ export class Game {
     if (!this.dracula.nextMove) {
       this.log('Dracula has no valid moves');
       this.log(this.dracula.die());
-      this.log(this.dracula.clearTrail(this, 1));
+      this.log(this.dracula.clearTrail(1));
       this.dracula.revealed = true;
       this.trail[0].revealed = true;
-      this.log(this.dracula.chooseNextMove(this));
+      this.log(this.dracula.chooseNextMove());
     }
 
     let doubleBackTrailIndex: number;
@@ -591,7 +591,7 @@ export class Game {
       switch (this.dracula.nextMove.power.name) {
         case PowerName.DarkCall:
           this.log('Dracula played power Dark Call');
-          this.log(this.dracula.executeDarkCall(this));
+          this.log(this.dracula.executeDarkCall());
           this.log(this.shuffleEncounters());
           break;
         case PowerName.DoubleBack:
@@ -617,7 +617,7 @@ export class Game {
             this.log(`Dracula Doubled Back to the location in position ${doubleBackCatacombIndex + 1} of the trail`);
             const doubleBackedCard = this.catacombs.splice(doubleBackCatacombIndex, 1)[0];
             this.pushToTrail(doubleBackedCard);
-            this.log(this.dracula.decideWhichEncounterToKeep(this.trail[0], this));
+            this.log(this.dracula.decideWhichEncounterToKeep(this.trail[0]));
           }
           break;
         case PowerName.Feed:
@@ -707,7 +707,7 @@ export class Game {
           this.dracula.hideLocation = null;
         }
       }
-      this.log(this.dracula.decideFateOfDroppedOffCard(droppedOffCard, this));
+      this.log(this.dracula.decideFateOfDroppedOffCard(droppedOffCard));
       if (this.dracula.currentLocation.type == LocationType.castle) {
         this.setDraculaBlood(this.dracula.blood + 2);
       }
@@ -722,13 +722,13 @@ export class Game {
     this.log('Performing Timekeeping phase');
     if (this.draculaAlly) {
       if (this.draculaAlly.name == EventName.QuinceyPMorris) {
-        this.log(this.dracula.chooseVictimForQuincey(this));
+        this.log(this.dracula.chooseVictimForQuincey());
       }
     }
-    this.log(this.dracula.chooseNextMove(this));
+    this.log(this.dracula.chooseNextMove());
 
     // evaluate catacombs
-    this.log(this.dracula.evaluateCatacombs(this));
+    this.log(this.dracula.evaluateCatacombs());
 
     // perform timekeeping
     if (this.dracula.currentLocation.type !== LocationType.sea) {
@@ -787,7 +787,7 @@ export class Game {
 
     // If Dracula doesn't cancel this, it's either the original event that he didn't cancel
     // or a cancellation of his cancellation that he didn't cancel, so the original event resolves
-    const cancelCardPlayedByDracula = this.dracula.cardPlayedToCancel(eventName, this);
+    const cancelCardPlayedByDracula = this.dracula.cardPlayedToCancel(eventName);
     if (cancelCardPlayedByDracula) {
       // If he did cancel it, then set a Dracula event card for the Hunters to consider cancelling and return
       this.dracula.eventAwaitingApproval = cancelCardPlayedByDracula.name;
@@ -870,7 +870,7 @@ export class Game {
       hunters[i].lastUsedCombatItem = items[i];
       this.dracula.updateItemTrackingFromCombat(hunters, items);
     }
-    this.log(this.dracula.chooseCombatCardAndHunter(hunters, this));
+    this.log(this.dracula.chooseCombatCardAndHunter(hunters));
   }
 
   /**
@@ -904,15 +904,15 @@ export class Game {
 
     switch (encounterName) {
       case EncounterName.Dracula:
-        if (this.dracula.willPlayWildHorses(this.huntersInGroup(hunter), this)) {
+        if (this.dracula.willPlayWildHorses(this.huntersInGroup(hunter))) {
           return;
         }
         this.setUpCombat(EncounterName.Dracula, hunter);
-        this.log(this.dracula.willPlayRage(this.huntersInGroup(hunter), this));
+        this.log(this.dracula.willPlayRage(this.huntersInGroup(hunter)));
         break;
       case EncounterName.VampireLair:
         this.setUpCombat(EncounterName.VampireLair, hunter);
-        this.log(this.dracula.willPlayRage(this.huntersInGroup(hunter), this));
+        this.log(this.dracula.willPlayRage(this.huntersInGroup(hunter)));
         break;
       case EncounterName.Ambush:
         this.dracula.encounterHandSize += 1;
@@ -1040,7 +1040,7 @@ export class Game {
             this.log('The Hunter group found a vampire during the day and killed it');
           }
         } else {
-          if (this.dracula.willPlaySeduction(this.huntersInGroup(hunter), this)) {
+          if (this.dracula.willPlaySeduction(this.huntersInGroup(hunter))) {
             this.log('Dracula played Seduction');
           } else {
             if (hunter.groupNumber == 0) {
@@ -1083,7 +1083,7 @@ export class Game {
     if (possibleDestinations.length == 0) {
       this.log('Dracula has nowhere to go');
     } else {
-      const destination = this.dracula.chooseBatDestination(possibleDestinations, this);
+      const destination = this.dracula.chooseBatDestination(possibleDestinations);
       let trailIndex = 0;
       for (trailIndex; trailIndex < this.trail.length; trailIndex++) {
         if (this.trail[trailIndex].location == this.dracula.currentLocation) {
@@ -1183,7 +1183,7 @@ export class Game {
    * Reveals cards in Dracula's catacombs by effect of an Event
    */
   revealCatacombCards() {
-    if (this.dracula.willPlaySensationalistPress(this)) {
+    if (this.dracula.willPlaySensationalistPress()) {
       return;
     }
     this.catacombCardsToBeRevealed.forEach(index => {
@@ -1197,7 +1197,7 @@ export class Game {
    * Reveals cards in Dracula's trail by effect of an Event
    */
   revealTrailCards() {
-    if (this.dracula.willPlaySensationalistPress(this)) {
+    if (this.dracula.willPlaySensationalistPress()) {
       return;
     }
     this.trailCardsToBeRevealed.forEach(index => {
@@ -1361,7 +1361,7 @@ export class Game {
     this.huntersInGroup(hunter).forEach(companion => {
       const previousLocation = companion.currentLocation;
       this.log(companion.setLocation(this.map.getLocationByName(locationName)));
-      if (this.dracula.willPlayCustomsSearch(hunter, previousLocation, this)) {
+      if (this.dracula.willPlayCustomsSearch(hunter, previousLocation)) {
         this.log(`Dracula played Customs Search on ${companion.name}`);
         this.log(`${companion.name} must discard all items and their turn ends`)
       }
@@ -1519,7 +1519,7 @@ export class Game {
    * Makes Dracula's first turn (selects his start location)
    */
   startGame() {
-    const startLocation = this.dracula.chooseStartLocation(this);
+    const startLocation = this.dracula.chooseStartLocation();
     this.log(this.dracula.setLocation(startLocation));
     this.pushToTrail({ location: startLocation, revealed: false });
     this.log('It is now Dracula\'s turn');

@@ -342,7 +342,7 @@ for (let i = 0; i < 4; i++) {
 console.log('Wiring up movement');
 travelButton.addEventListener('click', () => {
   if (moveMethod.value == EncounterName.Bats) {
-    game.setHunterLocation(hunters[actingHunter], game.dracula.decideBatsDestination(hunters[actingHunter], game).name);
+    game.setHunterLocation(hunters[actingHunter], game.dracula.decideBatsDestination(hunters[actingHunter]).name);
     let batsTile: Encounter;
     game.huntersInGroup(hunters[actingHunter]).forEach(companion => {
       batsTile = game.removeEncounterFromHunter(companion, EncounterName.Bats);

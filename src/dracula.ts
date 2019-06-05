@@ -30,6 +30,7 @@ export class Dracula {
   eventAwaitingApproval: string;
   potentialTargetHunters: Hunter[];
   hypnosisInEffect: boolean;
+  gameState: Game;
 
   constructor() {
     this.blood = 15;
@@ -89,11 +90,10 @@ export class Dracula {
 
   /**
    * Selects Dracula's first Location at the state of the game
-   * @param gameState The state of the game
    */
-  chooseStartLocation(gameState: Game): Location {
-    const validLocations = gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
-    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState));
+  chooseStartLocation(): Location {
+    const validLocations = this.gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
+    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }));
     const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
     const randomChoice = Math.random() * totalValue;
     let currentValue = 0;
@@ -106,13 +106,12 @@ export class Dracula {
 
   /**
    * Chooses a Location to move to when Evade is resolved
-   * @param gameState 
    */
-  chooseEvasionDestination(gameState: Game): Location {
-    const validLocations = gameState.map.locations.filter(location =>
-      (location.type == LocationType.smallCity || location.type == LocationType.largeCity) && !gameState.trailContains(location)
-      && !gameState.hunterIsIn(location));
-    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState));
+  chooseEvasionDestination(): Location {
+    const validLocations = this.gameState.map.locations.filter(location =>
+      (location.type == LocationType.smallCity || location.type == LocationType.largeCity) && !this.gameState.trailContains(location)
+      && !this.gameState.hunterIsIn(location));
+    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }));
     const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
     const randomChoice = Math.random() * totalValue;
     let currentValue = 0;
@@ -125,36 +124,35 @@ export class Dracula {
 
   /**
    * Decides Dracula's next move based on the current state of the game
-   * @param gameState The state of the game
    */
-  chooseNextMove(gameState: Game): string {
+  chooseNextMove(): string {
     if (!this.hypnosisInEffect) {
       this.nextMove = null;
     }
     this.possibleMoves = [];
     const connectedLocations = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
-    let invalidLocations = gameState.trail.filter(trail => trail.location).map(trail => trail.location);
-    invalidLocations.push(gameState.map.locations.find(location => location.type == LocationType.hospital), gameState.consecratedLocation);
-    if (gameState.stormRounds > 0) {
-      invalidLocations.push(gameState.stormLocation);
+    let invalidLocations = this.gameState.trail.filter(trail => trail.location).map(trail => trail.location);
+    invalidLocations.push(this.gameState.map.locations.find(location => location.type == LocationType.hospital), this.gameState.consecratedLocation);
+    if (this.gameState.stormRounds > 0) {
+      invalidLocations.push(this.gameState.stormLocation);
     }
     let seaIsInvalid = false;
     if (this.blood == 1) {
       if (this.currentLocation.type !== LocationType.sea) {
         seaIsInvalid = true;
       }
-      if (!this.seaBloodPaid || gameState.hunterAlly.name == EventName.RufusSmith) {
+      if (!this.seaBloodPaid || this.gameState.hunterAlly.name == EventName.RufusSmith) {
         seaIsInvalid = true;
       }
     }
     if (seaIsInvalid) {
       invalidLocations = invalidLocations.concat(connectedLocations.filter(location => location.type == LocationType.sea));
     }
-    const validLocations = _.without(connectedLocations, ...invalidLocations, gameState.map.locations.find(location => location.type == LocationType.hospital));
+    const validLocations = _.without(connectedLocations, ...invalidLocations, this.gameState.map.locations.find(location => location.type == LocationType.hospital));
     validLocations.map(location => {
-      let catacombIndex = gameState.catacombs.length - 1;
+      let catacombIndex = this.gameState.catacombs.length - 1;
       for (catacombIndex; catacombIndex > -1; catacombIndex--) {
-        if (gameState.catacombs[catacombIndex].location == location) {
+        if (this.gameState.catacombs[catacombIndex].location == location) {
           break;
         }
       }
@@ -165,9 +163,9 @@ export class Dracula {
       }
     });
 
-    const possiblePowers = this.powers.slice(0, 5).filter(power => (power.nightOnly == false || gameState.timePhase > 2) && power.cost < this.blood && this.currentLocation.type !== LocationType.sea);
+    const possiblePowers = this.powers.slice(0, 5).filter(power => (power.nightOnly == false || this.gameState.timePhase > 2) && power.cost < this.blood && this.currentLocation.type !== LocationType.sea);
     const invalidPowers: Power[] = [];
-    gameState.trail.forEach(trailCard => {
+    this.gameState.trail.forEach(trailCard => {
       if (trailCard.power) {
         invalidPowers.push(trailCard.power);
         if (trailCard.power.name == PowerName.WolfFormAndDoubleBack) {
@@ -198,8 +196,8 @@ export class Dracula {
           this.possibleMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.DoubleBack:
-          gameState.trail.concat(gameState.catacombs).forEach(trailCard => {
-            if (gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, [TravelMethod.road, TravelMethod.sea]) == 1) {
+          this.gameState.trail.concat(this.gameState.catacombs).forEach(trailCard => {
+            if (this.gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, [TravelMethod.road, TravelMethod.sea]) == 1) {
               this.possibleMoves.push({ location: trailCard.location, power: validPower, value: 1 });
             }
           });
@@ -211,11 +209,11 @@ export class Dracula {
           this.possibleMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.WolfForm:
-          potentialDestinations = this.currentLocation.roadConnections.filter(road => !gameState.cityIsConsecrated(road));
+          potentialDestinations = this.currentLocation.roadConnections.filter(road => !this.gameState.cityIsConsecrated(road));
           potentialDestinations.forEach(dest => secondLayerDestination.push(...dest.roadConnections));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
-          potentialDestinations = potentialDestinations.filter(dest => !gameState.trailContains(dest) && !gameState.catacombsContains(dest) && !gameState.cityIsConsecrated(dest));
+          potentialDestinations = potentialDestinations.filter(dest => !this.gameState.trailContains(dest) && !this.gameState.catacombsContains(dest) && !this.gameState.cityIsConsecrated(dest));
           potentialDestinations = _.without(potentialDestinations, this.currentLocation);
           potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
@@ -224,7 +222,7 @@ export class Dracula {
           potentialDestinations.forEach(dest => secondLayerDestination = secondLayerDestination.concat(dest.roadConnections));
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
-          potentialDestinations = potentialDestinations.filter(dest => (gameState.trailContains(dest) || gameState.catacombsContains(dest)) && !gameState.cityIsConsecrated(dest));
+          potentialDestinations = potentialDestinations.filter(dest => (this.gameState.trailContains(dest) || this.gameState.catacombsContains(dest)) && !this.gameState.cityIsConsecrated(dest));
           potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndHide:
@@ -232,7 +230,7 @@ export class Dracula {
           break;
       }
     });
-    this.possibleMoves.forEach(move => move.value = this.evaluateMove(move, gameState));
+    this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
     if (this.possibleMoves.length > 0) {
       if (this.hypnosisInEffect) {
         if (this.possibleMoves.find(move => move.catacombToDiscard == this.nextMove.catacombToDiscard
@@ -298,7 +296,11 @@ export class Dracula {
     return 'Dracula chose this order for the encounters to be resolved: ' + encountersCopy.map(encounter => encounter.name).join(', ');
   }
 
-  decideBatsDestination(hunter: Hunter, gameState: Game): Location {
+  /**
+   * Decide where so send the Hunter affected by Bats
+   * @param hunter The Hunter affected by Bats
+   */
+  decideBatsDestination(hunter: Hunter): Location {
     // TODO: make logical decision
     let possibleDestinations: Location[] = [hunter.currentLocation, ...hunter.currentLocation.roadConnections];
     let nextLayerDestination: Location[] = [];
@@ -322,14 +324,13 @@ export class Dracula {
 
   /**
    * Executes Dark Call power
-   * @param gameState The state of the game
    */
-  executeDarkCall(gameState: Game): string {
+  executeDarkCall(): string {
     this.encounterHandSize += 10;
-    gameState.log(this.drawUpEncounters(gameState.encounterPool));
+    this.gameState.log(this.drawUpEncounters(this.gameState.encounterPool));
     this.encounterHandSize -= 10;
-    gameState.log(this.discardDownEncounters(gameState.encounterPool));
-    gameState.log(gameState.shuffleEncounters());
+    this.gameState.log(this.discardDownEncounters(this.gameState.encounterPool));
+    this.gameState.log(this.gameState.shuffleEncounters());
     return 'Dracula has chosen his encounters';
   }
 
@@ -379,19 +380,17 @@ export class Dracula {
   /**
    * Plays Event of the given name from Dracula's hand
    * @param eventName The name of the Event to discard
-   * @param events The pool of Events to which to discard
    */
-  playEvent(eventName: string, events: Event[]) {
+  playEvent(eventName: string) {
     this.lastPlayedEvent = eventName;
-    this.discardEvent(eventName, events);
+    this.discardEvent(eventName);
   }
 
   /**
    * Discards Event of the given name from Dracula's hand
    * @param eventName The name of the Event to discard
-   * @param events The pool of Events to which to discard
    */
-  discardEvent(eventName: string, events: Event[]) {
+  discardEvent(eventName: string) {
     let eventIndex = 0;
     for (eventIndex; eventIndex < this.eventHand.length; eventIndex++) {
       if (this.eventHand[eventIndex].name == eventName) {
@@ -401,15 +400,14 @@ export class Dracula {
     if (eventIndex > this.eventHand.length) {
       return;
     }
-    events.push(this.eventHand.splice(eventIndex, 1)[0]);
+    this.gameState.eventDiscard.push(this.eventHand.splice(eventIndex, 1)[0]);
   }
 
   /**
    * Decides which Encounter to keep on a Catacomb card to which Dracula has Doubled Back
    * @param card The catacomb card
-   * @param gameState The state of the game
    */
-  decideWhichEncounterToKeep(card: TrailCard, gameState: Game): string {
+  decideWhichEncounterToKeep(card: TrailCard): string {
     // TODO: make logical decision
     if (!card.catacombEncounter) {
       return;
@@ -420,14 +418,14 @@ export class Dracula {
       return;
     }
     if (Math.floor(Math.random()) < 0.5) {
-      gameState.encounterPool.push(card.encounter);
+      this.gameState.encounterPool.push(card.encounter);
       card.encounter = card.catacombEncounter;
       delete card.catacombEncounter;
-      gameState.shuffleEncounters();
+      this.gameState.shuffleEncounters();
     } else {
-      gameState.encounterPool.push(card.catacombEncounter);
+      this.gameState.encounterPool.push(card.catacombEncounter);
       delete card.catacombEncounter;
-      gameState.shuffleEncounters();
+      this.gameState.shuffleEncounters();
     }
     return 'Dracula kept the one encounter from the catacomb card and discarded the other';
   }
@@ -435,14 +433,13 @@ export class Dracula {
   /**
    * Decides what to do with a card that has dropped off the end of the trail
    * @param droppedOffCard The card that has dropped off
-   * @param gameState The state of the game
    */
-  decideFateOfDroppedOffCard(droppedOffCard: TrailCard, gameState: Game): string {
+  decideFateOfDroppedOffCard(droppedOffCard: TrailCard): string {
     // TODO: make logical decision
     if (droppedOffCard.location) {
-      if (Math.random() < 0.2 && gameState.catacombs.length < 3 && droppedOffCard.location.type !== LocationType.sea) {
+      if (Math.random() < 0.2 && this.gameState.catacombs.length < 3 && droppedOffCard.location.type !== LocationType.sea) {
         droppedOffCard.catacombEncounter = this.chooseEncounterForCatacombs();
-        gameState.catacombs.push(droppedOffCard);
+        this.gameState.catacombs.push(droppedOffCard);
         delete droppedOffCard.power;
         return 'Dracula moved the card to the catacombs with an additional encounter on it'
       } else {
@@ -454,26 +451,25 @@ export class Dracula {
 
   /**
    * Checks the locations in the catacombs and decides what to do with them
-   * @param gameState The state of the game
    */
-  evaluateCatacombs(gameState: Game): string {
+  evaluateCatacombs(): string {
     // TODO: make logical decision
     let catacombToDiscard: number;
     if (this.nextMove) {
       catacombToDiscard = this.nextMove.catacombToDiscard || -1;
     }
     let logMessage = '';
-    for (let i = gameState.catacombs.length - 1; i >= 0; i--) {
-      if (Math.random() < 0.2 || i == catacombToDiscard || (!gameState.catacombs[i].encounter && !gameState.catacombs[i].catacombEncounter)) {
+    for (let i = this.gameState.catacombs.length - 1; i >= 0; i--) {
+      if (Math.random() < 0.2 || i == catacombToDiscard || (!this.gameState.catacombs[i].encounter && !this.gameState.catacombs[i].catacombEncounter)) {
         logMessage += logMessage ? ` and position ${i + 1}` : `Dracula discarded catacomb card from position ${i + 1}`;
-        if (gameState.catacombs[i].encounter) {
-          gameState.encounterPool.push(gameState.catacombs[i].encounter);
+        if (this.gameState.catacombs[i].encounter) {
+          this.gameState.encounterPool.push(this.gameState.catacombs[i].encounter);
         }
-        if (gameState.catacombs[i].catacombEncounter) {
-          gameState.encounterPool.push(gameState.catacombs[i].catacombEncounter);
+        if (this.gameState.catacombs[i].catacombEncounter) {
+          this.gameState.encounterPool.push(this.gameState.catacombs[i].catacombEncounter);
         }
-        gameState.catacombs.splice(i, 1);
-        gameState.shuffleEncounters();
+        this.gameState.catacombs.splice(i, 1);
+        this.gameState.shuffleEncounters();
       }
     }
     return logMessage;
@@ -481,16 +477,15 @@ export class Dracula {
 
   /**
    * Clears cards out of the trail
-   * @param gameState The state of the game
    * @param remainingCards The number of cards to leave behind in the trail
    */
-  clearTrail(gameState: Game, remainingCards: number): string {
+  clearTrail(remainingCards: number): string {
     let cardsCleared = 0;
     let encountersCleared = 0;
-    let cardIndex = gameState.trail.length - 1;
-    while (gameState.trail.length > remainingCards) {
-      if ((gameState.trail[cardIndex].location !== this.currentLocation)) {
-        const cardToClear = gameState.trail.splice(cardIndex, 1)[0];
+    let cardIndex = this.gameState.trail.length - 1;
+    while (this.gameState.trail.length > remainingCards) {
+      if ((this.gameState.trail[cardIndex].location !== this.currentLocation)) {
+        const cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
         cardsCleared++;
         if (cardToClear.location) {
         }
@@ -499,8 +494,8 @@ export class Dracula {
         }
         if (cardToClear.encounter) {
           encountersCleared++;
-          gameState.encounterPool.push(cardToClear.encounter);
-          gameState.shuffleEncounters();
+          this.gameState.encounterPool.push(cardToClear.encounter);
+          this.gameState.shuffleEncounters();
         }
       }
       cardIndex--;
@@ -510,44 +505,42 @@ export class Dracula {
 
   /**
    * Decides what to do with an Encounter that has dropped off the end of the trail
-   * @param gameState The state of the game
    */
-  decideFateOfDroppedOffEncounter(gameState: Game): string {
+  decideFateOfDroppedOffEncounter(): string {
     // TODO: Make logical decision
     let logMessage = 'Dracula returned the dropped off encounter to the encounter pool';
     switch (this.droppedOffEncounter.name) {
       case EncounterName.Ambush:
-        if (this.willMatureAmbush(gameState)) {
-          this.chooseAmbushEncounter(gameState);
+        if (this.willMatureAmbush()) {
+          this.chooseAmbushEncounter();
           if (this.ambushEncounter) {
             logMessage = `Dracula matured Ambush and played ${this.ambushEncounter.name} on ${this.ambushHunter.name}`;
-            this.clearTrail(gameState, 3);
+            this.clearTrail(3);
           }
         }
         break;
       case EncounterName.DesecratedSoil:
-        if (this.willMatureDesecratedSoil(gameState)) {
+        if (this.willMatureDesecratedSoil()) {
           logMessage = 'Dracula matured Desecrated soil. Draw event cards, discarding Hunter events until two Dracula event cards have been drawn.';
-          this.clearTrail(gameState, 3);
+          this.clearTrail(3);
         }
         break;
       case EncounterName.NewVampire:
         logMessage = 'Dracula matured New Vampire';
-        gameState.setVampireTrack(gameState.vampireTrack + 2);
-        this.clearTrail(gameState, 1);
+        this.gameState.setVampireTrack(this.gameState.vampireTrack + 2);
+        this.clearTrail(1);
         break;
     }
-    gameState.encounterPool.push(this.droppedOffEncounter);
-    gameState.log(gameState.shuffleEncounters());
+    this.gameState.encounterPool.push(this.droppedOffEncounter);
+    this.gameState.log(this.gameState.shuffleEncounters());
     this.droppedOffEncounter = null;
     return logMessage;
   }
 
   /**
-   * Decides whether or not to mature Ambush Soil
-   * @param gameState The state of the game
+   * Decides whether or not to mature Ambush
    */
-  willMatureAmbush(gameState: Game): boolean {
+  willMatureAmbush(): boolean {
     // TODO: make logical decision
     if (Math.random() < 0.5) {
       return true;
@@ -558,9 +551,8 @@ export class Dracula {
 
   /**
    * Decides whether or not to mature Desecrated Soil
-   * @param gameState The state of the game
    */
-  willMatureDesecratedSoil(gameState: Game): boolean {
+  willMatureDesecratedSoil(): boolean {
     // TODO: make logical decision
     if (Math.random() < 0.5) {
       return true;
@@ -571,10 +563,9 @@ export class Dracula {
 
   /**
    * Chooses a Hunter and an Encounter to play when maturing an Ambush Encounter
-   * @param gameState The state of the game
    */
-  chooseAmbushEncounter(gameState: Game) {
-    const validHunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina]
+  chooseAmbushEncounter() {
+    const validHunters = [this.gameState.godalming, this.gameState.seward, this.gameState.vanHelsing, this.gameState.mina]
       .filter(hunter => hunter.currentLocation.type !== LocationType.sea && hunter.currentLocation.type !== LocationType.hospital);
     if (validHunters.length == 0) {
       this.ambushEncounter = null;
@@ -590,17 +581,16 @@ export class Dracula {
   /**
    * Chooses which combat card to use in the current round of combat
    * @param hunters The Hunters involved in the combat
-   * @param gameState The state of the game
    */
-  chooseCombatCardAndHunter(hunters: Hunter[], gameState: Game): string {
+  chooseCombatCardAndHunter(hunters: Hunter[]): string {
     // TODO: Make logical descision
     let allowedAttacks = _.without(this.availableAttacks, this.lastUsedAttack);
     if (this.repelled) {
       allowedAttacks = _.without(this.availableAttacks, Attack.Claws, Attack.Fangs, Attack.Mesmerize, Attack.Strength);
     }
-    if (gameState.rageRounds > 0) {
+    if (this.gameState.rageRounds > 0) {
       allowedAttacks = _.without(this.availableAttacks, Attack.EscapeBat, Attack.EscapeMan, Attack.EscapeMist);
-      gameState.rageRounds -= 1;
+      this.gameState.rageRounds -= 1;
     }
     const attackChoice = Math.floor(Math.random() * allowedAttacks.length);
     const targetChoice = Math.floor(Math.random() * hunters.length);
@@ -612,9 +602,8 @@ export class Dracula {
   /**
    * Selects a destination for Escape as Bat
    * @param possibleDestinations The list of possible Locations
-   * @gameState The state of the game
    */
-  chooseBatDestination(possibleDestinations: Location[], gameState: Game): Location {
+  chooseBatDestination(possibleDestinations: Location[]): Location {
     // TODO: Make logical decision
     const choice = Math.floor(Math.random() * possibleDestinations.length);
     return possibleDestinations[choice];
@@ -623,16 +612,15 @@ export class Dracula {
   /**
    * Chooses whether to play Control Storms on the set of Hunters
    * @param hunters The Hunters potentially affected
-   * @param gameState The state of the game
    */
-  chooseControlStormsDestination(hunters: Hunter[], gameState: Game): Location {
+  chooseControlStormsDestination(hunters: Hunter[]): Location {
     // TODO: Make logical decision
     if (this.eventHand.find(event => event.name == EventName.ControlStorms)) {
       if (Math.random() < 0.5) {
-        const destinations = gameState.map.portsWithinRange(hunters[0].currentLocation, 4);
+        const destinations = this.gameState.map.portsWithinRange(hunters[0].currentLocation, 4);
         if (destinations.length > 0) {
           const choice = Math.floor(Math.random() * destinations.length);
-          this.playEvent(EventName.ControlStorms, gameState.eventDiscard);
+          this.playEvent(EventName.ControlStorms);
           return destinations[choice];
         }
       }
@@ -644,9 +632,8 @@ export class Dracula {
    * Decides whether or not to play Customs Search on a Hunter
    * @param hunter The Hunter who moved
    * @param previousLocation The previous Location of the Hunter
-   * @param gameState The state of the game
    */
-  willPlayCustomsSearch(hunter: Hunter, previousLocation: Location, gameState: Game): boolean {
+  willPlayCustomsSearch(hunter: Hunter, previousLocation: Location): boolean {
     // TODO: Make logical decision
     if (!this.eventHand.find(event => event.name == EventName.CustomsSearch)) {
       return false;
@@ -660,13 +647,13 @@ export class Dracula {
       || (hunter.currentLocation.domain == LocationDomain.east && previousLocation.domain == LocationDomain.west)) {
       canPlayCustomsSearch = true;
     }
-    const trailCard = gameState.trail.find(trail => trail.location == hunter.currentLocation);
+    const trailCard = this.gameState.trail.find(trail => trail.location == hunter.currentLocation);
     if (trailCard) {
       if (trailCard.encounter) {
         canPlayCustomsSearch = false;
       }
     }
-    const catacombsCard = gameState.catacombs.find(catacomb => catacomb.location == hunter.currentLocation);
+    const catacombsCard = this.gameState.catacombs.find(catacomb => catacomb.location == hunter.currentLocation);
     if (catacombsCard) {
       if (catacombsCard.encounter || catacombsCard.catacombEncounter) {
         canPlayCustomsSearch = false;
@@ -676,8 +663,8 @@ export class Dracula {
       return false;
     }
     if (Math.random() < 0.5) {
-      this.playEvent(EventName.CustomsSearch, gameState.eventDiscard);
-      gameState.eventPendingResolution = EventName.CustomsSearch;
+      this.playEvent(EventName.CustomsSearch);
+      this.gameState.eventPendingResolution = EventName.CustomsSearch;
       this.eventAwaitingApproval = EventName.CustomsSearch;
       this.potentialTargetHunters = [hunter];
       return true;
@@ -687,13 +674,12 @@ export class Dracula {
   /**
    * Decides whether to play False Tip-off on a Hunter or group
    * @param hunters The Hunters attempting to catch a train
-   * @param gameState The state of the game
    */
-  willPlayFalseTipoff(hunters: Hunter[], gameState: Game): boolean {
+  willPlayFalseTipoff(hunters: Hunter[]): boolean {
     // TODO: Make logical decision
     if (this.eventHand.find(event => event.name == EventName.FalseTipoff)) {
       if (Math.random() < 0.25) {
-        this.playEvent(EventName.FalseTipoff, gameState.eventDiscard);
+        this.playEvent(EventName.FalseTipoff);
         return true;
       }
       return false;
@@ -702,9 +688,8 @@ export class Dracula {
 
   /**
    * Decides which Event, if any, to play at the start of Dracula's turn
-   * @param gameState The state of the game
    */
-  chooseStartOfTurnEvent(gameState: Game): string {
+  chooseStartOfTurnEvent(): string {
     // TODO: Make logical decision
     if (this.eventAwaitingApproval) {
       return;
@@ -716,7 +701,7 @@ export class Dracula {
       || card.name == EventName.UnearthlySwiftness);
     if (potentialEvents.find(card => card.name == EventName.DevilishPower)) {
       let canPlayDevilishPower = false;
-      if (gameState.hunterAlly || gameState.heavenlyHostLocations.length > 0) {
+      if (this.gameState.hunterAlly || this.gameState.heavenlyHostLocations.length > 0) {
         canPlayDevilishPower = true;
       }
       if (!canPlayDevilishPower) {
@@ -728,28 +713,27 @@ export class Dracula {
     }
     if (Math.random() < 0.2) {
       const choice = Math.floor(Math.random() * potentialEvents.length);
-      this.playEvent(potentialEvents[choice].name, gameState.eventDiscard);
+      this.playEvent(potentialEvents[choice].name);
       this.eventAwaitingApproval = potentialEvents[choice].name;
-      gameState.eventPendingResolution = potentialEvents[choice].name;
+      this.gameState.eventPendingResolution = potentialEvents[choice].name;
       return `Dracula played ${potentialEvents[choice].name}`;
     }
   }
 
   /**
    * Used when playing the Devilish Power card to remove a game component
-   * @param gameState The state of the game
    */
-  chooseTargetForDevilishPower(gameState: Game): string {
+  chooseTargetForDevilishPower(): string {
     // TODO: Make logical decision
     let options = [];
-    if (gameState.hunterAlly) {
+    if (this.gameState.hunterAlly) {
       options.push('discard the Hunters\' Ally');
     }
-    if (gameState.heavenlyHostLocations.length > 0) {
-      options.push(`discard the Heavenly Host in ${gameState.heavenlyHostLocations[0]}`);
+    if (this.gameState.heavenlyHostLocations.length > 0) {
+      options.push(`discard the Heavenly Host in ${this.gameState.heavenlyHostLocations[0]}`);
     }
-    if (gameState.heavenlyHostLocations.length > 1) {
-      options.push(`discard the Heavenly Host in ${gameState.heavenlyHostLocations[1]}`);
+    if (this.gameState.heavenlyHostLocations.length > 1) {
+      options.push(`discard the Heavenly Host in ${this.gameState.heavenlyHostLocations[1]}`);
     }
     const choice = Math.floor(Math.random() * options.length);
     this.lastPlayedEvent = this.eventAwaitingApproval;
@@ -760,9 +744,8 @@ export class Dracula {
   /**
    * Decides whether to replace the existing Ally with the one drawn
    * @param ally The newly drawn Ally
-   * @param gameState The state of the game
    */
-  replaceExistingAlly(ally: Event, gameState: Game): boolean {
+  replaceExistingAlly(ally: Event): boolean {
     // TODO: Make logical decision
     if (Math.random() < 0.5) {
       return true;
@@ -773,22 +756,20 @@ export class Dracula {
 
   /**
    * Choose which bitten Hunter to play Night Visit on
-   * @param gameState The state of the game
    */
-  chooseHunterToNightVisit(gameState: Game): string {
+  chooseHunterToNightVisit(): string {
     // TODO: Make logical decision
-    const bittenHunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina].filter(hunter => hunter.bites > 0);
+    const bittenHunters = [this.gameState.godalming, this.gameState.seward, this.gameState.vanHelsing, this.gameState.mina].filter(hunter => hunter.bites > 0);
     const choice = Math.floor(Math.random() * bittenHunters.length);
     return `Dracula pays a Night Visit to ${bittenHunters[choice].name}, costing them 2 health`;
   }
 
   /**
    * Chooses a victim for Quincey P. Morris
-   * @param gameState The state of the game
    */
-  chooseVictimForQuincey(gameState: Game): string {
+  chooseVictimForQuincey(): string {
     // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
-    const hunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina];
+    const hunters = [this.gameState.godalming, this.gameState.seward, this.gameState.vanHelsing, this.gameState.mina];
     const huntersWithoutGuaranteedProtection = hunters.filter(hunter => !hunter.knownItems.find(item => item == ItemName.Crucifix) && !hunter.knownItems.find(item => item == ItemName.HeavenlyHost));
     if (huntersWithoutGuaranteedProtection.length == 0) {
       const choice = Math.floor(Math.random() * 4);
@@ -801,17 +782,16 @@ export class Dracula {
   /**
    * Decides whether or not to play Rage
    * @param hunters The potential targets
-   * @param gameState The state of the game
    */
-  willPlayRage(hunters: Hunter[], gameState: Game): string {
+  willPlayRage(hunters: Hunter[]): string {
     // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
     if (!this.eventHand.find(event => event.name == EventName.Rage)) {
       return;
     }
     if (Math.random() < 0.5) {
-      this.playEvent(EventName.Rage, gameState.eventDiscard);
+      this.playEvent(EventName.Rage);
       this.eventAwaitingApproval = EventName.Rage;
-      gameState.eventPendingResolution = EventName.Rage;
+      this.gameState.eventPendingResolution = EventName.Rage;
       this.potentialTargetHunters = hunters;
       return 'Dracula played Rage';
     }
@@ -819,9 +799,8 @@ export class Dracula {
 
   /**
    * Chooses a target for Rage
-   * @param gameState The state of the game
    */
-  chooseRageVictim(gameState: Game): string {
+  chooseRageVictim(): string {
     // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
     const hunterChoice = Math.floor(Math.random() * this.potentialTargetHunters.length);
     const targetHunter = this.potentialTargetHunters[hunterChoice];
@@ -831,15 +810,14 @@ export class Dracula {
 
   /**
    * Decides whether or not to play Relentless Minion
-   * @param gameState The state of the game
    */
-  willPlayRelentlessMinion(gameState: Game): boolean {
+  willPlayRelentlessMinion(): boolean {
     // TODO: Make logical decision
     if (![Attack.DodgeMinion, Attack.Knife, Attack.Pistol, Attack.Punch, Attack.Rifle].find(attack => attack == this.lastUsedAttack)) {
       return false;
     } else {
       if (Math.random() < 0.5) {
-        this.playEvent(EventName.RelentlessMinion, gameState.eventDiscard);
+        this.playEvent(EventName.RelentlessMinion);
         return true;
       }
     }
@@ -847,11 +825,10 @@ export class Dracula {
 
   /**
    * Chooses a road to block with Roadblock
-   * @param gameState The state of the game
    */
-  chooseRoadBlockTarget(gameState: Game): Location[] {
+  chooseRoadBlockTarget(): Location[] {
     // TODO: Make logical decision
-    const landLocations = gameState.map.locations.filter(location => location.type != LocationType.sea && location.roadConnections.length > 0);
+    const landLocations = this.gameState.map.locations.filter(location => location.type != LocationType.sea && location.roadConnections.length > 0);
     const choice1 = Math.floor(Math.random() * landLocations.length);
     const target1 = landLocations[choice1];
     const choice2 = Math.floor(Math.random() * target1.roadConnections.length);
@@ -862,13 +839,13 @@ export class Dracula {
   /**
    * Decides whether or not to play Seduction when a Hunter group encounters a New Vampire at night
    */
-  willPlaySeduction(hunters: Hunter[], gameState: Game): boolean {
+  willPlaySeduction(hunters: Hunter[]): boolean {
     // TODO: Make logical decision; spoiler: always do this
     if (this.eventHand.find(event => event.name == EventName.Seduction)) {
       this.eventAwaitingApproval = EventName.Seduction;
-      gameState.eventPendingResolution = EventName.Seduction;
+      this.gameState.eventPendingResolution = EventName.Seduction;
       this.potentialTargetHunters = hunters;
-      this.playEvent(EventName.Seduction, gameState.eventDiscard);
+      this.playEvent(EventName.Seduction);
       return true;
     }
     return false;
@@ -877,9 +854,8 @@ export class Dracula {
   /**
    * Chooses a card to play to cancel the Hunter card just played
    * @param eventJustPlayed The Hunter Event just played
-   * @param gameState The state of the game
    */
-  cardPlayedToCancel(eventJustPlayed: string, gameState: Game): Event {
+  cardPlayedToCancel(eventJustPlayed: string): Event {
     // TODO: Make logical decision
     // check if the event just played can be cancelled
     const possibleCancellationCards: string[] = [];
@@ -903,48 +879,45 @@ export class Dracula {
       }
     }
     const cancelCard = this.eventHand.splice(eventIndex, 1)[0];
-    gameState.eventDiscard.push(cancelCard);
+    this.gameState.eventDiscard.push(cancelCard);
     return cancelCard;
   }
 
   /**
    * Decides whether to play Sensationalist Press
-   * @param gameState The state of the game
    */
-  willPlaySensationalistPress(gameState: Game): boolean {
+  willPlaySensationalistPress(): boolean {
     // TODO: Make logical decision
     if (!this.eventHand.find(event => event.name == EventName.SensationalistPress)) {
       return false;
     }
     if (Math.random() < 0.5) {
-      this.playEvent(EventName.SensationalistPress, gameState.eventDiscard);
+      this.playEvent(EventName.SensationalistPress);
       this.eventAwaitingApproval = EventName.SensationalistPress;
-      gameState.eventPendingResolution = EventName.SensationalistPress;
+      this.gameState.eventPendingResolution = EventName.SensationalistPress;
       return true;
     }
   }
 
   /**
    * Chooses which Location to keep hidden with Sensationalist Press
-   * @param gameState The state of the game
    */
-  chooseLocationForSensationalistPress(gameState: Game) {
+  chooseLocationForSensationalistPress() {
     // TODO: Make logical decision
-    const choice = Math.floor(Math.random() * (gameState.trailCardsToBeRevealed.length + gameState.catacombCardsToBeRevealed.length));
-    if (choice < gameState.trailCardsToBeRevealed.length) {
-      gameState.trailCardsToBeRevealed.splice(choice, 1);
+    const choice = Math.floor(Math.random() * (this.gameState.trailCardsToBeRevealed.length + this.gameState.catacombCardsToBeRevealed.length));
+    if (choice < this.gameState.trailCardsToBeRevealed.length) {
+      this.gameState.trailCardsToBeRevealed.splice(choice, 1);
     } else {
-      gameState.catacombCardsToBeRevealed.splice(choice - gameState.trailCardsToBeRevealed.length, 1);
+      this.gameState.catacombCardsToBeRevealed.splice(choice - this.gameState.trailCardsToBeRevealed.length, 1);
     }
   }
 
   /**
    * Chooses which bitten Hunter to influence with Vampiric Influence
-   * @param gameState The state of the Game
    */
-  chooseHunterToInfluence(gameState: Game): Hunter {
+  chooseHunterToInfluence(): Hunter {
     // TODO: Make logical decision
-    const bittenHunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina].filter(hunter => hunter.bites > 0);
+    const bittenHunters = [this.gameState.godalming, this.gameState.seward, this.gameState.vanHelsing, this.gameState.mina].filter(hunter => hunter.bites > 0);
     const choice = Math.floor(Math.random() * bittenHunters.length);
     return bittenHunters[choice];
   }
@@ -952,15 +925,14 @@ export class Dracula {
   /**
    * Decides whether to play Wild horses on a Hunter
    * @param hunters The Hunters entering combat with Dracula
-   * @param gameState The state of the game
    */
-  willPlayWildHorses(hunters: Hunter[], gameState: Game): boolean {
+  willPlayWildHorses(hunters: Hunter[]): boolean {
     // TODO: Make logical decision
     if (!this.eventHand.find(event => event.name == EventName.WildHorses)) {
       return false;
     }
     if (Math.random() < 0.5) {
-      gameState.eventPendingResolution = EventName.WildHorses;
+      this.gameState.eventPendingResolution = EventName.WildHorses;
       this.eventAwaitingApproval = EventName.WildHorses;
       this.potentialTargetHunters = hunters;
       return true;
@@ -970,9 +942,8 @@ export class Dracula {
 
   /**
    * Chooses where to send a Hunter with Wild Horses
-   * @param gameState The state of the Game
    */
-  chooseWildHorsesLocation(gameState: Game): Location {
+  chooseWildHorsesLocation(): Location {
     // TODO: Make logical decision
     const choice = Math.floor(Math.random() * this.potentialTargetHunters[0].currentLocation.roadConnections.length);
     return this.potentialTargetHunters[0].currentLocation.roadConnections[choice];
@@ -981,15 +952,14 @@ export class Dracula {
   /**
    * Calculates a value for a given possible move
    * @param possibleMove The move to evaluate
-   * @param gameState The state of the game
    */
-  evaluateMove(possibleMove: PossibleMove, gameState: Game): number {
+  evaluateMove(possibleMove: PossibleMove): number {
     const location = possibleMove.location || this.currentLocation;
     const distanceToNearestHunter = Math.min(
-      gameState.map.distanceBetweenLocations(location, gameState.godalming.currentLocation),
-      gameState.map.distanceBetweenLocations(location, gameState.seward.currentLocation),
-      gameState.map.distanceBetweenLocations(location, gameState.vanHelsing.currentLocation),
-      gameState.map.distanceBetweenLocations(location, gameState.mina.currentLocation)
+      this.gameState.map.distanceBetweenLocations(location, this.gameState.godalming.currentLocation),
+      this.gameState.map.distanceBetweenLocations(location, this.gameState.seward.currentLocation),
+      this.gameState.map.distanceBetweenLocations(location, this.gameState.vanHelsing.currentLocation),
+      this.gameState.map.distanceBetweenLocations(location, this.gameState.mina.currentLocation)
     );
     return Math.pow(possibleMove.value * distanceToNearestHunter / 3, 1.2);
   }
