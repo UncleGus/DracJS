@@ -1019,6 +1019,12 @@ export class Dracula {
       if (hunters[i].lastUsedCombatItem == items[i]) {
         if (hunters[i].knownItems.find(item => item == items[i]).length < 2) {
           hunters[i].knownItems.push(items[i]);
+          const alreadyPossibleItem = hunters[i].possibleItems.find(possibleItem => possibleItem.item == items[i]);
+          if (alreadyPossibleItem) {
+            const totalCards = hunters[i].items.length - 3;
+            const unknownCards = totalCards - hunters[i].knownItems.length;
+            alreadyPossibleItem.chance *= unknownCards / totalCards;
+          }
         }
       }
     }
