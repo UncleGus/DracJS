@@ -48,7 +48,7 @@ export enum EventName {
   RufusSmith = 'Rufus Smith',
   SecretWeapon = 'Secret Weapon',
   Seduction = 'Seduction',
-  SensationalistPress = 'Sensational Press',
+  SensationalistPress = 'Sensationalist Press',
   SenseofEmergency = 'Sense Of Emergency',
   SisterAgatha = 'Sister Agatha',
   StormySeas = 'Stormy Seas',
@@ -169,7 +169,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
     // case EventName.CustomsSearch:
     //   break;
     case EventName.DevilishPower:
-      gameState.log(gameState.dracula.chooseTargetForDevilishPower(gameState));
+      gameState.log(gameState.dracula.chooseTargetForDevilishPower());
       break;
     // Ally
     // case EventName.DraculasBrides:
@@ -179,7 +179,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
       break;
     case EventName.Evasion:
       gameState.dracula.revealed = false;
-      const evasionDestination = gameState.dracula.chooseEvasionDestination(gameState);
+      const evasionDestination = gameState.dracula.chooseEvasionDestination();
       gameState.dracula.currentLocation = evasionDestination;
       gameState.pushToTrail({ revealed: false, location: evasionDestination, encounter: gameState.dracula.chooseEncounterForTrail() });
       break;
@@ -231,10 +231,8 @@ export function resolveEvent(eventName: string, gameState: Game) {
           }
         }
       });
-      gameState.revealTrailCards();
-      gameState.revealCatacombCards();
       gameState.timePhase = (gameState.timePhase + 1) % 6;
-      gameState.dracula.chooseNextMove(gameState);
+      gameState.dracula.chooseNextMove();
       gameState.timePhase = (gameState.timePhase + 5) % 6;
       gameState.dracula.hypnosisInEffect = true;
       if (!gameState.dracula.nextMove) {
@@ -266,7 +264,6 @@ export function resolveEvent(eventName: string, gameState: Game) {
           }
         }
       }
-      gameState.revealTrailCards();
       break;
     case EventName.MysticResearch:
       gameState.dracula.eventHand.forEach(card => {
@@ -281,16 +278,15 @@ export function resolveEvent(eventName: string, gameState: Game) {
           break;
         }
       }
-      gameState.revealTrailCards();
       break;
     case EventName.NightVisit:
-      gameState.log(gameState.dracula.chooseHunterToNightVisit(gameState));
+      gameState.log(gameState.dracula.chooseHunterToNightVisit());
       break;
     // Ally
     // case EventName.QuinceyPMorris:
     //   break;
     case EventName.Rage:
-      gameState.log(gameState.dracula.chooseRageVictim(gameState));
+      gameState.log(gameState.dracula.chooseRageVictim());
       gameState.rageRounds = 3;
       break;
     case EventName.ReEquip:
@@ -300,7 +296,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
     // case EventName.RelentlessMinion:
     //   break;
     case EventName.Roadblock:
-      gameState.roadBlock = gameState.dracula.chooseRoadBlockTarget(gameState);
+      gameState.roadBlock = gameState.dracula.chooseRoadBlockTarget();
       gameState.log(`Dracula chose to move the Roadblock to the road between ${gameState.roadBlock[0]} and ${gameState.roadBlock[1]}`);
       break;
     // Ally
@@ -325,9 +321,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
       gameState.dracula.discardDownEncounters(gameState.encounterPool);
       break;
     case EventName.SensationalistPress:
-      gameState.dracula.chooseLocationForSensationalistPress(gameState);
-      gameState.revealTrailCards();
-      gameState.revealCatacombCards();
+      gameState.dracula.chooseLocationForSensationalistPress();
       break;
     case EventName.SenseofEmergency:
       gameState.log(`Lose ${6 - gameState.vampireTrack} Health and move to your chosen destination`);
@@ -349,7 +343,6 @@ export function resolveEvent(eventName: string, gameState: Game) {
           gameState.trailCardsToBeRevealed.push(telegraphTrailIndex);
         }
       }
-      gameState.revealTrailCards();
       break;
     case EventName.TimeRunsShort:
       gameState.log('Time marches on...');
@@ -376,11 +369,11 @@ export function resolveEvent(eventName: string, gameState: Game) {
       gameState.resolveEncounter(EncounterName.VampireLair, gameState.hunterWhoPlayedEvent);
       break;
     case EventName.VampiricInfluence:
-      const hunterToInfluence = gameState.dracula.chooseHunterToInfluence(gameState);
+      const hunterToInfluence = gameState.dracula.chooseHunterToInfluence();
       gameState.log(`${hunterToInfluence.name} must show Dracula all event and item cards and declare their next move to Dracula`);
       break;
     case EventName.WildHorses:
-      const wildHorsesLocation = gameState.dracula.chooseWildHorsesLocation(gameState);
+      const wildHorsesLocation = gameState.dracula.chooseWildHorsesLocation();
       gameState.setHunterLocation(gameState.dracula.potentialTargetHunters[0], wildHorsesLocation.name);
       break;
   }

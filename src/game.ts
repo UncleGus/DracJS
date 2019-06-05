@@ -66,6 +66,7 @@ export class Game {
     this.catacombCardsToBeRevealed = [];
     this.stormRounds = 0;
     this.dracula = new Dracula();
+    this.dracula.gameState = this;
     this.godalming = new Hunter(HunterName.godalming, 12);
     this.seward = new Hunter(HunterName.seward, 10);
     this.vanHelsing = new Hunter(HunterName.vanHelsing, 8);
@@ -338,7 +339,7 @@ export class Game {
     }
     const cardDrawn = this.eventDeck.splice(eventIndex, 1)[0];
     hunter.events.push(cardDrawn);
-    if (cardDrawn.type != EventType.Keep) {
+    if (cardDrawn.type !== EventType.Keep) {
       this.playHunterEvent(eventName, hunter);
     } else {
       this.log(`${hunter.name} took event ${eventName}`);
@@ -582,6 +583,7 @@ export class Game {
       this.dracula.revealed = true;
       this.trail[0].revealed = true;
       this.log(this.dracula.chooseNextMove());
+      console.log(this.dracula.nextMove);
     }
 
     let doubleBackTrailIndex: number;
@@ -750,7 +752,7 @@ export class Game {
    * @param eventName The name of the Event
    * @param hunter The Hunter playing the Event
    */
-  playHunterEvent(eventName: string, hunter: Hunter, locationNames: string[] = [], allySelected?: boolean, roadblockSelected?: boolean) {
+  playHunterEvent(eventName: string, hunter: Hunter) {
     let eventIndex = 0;
     for (eventIndex; eventIndex < hunter.events.length; eventIndex++) {
       if (hunter.events[eventIndex].name == eventName) {
@@ -791,7 +793,6 @@ export class Game {
     if (cancelCardPlayedByDracula) {
       // If he did cancel it, then set a Dracula event card for the Hunters to consider cancelling and return
       this.dracula.eventAwaitingApproval = cancelCardPlayedByDracula.name;
-      this.eventPendingResolution = cancelCardPlayedByDracula.name;
       this.log(`Dracula played ${cancelCardPlayedByDracula.name}`);
       return;
     } else {
@@ -803,11 +804,12 @@ export class Game {
         this.eventPendingResolution = null;
         this.dracula.eventAwaitingApproval = null;
         return;
+      } else {
+        // Otherwise the Hunters initiated this and their Event is resolved
+        resolveEvent(this.eventPendingResolution, this);
+        this.eventPendingResolution = null;
+        return;
       }
-      // Otherwise the Hunters initiated this and their Event is resolved
-      resolveEvent(this.eventPendingResolution, this);
-      this.eventPendingResolution = null;
-      return;
     }
   }
 
@@ -846,17 +848,21 @@ export class Game {
    * Resolves an Event played by Dracula that the Hunters have not chosen to cancel
    */
   resolveApprovedEvent() {
-    const eventPlayed = this.eventDiscard.find(event => event.name == this.eventPendingResolution);
-    if (!eventPlayed.draculaCard) {
-      // If the cancellation tug-of-war was initiated by the Hunters, but Dracula played an Event card
-      // pending approval, then it was a cancellation, so by approving it, their original Event is cancelled
+    const originalEventPlayed = this.eventDiscard.find(event => event.name == this.eventPendingResolution);
+    if (this.dracula.eventAwaitingApproval == this.eventPendingResolution) {
+      // Dracula played a card and it was not contested
+      resolveEvent(this.eventPendingResolution, this);
       this.eventPendingResolution = null;
-      return;
+      this.dracula.eventAwaitingApproval = null;
+    } else if (originalEventPlayed.draculaCard) {
+      resolveEvent(this.eventPendingResolution, this);
+      this.eventPendingResolution = null;
+      this.dracula.eventAwaitingApproval = null;
+    } else {
+      // Hunters played the original card, there was a tug-of-war, Dracula prevailed, so the original Event is cancelled
+      this.eventPendingResolution = null;
+      this.dracula.eventAwaitingApproval = null;
     }
-    resolveEvent(this.eventPendingResolution, this);
-
-    this.eventPendingResolution = null;
-    this.dracula.eventAwaitingApproval = null;
   }
 
   /**
@@ -1136,9 +1142,6 @@ export class Game {
         }
       }
     }
-    this.revealTrailCards();
-    this.revealCatacombCards();
-    this.log('Hired Scouts resolved');
   }
 
   /**
@@ -1183,7 +1186,11 @@ export class Game {
    * Reveals cards in Dracula's catacombs by effect of an Event
    */
   revealCatacombCards() {
+    if (this.catacombCardsToBeRevealed.length == 0) {
+      return;
+    }
     if (this.dracula.willPlaySensationalistPress()) {
+      this.log('Dracula played Sensationalist Press to prevent a location from being revealed');
       return;
     }
     this.catacombCardsToBeRevealed.forEach(index => {
@@ -1197,7 +1204,11 @@ export class Game {
    * Reveals cards in Dracula's trail by effect of an Event
    */
   revealTrailCards() {
+    if (this.trailCardsToBeRevealed.length == 0) {
+      return;
+    }
     if (this.dracula.willPlaySensationalistPress()) {
+      this.log('Dracula played Sensationalist Press to prevent a location from being revealed');
       return;
     }
     this.trailCardsToBeRevealed.forEach(index => {

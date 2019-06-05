@@ -26,7 +26,6 @@ export class Dracula {
   lastUsedAttack: string;
   lastAttackedHunter: Hunter;
   repelled: boolean;
-  lastPlayedEvent: string;
   eventAwaitingApproval: string;
   potentialTargetHunters: Hunter[];
   hypnosisInEffect: boolean;
@@ -378,15 +377,6 @@ export class Dracula {
   }
 
   /**
-   * Plays Event of the given name from Dracula's hand
-   * @param eventName The name of the Event to discard
-   */
-  playEvent(eventName: string) {
-    this.lastPlayedEvent = eventName;
-    this.discardEvent(eventName);
-  }
-
-  /**
    * Discards Event of the given name from Dracula's hand
    * @param eventName The name of the Event to discard
    */
@@ -483,23 +473,30 @@ export class Dracula {
     let cardsCleared = 0;
     let encountersCleared = 0;
     let cardIndex = this.gameState.trail.length - 1;
+    console.log(this.gameState.trail);
     while (this.gameState.trail.length > remainingCards) {
-      if ((this.gameState.trail[cardIndex].location !== this.currentLocation)) {
+      console.log(`Looking at index ${cardIndex}`);
+      if (this.gameState.trail[cardIndex].location !== this.currentLocation) {
         const cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
-        cardsCleared++;
         if (cardToClear.location) {
+          console.log(`Removed location card ${cardToClear.location.name}`);
+          cardsCleared++;
         }
         if (cardToClear.power) {
+          console.log(`Removed power card ${cardToClear.power.name}`);
           cardsCleared++;
         }
         if (cardToClear.encounter) {
+          console.log(`Removed encounter ${cardToClear.encounter.name}`);
           encountersCleared++;
           this.gameState.encounterPool.push(cardToClear.encounter);
           this.gameState.shuffleEncounters();
         }
       }
+      console.log(`${this.gameState.trail.length} cards left in trail`);
       cardIndex--;
     }
+    console.log('Done');
     return `Returned ${cardsCleared} cards and ${encountersCleared} encounters`;
   }
 
@@ -620,7 +617,7 @@ export class Dracula {
         const destinations = this.gameState.map.portsWithinRange(hunters[0].currentLocation, 4);
         if (destinations.length > 0) {
           const choice = Math.floor(Math.random() * destinations.length);
-          this.playEvent(EventName.ControlStorms);
+          this.discardEvent(EventName.ControlStorms);
           return destinations[choice];
         }
       }
@@ -663,7 +660,7 @@ export class Dracula {
       return false;
     }
     if (Math.random() < 0.5) {
-      this.playEvent(EventName.CustomsSearch);
+      this.discardEvent(EventName.CustomsSearch);
       this.gameState.eventPendingResolution = EventName.CustomsSearch;
       this.eventAwaitingApproval = EventName.CustomsSearch;
       this.potentialTargetHunters = [hunter];
@@ -679,7 +676,9 @@ export class Dracula {
     // TODO: Make logical decision
     if (this.eventHand.find(event => event.name == EventName.FalseTipoff)) {
       if (Math.random() < 0.25) {
-        this.playEvent(EventName.FalseTipoff);
+        this.discardEvent(EventName.FalseTipoff);
+        this.gameState.eventPendingResolution = EventName.FalseTipoff;
+        this.eventAwaitingApproval = EventName.FalseTipoff;
         return true;
       }
       return false;
@@ -713,7 +712,7 @@ export class Dracula {
     }
     if (Math.random() < 0.2) {
       const choice = Math.floor(Math.random() * potentialEvents.length);
-      this.playEvent(potentialEvents[choice].name);
+      this.discardEvent(potentialEvents[choice].name);
       this.eventAwaitingApproval = potentialEvents[choice].name;
       this.gameState.eventPendingResolution = potentialEvents[choice].name;
       return `Dracula played ${potentialEvents[choice].name}`;
@@ -736,7 +735,6 @@ export class Dracula {
       options.push(`discard the Heavenly Host in ${this.gameState.heavenlyHostLocations[1]}`);
     }
     const choice = Math.floor(Math.random() * options.length);
-    this.lastPlayedEvent = this.eventAwaitingApproval;
     this.eventAwaitingApproval = null;
     return `Dracula played Devilish power to ${options[choice]}`;
   }
@@ -789,7 +787,7 @@ export class Dracula {
       return;
     }
     if (Math.random() < 0.5) {
-      this.playEvent(EventName.Rage);
+      this.discardEvent(EventName.Rage);
       this.eventAwaitingApproval = EventName.Rage;
       this.gameState.eventPendingResolution = EventName.Rage;
       this.potentialTargetHunters = hunters;
@@ -817,7 +815,7 @@ export class Dracula {
       return false;
     } else {
       if (Math.random() < 0.5) {
-        this.playEvent(EventName.RelentlessMinion);
+        this.discardEvent(EventName.RelentlessMinion);
         return true;
       }
     }
@@ -845,7 +843,7 @@ export class Dracula {
       this.eventAwaitingApproval = EventName.Seduction;
       this.gameState.eventPendingResolution = EventName.Seduction;
       this.potentialTargetHunters = hunters;
-      this.playEvent(EventName.Seduction);
+      this.discardEvent(EventName.Seduction);
       return true;
     }
     return false;
@@ -892,7 +890,7 @@ export class Dracula {
       return false;
     }
     if (Math.random() < 0.5) {
-      this.playEvent(EventName.SensationalistPress);
+      this.discardEvent(EventName.SensationalistPress);
       this.eventAwaitingApproval = EventName.SensationalistPress;
       this.gameState.eventPendingResolution = EventName.SensationalistPress;
       return true;

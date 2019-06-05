@@ -63,7 +63,7 @@ const travelButton = document.getElementById('travel');
 // action
 const eventDeck = document.getElementById('eventDeck') as HTMLSelectElement;
 const drawEvent = document.getElementById('drawEvent');
-const rest = document.getElementById('drawEvent');
+const rest = document.getElementById('rest');
 const itemDeck = document.getElementById('itemDeck') as HTMLSelectElement;
 const drawItem = document.getElementById('drawItem');
 const useItem = document.getElementById('useItem');
@@ -462,7 +462,7 @@ discardEvent.addEventListener('click', () => {
 });
 playEvent.addEventListener('click', () => {
   if ((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).selectedIndex > -1) {
-    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter], [hiredScoutsLocation1.value, hiredScoutsLocation2.value], draculaAllySelected, roadBlockSelected);
+    game.playHunterEvent((hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value, hunters[actingHunter]);
     updateAllFields();
   }
 });
@@ -620,6 +620,8 @@ function updateAllFields() {
  * Updates the values in all the fields in the Trail section
  */
 function updateTrail() {
+  game.revealTrailCards();
+  game.revealCatacombCards();
   for (let i = 0; i < 6; i++) {
     if (!game.trail[i]) {
       // no trail card, blank all fields
