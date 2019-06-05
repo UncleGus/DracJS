@@ -993,9 +993,15 @@ export class Dracula {
    * @param hunter The Hunter showing Dracula an Item
    * @param itemName The name of the Item shown
    */
-  updateItemTrackingFromShown(hunter: Hunter, itemName: string) {
+  updateItemTrackingFromShown(hunter: Hunter, itemName: string, offset: number = 0) {
     if (!hunter.knownItems.find(item => item == itemName)) {
       hunter.knownItems.push(itemName);
+      const alreadyPossibleItem = hunter.possibleItems.find(possibleItem => possibleItem.item == itemName);
+      if (alreadyPossibleItem) {
+        const totalCards = hunter.items.length - offset;
+        const unknownCards = totalCards - hunter.knownItems.length;
+        alreadyPossibleItem.chance *= unknownCards / totalCards;
+      }
     }
   }
 
@@ -1009,7 +1015,7 @@ export class Dracula {
       if (items[i] == 'Dodge' || items[i] == 'Punch' || items[i] == 'Escape') {
         continue;
       }
-      this.updateItemTrackingFromShown(hunters[i], items[i]);
+      this.updateItemTrackingFromShown(hunters[i], items[i], -3);
       if (hunters[i].lastUsedCombatItem == items[i]) {
         if (hunters[i].knownItems.find(item => item == items[i]).length < 2) {
           hunters[i].knownItems.push(items[i]);

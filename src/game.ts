@@ -990,7 +990,6 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Rats:
-        // TODO: integrate with Dracula's knowledge of Hunter Items
         if (hunter.groupNumber == 0) {
           this.log(`${hunter.name} must show Dracula a Dogs item or roll four dice, losing one health for each 4-6 rolled`);
         } else {
@@ -1001,7 +1000,6 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Saboteur:
-        // TODO: integrate with Dracula's knowledge of Hunter Items
         if (hunter.groupNumber == 0) {
           this.log(`${hunter.name} must show Dracula a Dogs item or discard one item or event and end the turn`);
         } else {
@@ -1023,7 +1021,6 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Thief:
-        // TODO: integrate with Dracula's knowledge of Hunter Items
         if (hunter.groupNumber == 0) {
           this.log(`${hunter.name} must show Dracula a Dogs item or discard one random item or event of Dracula's choice`);
         } else {
@@ -1034,7 +1031,6 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.NewVampire:
-        // TODO: integrate with Dracula's knowledge of Hunter Items
         if (this.timePhase < 3) {
           if (hunter.groupNumber == 0) {
             this.log(`${hunter.name} found a vampire during the day and killed it`);
