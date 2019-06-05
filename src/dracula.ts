@@ -233,9 +233,9 @@ export class Dracula {
       if (this.hypnosisInEffect) {
         if (this.possibleMoves.find(move => move.catacombToDiscard == this.nextMove.catacombToDiscard
           && move.location == this.nextMove.location && move.power.name == this.nextMove.power.name)) {
-            return 'Dracula is bound by Hypnosis';
-          }
+          return 'Dracula is bound by Hypnosis';
         }
+      }
       this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
@@ -1019,12 +1019,17 @@ export class Dracula {
       toHunter.knownItems.push(fromHunter.knownItems.splice(0, 1)[0]);
     } else {
       // convert each fromHunter known item into a possible item with 100% chance
+      let knownItemTypesProcessed: string[] = [];
       fromHunter.knownItems.forEach(knownItem => {
-        const alreadyPossibleItem = fromHunter.possibleItems.find(possibleItem => possibleItem.item == knownItem);
-        if (alreadyPossibleItem) {
-          alreadyPossibleItem.chance += 1;
-        } else {
-          fromHunter.possibleItems.push({ item: knownItem, chance: 1 });
+        // if we haven't already done this for one known item, since only one can be traded at a time
+        if (!knownItemTypesProcessed.find(item => item == knownItem)) {
+          knownItemTypesProcessed.push(knownItem);
+          const alreadyPossibleItem = fromHunter.possibleItems.find(possibleItem => possibleItem.item == knownItem);
+          if (alreadyPossibleItem) {
+            alreadyPossibleItem.chance += 1;
+          } else {
+            fromHunter.possibleItems.push({ item: knownItem, chance: 1 });
+          }
         }
       });
       // calculate the cardChance as 1 / total cards
