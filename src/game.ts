@@ -1503,6 +1503,16 @@ export class Game {
   }
 
   /**
+   * Shows Dracula an Event in a Hunter's hand
+   * @param hunter The Hunter showing the Event
+   * @param eventName The name of the Event shown
+   */
+  showEventToDracula(hunter: Hunter, eventName: string) {
+    this.dracula.updateEventTrackingFromShown(hunter, eventName);
+  }
+
+
+  /**
    * Shows Dracula an Item in a Hunter's hand
    * @param hunter The Hunter showing the Item
    * @param itemName The name of the Item shown

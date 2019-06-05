@@ -80,6 +80,7 @@ const retrieveEvent = document.getElementById('retrieveEvent');
 const discardEvent = document.getElementById('discardEvent');
 const playEvent = document.getElementById('playEvent');
 const showItem = document.getElementById('showItem');
+const showEvent = document.getElementById('showEvent');
 const approvalButton = document.getElementById('approval');
 const hiredScoutsSelectors = document.getElementById('hiredScoutsSelectors');
 const hiredScoutsLocation1 = document.getElementById('hiredScoutsLocation1') as HTMLSelectElement;
@@ -470,10 +471,14 @@ showItem.addEventListener('click', () => {
   game.showItemToDracula(hunters[actingHunter], (hunterDetails[actingHunter].querySelector('#items') as HTMLSelectElement).value);
   updateLog();
 });
+showEvent.addEventListener('click', () => {
+  game.showEventToDracula(hunters[actingHunter], (hunterDetails[actingHunter].querySelector('#events') as HTMLSelectElement).value);
+  updateLog();
+});
 approvalButton.addEventListener('click', () => {
   if (game.dracula.eventAwaitingApproval) {
     game.resolveApprovedEvent();
-    updateAllFields()
+    updateAllFields();
   }
 });
 sendScouts.addEventListener('click', () => {
@@ -551,6 +556,7 @@ enemyWin.addEventListener('click', () => {
 // markers
 consecratedGround.addEventListener('change', () => {
   game.setConsecratedGround(consecratedGround.value);
+  updateLog();
 });
 heavenlyHost1.addEventListener('change', () => {
   game.setHeavenlyHostLocations(heavenlyHost1.value, heavenlyHost2.value);

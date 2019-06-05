@@ -965,6 +965,17 @@ export class Dracula {
   /**
    * Updates the Items that Dracula knows a Hunter has after they show him one
    * @param hunter The Hunter showing Dracula an Item
+   * @param eventName The name of the Item shown
+   */
+  updateEventTrackingFromShown(hunter: Hunter, eventName: string) {
+    if (!hunter.knownEvents.find(item => item == eventName)) {
+      hunter.knownEvents.push(eventName);
+    }
+  }
+
+  /**
+   * Updates the Items that Dracula knows a Hunter has after they show him one
+   * @param hunter The Hunter showing Dracula an Item
    * @param itemName The name of the Item shown
    */
   updateItemTrackingFromShown(hunter: Hunter, itemName: string, offset: number = 0) {

@@ -371,6 +371,11 @@ export function resolveEvent(eventName: string, gameState: Game) {
     case EventName.VampiricInfluence:
       const hunterToInfluence = gameState.dracula.chooseHunterToInfluence();
       gameState.log(`${hunterToInfluence.name} must show Dracula all event and item cards and declare their next move to Dracula`);
+      hunterToInfluence.knownEvents = [];
+      hunterToInfluence.knownItems = [];
+      hunterToInfluence.possibleItems = [];
+      hunterToInfluence.items.forEach(item => hunterToInfluence.knownItems.push(item.name));
+      hunterToInfluence.events.forEach(event => hunterToInfluence.knownEvents.push(event.name));
       break;
     case EventName.WildHorses:
       const wildHorsesLocation = gameState.dracula.chooseWildHorsesLocation();
