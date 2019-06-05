@@ -92,9 +92,9 @@ export class Dracula {
    */
   chooseStartLocation(gameState: Game): Location {
     const validLocations = gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
-    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState ));
+    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState));
     const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
-    const randomChoice = Math.random()*totalValue;
+    const randomChoice = Math.random() * totalValue;
     let currentValue = 0;
     let index = 0;
     while (currentValue < randomChoice) {
@@ -111,16 +111,16 @@ export class Dracula {
     const validLocations = gameState.map.locations.filter(location =>
       (location.type == LocationType.smallCity || location.type == LocationType.largeCity) && !gameState.trailContains(location)
       && !gameState.hunterIsIn(location));
-      const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState ));
-      const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
-      const randomChoice = Math.random()*totalValue;
-      let currentValue = 0;
-      let index = 0;
-      while (currentValue < randomChoice) {
-        currentValue += distances[index];
-      }
-      return validLocations[index];
+    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }, gameState));
+    const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
+    const randomChoice = Math.random() * totalValue;
+    let currentValue = 0;
+    let index = 0;
+    while (currentValue < randomChoice) {
+      currentValue += distances[index];
     }
+    return validLocations[index];
+  }
 
   /**
    * Decides Dracula's next move based on the current state of the game
@@ -1015,6 +1015,45 @@ export class Dracula {
           hunters[i].knownItems.push(items[i]);
         }
       }
+    }
+  }
+
+  updateItemTrackingFromTrade(fromHunter: Hunter, toHunter: Hunter) {
+    const fromHunterItemCount = fromHunter.items.length + 1;
+    const fromHunterNumberOfKnownItems = fromHunter.knownItems.length;
+    const fromHunterNumberOfDifferentKnownItemTypes = _.uniq(fromHunter.knownItems).length;
+    let fromHunterAllItemsAreTheSame = false;
+
+    if (fromHunterNumberOfKnownItems == fromHunterItemCount && fromHunterNumberOfDifferentKnownItemTypes == 1) {
+      fromHunterAllItemsAreTheSame = true;
+    }
+
+    if (fromHunterAllItemsAreTheSame) {
+      // take one from fromHunter and give it to toHunter
+      toHunter.knownItems.push(fromHunter.knownItems.splice(0, 1)[0]);
+    } else {
+      // convert each fromHunter known item into a possible item with 100% chance
+      fromHunter.knownItems.forEach(knownItem => {
+        const alreadyPossibleItem = fromHunter.possibleItems.find(possibleItem => possibleItem.item == knownItem);
+        if (alreadyPossibleItem) {
+          alreadyPossibleItem.chance += 1;
+        } else {
+          fromHunter.possibleItems.push({ item: knownItem, chance: 1 });
+        }
+      });
+      // calculate the cardChance as 1 / total cards
+      const cardChance = 1 / fromHunterItemCount;
+      // "give" each possible item to toHunter as a possible with cardChance
+      fromHunter.possibleItems.forEach(possItem => {
+        const alreadyPossibleItem = toHunter.possibleItems.find(possibleItem => possibleItem.item == possItem.item);
+        if (alreadyPossibleItem) {
+          alreadyPossibleItem.chance += possItem.chance * cardChance;
+        } else {
+          toHunter.possibleItems.push({ item: possItem.item, chance: possItem.chance * cardChance });
+        }
+        // update each fromHunter possible card with remaining percentage
+        possItem.chance /= cardChance;
+      });
     }
   }
 }
