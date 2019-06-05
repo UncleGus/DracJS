@@ -49,6 +49,7 @@ export class Game {
   unearthlySwiftnessInEffect: boolean;
   vampireLairInEffect: boolean;
   opponent: string;
+  fromHunter: Hunter;
 
   constructor() {
     // construct game components
@@ -1536,6 +1537,7 @@ export class Game {
       }
     }
     this.itemInTrade = hunter.items.splice(itemIndex, 1)[0];
+    this.fromHunter = hunter;
     this.log(`${hunter.name} gave away item ${itemName}`);
   }
 
@@ -1547,6 +1549,7 @@ export class Game {
     hunter.items.push(this.itemInTrade);
     this.log(`${hunter.name} received item ${this.itemInTrade.name}`);
     this.itemInTrade = null;
+    this.dracula.updateItemTrackingFromTrade(this.fromHunter, hunter);
   }
 
   /**
