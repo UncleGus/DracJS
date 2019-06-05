@@ -230,14 +230,14 @@ export class Dracula {
           break;
       }
     });
-    this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
     if (this.possibleMoves.length > 0) {
       if (this.hypnosisInEffect) {
         if (this.possibleMoves.find(move => move.catacombToDiscard == this.nextMove.catacombToDiscard
           && move.location == this.nextMove.location && move.power.name == this.nextMove.power.name)) {
-          return 'Dracula is bound by Hypnosis';
+            return 'Dracula is bound by Hypnosis';
+          }
         }
-      }
+      this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
       let index = 0;
