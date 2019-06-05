@@ -4,6 +4,7 @@ import { Game } from "./game";
 import { Encounter, EncounterName } from "./encounter";
 import { Event, EventName } from "./event";
 import { Hunter } from "./hunter";
+import { ItemName } from './item';
 
 export class Dracula {
   blood: number;
@@ -788,8 +789,13 @@ export class Dracula {
   chooseVictimForQuincey(gameState: Game): string {
     // TODO: Make logical decision, integrate with Dracula's knowledge of Hunters' cards
     const hunters = [gameState.godalming, gameState.seward, gameState.vanHelsing, gameState.mina];
-    const choice = Math.floor(Math.random() * 4);
-    return `Quincey has targeted ${hunters[choice].name}, who must show Dracula a Heavenly Host or Crucifix or suffer 1 health loss`;
+    const huntersWithoutGuaranteedProtection = hunters.filter(hunter => !hunter.knownItems.find(item => item == ItemName.Crucifix) && !hunter.knownItems.find(item => item == ItemName.HeavenlyHost));
+    if (huntersWithoutGuaranteedProtection.length == 0) {
+      const choice = Math.floor(Math.random() * 4);
+      return `Quincey has targeted ${hunters[choice].name}, who must show Dracula a Heavenly Host or Crucifix or suffer 1 health loss`;
+    }
+    const choice = Math.floor(Math.random() * huntersWithoutGuaranteedProtection.length);
+    return `Quincey has targeted ${huntersWithoutGuaranteedProtection[choice].name}, who must show Dracula a Heavenly Host or Crucifix or suffer 1 health loss`;
   }
 
   /**
@@ -1067,6 +1073,28 @@ export class Dracula {
         possItem.chance /= cardChance;
       });
     }
+  }
+
+  /**
+   * Updates Dracula's tracking of known Hunter Items after a Hunter discards one
+   * @param hunter The Hunter discarding the Item
+   * @param itemName The Item discarded
+   */
+  updateItemTrackingFromDiscard(hunter: Hunter, itemName: string) {
+    let itemIndex = 0;
+    for (itemIndex; itemIndex < hunter.knownItems.length; itemIndex++) {
+      if (hunter.knownItems[itemIndex] == itemName) {
+        break;
+      }
+    }
+    if (itemIndex < hunter.knownItems.length) {
+      hunter.knownItems.splice(itemIndex, 1);
+    }
+    const totalItems = hunter.items.length - (hunter.inCombat ? 3 : 0);
+    const unaccountedItems = totalItems - hunter.knownItems.length;
+    hunter.possibleItems.forEach(possItem => {
+      possItem.chance *= unaccountedItems / totalItems;
+    });
   }
 }
 

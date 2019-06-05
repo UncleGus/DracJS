@@ -222,6 +222,7 @@ export class Game {
     }
     this.itemDiscard.push(hunter.items.splice(itemIndex, 1)[0]);
     this.log(`${hunter.name} discarded item ${itemName}`);
+    this.dracula.updateItemTrackingFromDiscard(hunter, itemName);
   }
 
   /**
@@ -1598,6 +1599,7 @@ export class Game {
     switch (itemName) {
       case ItemName.Dogs:
         this.log(`${hunter.name} has placed Dogs face up`);
+        this.dracula.updateItemTrackingFromShown(hunter, itemName);
         break;
       case ItemName.FastHorse:
         hunter.usingFastHorse = true;
