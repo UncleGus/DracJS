@@ -87,9 +87,16 @@ export class Game {
   applyEnemyAttackSuccess() {
     const outcome = getEnemySuccessCombatOutcome(this.dracula.lastAttackedHunter.lastUsedCombatItem, this.dracula.lastUsedAttack);
     this.dracula.repelled = false;
+    let continued = false;
     outcome.forEach(effect => {
       this.handleCombatEffect(effect, this.dracula.lastAttackedHunter);
+      if (effect == CombatOutcome.Continue) {
+        continued = true;
+      }
     });
+    if (!continued) {
+      this.roundsContinued = 0;
+    }
   }
 
   /**
@@ -99,9 +106,16 @@ export class Game {
   applyHunterAttackSuccess(itemName: string) {
     const outcome = getHunterSuccessCombatOutcome(itemName, this.dracula.lastUsedAttack);
     this.dracula.repelled = false;
+    let continued = false;
     outcome.forEach(effect => {
-      this.handleCombatEffect(effect);
+      this.handleCombatEffect(effect, this.dracula.lastAttackedHunter);
+      if (effect == CombatOutcome.Continue) {
+        continued = true;
+      }
     });
+    if (!continued) {
+      this.roundsContinued = 0;
+    }
   }
 
   /**
@@ -182,13 +196,13 @@ export class Game {
    * @param eventName The Event to discard
    */
   discardEventFromRest(eventName: string) {
-    let draculaEventIndex = 0;
-    for (draculaEventIndex; draculaEventIndex < this.eventDeck.length; draculaEventIndex++) {
-      if (this.eventDeck[draculaEventIndex].draculaCard) {
+    let eventIndex = 0;
+    for (eventIndex; eventIndex < this.eventDeck.length; eventIndex++) {
+      if (this.eventDeck[eventIndex].name == eventName) {
         break;
       }
     }
-    const eventCardDrawn = this.eventDeck.splice(draculaEventIndex, 1)[0];
+    const eventCardDrawn = this.eventDeck.splice(eventIndex, 1)[0];
     this.eventDiscard.push(eventCardDrawn);
     this.log(`${eventCardDrawn.name} discarded`);
   }
@@ -430,6 +444,7 @@ export class Game {
           this.seward.inCombat = false;
           this.vanHelsing.inCombat = false;
           this.mina.inCombat = false;
+          this.opponent = null;
           if (this.dracula.willPlayRelentlessMinion()) {
             this.log('Dracula played Relentless Minion');
             this.log('Resolve another combat with the same minion');
@@ -444,6 +459,7 @@ export class Game {
         this.seward.inCombat = false;
         this.vanHelsing.inCombat = false;
         this.mina.inCombat = false;
+        this.opponent = null;
         if (this.dracula.willPlayRelentlessMinion()) {
           this.log('Dracula played Relentless Minion');
           this.log('Resolve another combat with the same minion');
@@ -1215,10 +1231,6 @@ export class Game {
       this.trail[index].revealed = true;
       if (this.trail[index].location) {
         this.log(`${this.trail[index].location.name} is revealed`);
-        if (this.trail[index].location == this.dracula.currentLocation) {
-          this.log(`Dracula is revealed at ${this.trail[index].location.name}`);
-          this.dracula.revealed == true;
-        }
       } else if (this.trail[index].power) {
         this.log(`${this.trail[index].power.name} is revealed`);
       }
@@ -1599,6 +1611,18 @@ export class Game {
     }
     this.log(this.dracula.discardDownEncounters(this.encounterPool));
     this.log(this.dracula.discardDownEvents(this.eventDiscard));
+  }
+
+  /**
+   * Updates Dracula's revealed status based on the status of the card in the first trail slot
+   */
+  updateDraculaRevealed() {
+    if (this.trail[0]) {
+      if (this.trail[0].revealed && !this.dracula.revealed) {
+        this.dracula.revealed = true;
+        this.log(`Dracula is revealed at ${this.dracula.currentLocation.name}`);
+      }
+    }
   }
 
   /**

@@ -698,6 +698,7 @@ function updateCatacombs() {
  * Updates the values in the fields in the Dracula's Details section
  */
 function updateDracula() {
+  game.updateDraculaRevealed();
   draculaBlood.value = game.dracula.blood.toString();
   draculaLocation.value = game.dracula.revealed ? game.dracula.currentLocation.name : 'Hidden';
   draculaAlly.value = game.draculaAlly ? game.draculaAlly.name : '';
@@ -841,6 +842,16 @@ function updateEncounters() {
  * Updates the visibility of combat buttons
  */
 function updateCombat() {
+  if (!game.opponent) {
+    opponent.selectedIndex = 0;
+  } else {
+    for (let i = 1; i < opponent.options.length; i++) {
+      if (opponent.options[i].text == game.opponent) {
+        opponent.selectedIndex = i;
+        break;
+      }
+    }
+  }
   if (opponent.value == 'None') {
     fight.style.setProperty('visibility', 'hidden');
     hunterWin.style.setProperty('visibility', 'hidden');

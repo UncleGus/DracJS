@@ -593,7 +593,7 @@ export class Dracula {
     const targetChoice = Math.floor(Math.random() * hunters.length);
     this.lastUsedAttack = allowedAttacks[attackChoice];
     this.lastAttackedHunter = hunters[targetChoice];
-    return `Dracula chose ${allowedAttacks[attackChoice]} against ${hunters[targetChoice]}`;
+    return `Dracula chose ${allowedAttacks[attackChoice]} against ${hunters[targetChoice].name}`;
   }
 
   /**
