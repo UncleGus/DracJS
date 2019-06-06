@@ -580,8 +580,8 @@ export class Game {
       }
     }
 
-    if (this.dracula.droppedOffEncounter) {
-      this.log(this.dracula.decideFateOfDroppedOffEncounter());
+    if (this.dracula.droppedOffEncounters) {
+      this.log(this.dracula.decideFateOfDroppedOffEncounters());
     }
 
     // Refill encounter hand

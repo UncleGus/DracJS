@@ -14,7 +14,7 @@ export class Dracula {
   encounterHandSize: number;
   eventHand: Event[];
   eventHandSize: number;
-  droppedOffEncounter: Encounter;
+  droppedOffEncounters: Encounter[];
   ambushEncounter: Encounter;
   ambushHunter: Hunter;
   seaBloodPaid: boolean;
@@ -37,6 +37,7 @@ export class Dracula {
     this.encounterHandSize = 5;
     this.encounterHand = [];
     this.eventHand = [];
+    this.droppedOffEncounters = [];
     this.eventHandSize = 4;
     this.seaBloodPaid = false;
     this.powers = [
@@ -433,7 +434,7 @@ export class Dracula {
         delete droppedOffCard.power;
         return 'Dracula moved the card to the catacombs with an additional encounter on it'
       } else {
-        this.droppedOffEncounter = droppedOffCard.encounter;
+        this.droppedOffEncounters.push(droppedOffCard.encounter);
       }
     }
     return 'Dracula returned the dropped off card to the Location deck';
@@ -501,36 +502,40 @@ export class Dracula {
   }
 
   /**
-   * Decides what to do with an Encounter that has dropped off the end of the trail
+   * Decides what to do with Encounters that have dropped off the end of the trail
    */
-  decideFateOfDroppedOffEncounter(): string {
+  decideFateOfDroppedOffEncounters(): string {
     // TODO: Make logical decision
-    let logMessage = 'Dracula returned the dropped off encounter to the encounter pool';
-    switch (this.droppedOffEncounter.name) {
-      case EncounterName.Ambush:
-        if (this.willMatureAmbush()) {
-          this.chooseAmbushEncounter();
-          if (this.ambushEncounter) {
-            logMessage = `Dracula matured Ambush and played ${this.ambushEncounter.name} on ${this.ambushHunter.name}`;
+    let logMessage = '';
+    this.droppedOffEncounters.forEach(encounter => {
+      switch (encounter.name) {
+        case EncounterName.Ambush:
+          if (this.willMatureAmbush()) {
+            this.chooseAmbushEncounter();
+            if (this.ambushEncounter) {
+              logMessage += `Dracula matured Ambush and played ${this.ambushEncounter.name} on ${this.ambushHunter.name}`;
+              this.clearTrail(3);
+            }
+          }
+          break;
+        case EncounterName.DesecratedSoil:
+          if (this.willMatureDesecratedSoil()) {
+            logMessage += 'Dracula matured Desecrated soil. Draw event cards, discarding Hunter events until two Dracula event cards have been drawn.';
             this.clearTrail(3);
           }
-        }
-        break;
-      case EncounterName.DesecratedSoil:
-        if (this.willMatureDesecratedSoil()) {
-          logMessage = 'Dracula matured Desecrated soil. Draw event cards, discarding Hunter events until two Dracula event cards have been drawn.';
-          this.clearTrail(3);
-        }
-        break;
-      case EncounterName.NewVampire:
-        logMessage = 'Dracula matured New Vampire';
-        this.gameState.setVampireTrack(this.gameState.vampireTrack + 2);
-        this.clearTrail(1);
-        break;
-    }
-    this.gameState.encounterPool.push(this.droppedOffEncounter);
+          break;
+        case EncounterName.NewVampire:
+          logMessage += 'Dracula matured New Vampire';
+          this.gameState.setVampireTrack(this.gameState.vampireTrack + 2);
+          this.clearTrail(1);
+          break;
+        default:
+          logMessage += 'Dracula returned the dropped off encounter to the encounter pool';
+      }
+      this.gameState.encounterPool.push(encounter);
+    });
+    this.droppedOffEncounters = [];
     this.gameState.log(this.gameState.shuffleEncounters());
-    this.droppedOffEncounter = null;
     return logMessage;
   }
 

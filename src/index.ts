@@ -276,6 +276,10 @@ draculaTurnButton.addEventListener('click', () => {
       }
       draculaTurnButton.textContent = 'Perform Action phase';
       game.performDraculaMovementPhase();
+      if (game.unearthlySwiftnessInEffect) {
+        game.log(game.dracula.chooseNextMove());
+        game.performDraculaMovementPhase();
+      }
       updateAllFields();
       break;
     case 'Perform Action phase':
