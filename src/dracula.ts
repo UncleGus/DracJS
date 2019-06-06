@@ -85,6 +85,7 @@ export class Dracula {
    */
   setLocation(newLocation: Location): string {
     this.currentLocation = newLocation;
+    this.gameState.logVerbose(`Dracula moved to ${this.currentLocation.name}`);
     return this.revealed ? `Dracula moved to ${this.currentLocation.name}` : 'Dracula moved to a hidden location';
   }
 
@@ -327,21 +328,21 @@ export class Dracula {
    */
   executeDarkCall(): string {
     this.encounterHandSize += 10;
-    this.gameState.log(this.drawUpEncounters(this.gameState.encounterPool));
+    this.gameState.log(this.drawUpEncounters());
     this.encounterHandSize -= 10;
-    this.gameState.log(this.discardDownEncounters(this.gameState.encounterPool));
+    this.gameState.log(this.discardDownEncounters());
     this.gameState.log(this.gameState.shuffleEncounters());
     return 'Dracula has chosen his encounters';
   }
 
   /**
    * Draws Encounters up to Dracula's hand limit
-   * @param encounterPool The pool of Encounters from which to draw
    */
-  drawUpEncounters(encounterPool: Encounter[]): string {
+  drawUpEncounters(): string {
     let drawCount = 0;
     while (this.encounterHand.length < this.encounterHandSize) {
-      this.encounterHand.push(encounterPool.pop());
+      this.encounterHand.push(this.gameState.encounterPool.pop());
+      this.gameState.logVerbose(`Dracula drew Encounter ${this.encounterHand[this.encounterHand.length -1].name}`);
       drawCount++;
     }
     return drawCount > 0 ? `Dracula drew ${drawCount} encounter${drawCount > 1 ? 's' : ''}` : '';
@@ -349,14 +350,14 @@ export class Dracula {
 
   /**
    * Discards Encounters down to Dracula's hand limit
-   * @param encounters The pool of Encounter to which to discard
    */
-  discardDownEncounters(encounters: Encounter[]): string {
+  discardDownEncounters(): string {
     // TODO: Make logical decision
     let discardCount = 0;
     while (this.encounterHand.length > this.encounterHandSize) {
       const choice = Math.floor(Math.random() * this.encounterHand.length);
-      encounters.push(this.encounterHand.splice(choice, 1)[0]);
+      this.gameState.encounterPool.push(this.encounterHand.splice(choice, 1)[0]);
+      this.gameState.logVerbose(`Dracula discarded ${this.gameState.encounterPool[this.gameState.encounterPool.length -1].name}`);
       discardCount++;
     }
     return discardCount > 0 ? `Dracula discarded ${discardCount} encounter${discardCount > 1 ? 's' : ''}` : '';
@@ -364,14 +365,14 @@ export class Dracula {
 
   /**
    * Discards Events down to Dracula's hand limit
-   * @param events The pool of Events to which to discard
    */
-  discardDownEvents(events: Event[]): string {
+  discardDownEvents(): string {
     // TODO: Make logical decision
     let discardCount = 0;
     while (this.eventHand.length > this.eventHandSize) {
       const choice = Math.floor(Math.random() * this.eventHand.length);
-      events.push(this.eventHand.splice(choice, 1)[0]);
+      this.gameState.eventDiscard.push(this.eventHand.splice(choice, 1)[0]);
+      this.gameState.logVerbose(`Dracula discarded ${this.gameState.eventDiscard[this.gameState.eventDiscard.length -1].name}`);
       discardCount++;
     }
     return discardCount > 0 ? `Dracula discarded ${discardCount} event${discardCount > 1 ? 's' : ''}` : '';
@@ -392,6 +393,7 @@ export class Dracula {
       return;
     }
     this.gameState.eventDiscard.push(this.eventHand.splice(eventIndex, 1)[0]);
+    this.gameState.logVerbose(`Dracula discarded ${this.gameState.eventDiscard[this.gameState.eventDiscard.length -1].name}`);
   }
 
   /**
@@ -410,15 +412,17 @@ export class Dracula {
     }
     if (Math.floor(Math.random()) < 0.5) {
       this.gameState.encounterPool.push(card.encounter);
+      this.gameState.logVerbose(`Dracula discarded ${card.encounter.name} and kept ${card.catacombEncounter.name}`);
       card.encounter = card.catacombEncounter;
       delete card.catacombEncounter;
       this.gameState.shuffleEncounters();
     } else {
       this.gameState.encounterPool.push(card.catacombEncounter);
+      this.gameState.logVerbose(`Dracula discarded ${card.catacombEncounter.name} and kept ${card.encounter.name}`);
       delete card.catacombEncounter;
       this.gameState.shuffleEncounters();
     }
-    return 'Dracula kept the one encounter from the catacomb card and discarded the other';
+    return 'Dracula kept one encounter from the catacomb card and discarded the other';
   }
 
   /**
@@ -430,12 +434,14 @@ export class Dracula {
     if (droppedOffCard.location) {
       if (Math.random() < 0.2 && this.gameState.catacombs.length < 3 && droppedOffCard.location.type !== LocationType.sea) {
         droppedOffCard.catacombEncounter = this.chooseEncounterForCatacombs();
+        this.gameState.logVerbose(`Dracula moved Location ${droppedOffCard.location.name} to the catacmobs and placed ${droppedOffCard.catacombEncounter.name} on it`);
         this.gameState.catacombs.push(droppedOffCard);
         delete droppedOffCard.power;
         return 'Dracula moved the card to the catacombs with an additional encounter on it'
       } else {
         this.droppedOffEncounters.push(droppedOffCard.encounter);
       }
+      this.gameState.logVerbose(`${droppedOffCard.location.name} returned to the Location deck`);
     }
     return 'Dracula returned the dropped off card to the Location deck';
   }
@@ -957,6 +963,20 @@ export class Dracula {
    * @param possibleMove The move to evaluate
    */
   evaluateMove(possibleMove: PossibleMove): number {
+    // things to consider
+    // if the trail is all unknown, it is best to stay hidden
+    // moving to sea is bad
+    // fighting a Hunter is okay if they don't have good gear, but staying hidden is more valuable
+    // clearing the trail doesn't mean that the Hunters won't remember any revealed cards that were there
+    // using powers costs blood
+    // double back is good for keeping a trail short, like after a Vampire is matured or at the start of the game
+    // but shouldn't be used if there's a Vampire about to drop off the trail
+    // Hunters with no gear will favour large cities, so smaller cities are best for avoiding them
+    // cities with more road connections make the trail harder to predict
+    // cities with rail connections are easier to get to quicker, which is particularly bad when Dracula's whereabouts is known
+    // Feed and Hide are brilliant for staying put, which is especially good when the trail is cold
+    // if a Hunter's next move is known, it should be considered here
+
     const location = possibleMove.location || this.currentLocation;
     const distanceToNearestHunter = Math.min(
       this.gameState.map.distanceBetweenLocations(location, this.gameState.godalming.currentLocation),

@@ -112,6 +112,7 @@ const heavenlyHost2 = document.getElementById('heavenlyHost2') as HTMLSelectElem
 
 // miscellaneous
 const logBox = document.getElementById('logBox') as HTMLInputElement;
+const debugLogButton = document.getElementById('debugLog');
 const debugGameStateButton = document.getElementById('debugGameState');
 
 // variables
@@ -548,6 +549,14 @@ console.log('Wiring up debug button');
 debugGameStateButton.addEventListener('click', () => {
   console.log(game);
 });
+debugLogButton.addEventListener('click', () => {
+  if (debugLogButton.textContent == 'Show full log') {
+    debugLogButton.textContent = 'Show normal log';
+  } else {
+    debugLogButton.textContent = 'Show full log';
+  }
+  updateLog();
+});
 
 // set fields to game start state
 [consecratedGround, heavenlyHost1, heavenlyHost2].forEach(locationSelector => {
@@ -959,7 +968,11 @@ function updateMarkers() {
  * Updates the log field
  */
 function updateLog() {
-  logBox.value = game.logText;
+  if (debugLogButton.textContent == 'Show normal log') {
+    logBox.value = game.logVerboseText;
+  } else {
+    logBox.value = game.logText;
+  }  
   logBox.scrollTop = logBox.scrollHeight;
 }
 

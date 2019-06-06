@@ -25,6 +25,7 @@ export class Game {
   vanHelsing: Hunter;
   mina: Hunter;
   logText: string;
+  logVerboseText: string;
   timePhase: number;
   vampireTrack: number;
   resolveTrack: number;
@@ -324,7 +325,8 @@ export class Game {
     if (eventCardDrawn.type == EventType.Keep) {
       this.dracula.eventHand.push(eventCardDrawn);
       this.log('Keep event card given to Dracula');
-      this.log(this.dracula.discardDownEvents(this.eventDiscard));
+      this.logVerbose(`Dracula drew ${eventCardDrawn.name}`);
+      this.log(this.dracula.discardDownEvents());
     } else {
       this.log(`Dracula drew ${eventCardDrawn.name}`);
       if (eventCardDrawn.type == EventType.Ally) {
@@ -526,9 +528,10 @@ export class Game {
    */
   initialiseGameState() {
     this.logText = 'INITIALISING GAME STATE';
+    this.logVerboseText = 'INITIALISING GAME STATE';
     this.log(this.map.verifyMapData());
     this.log(this.shuffleEncounters());
-    this.log(this.dracula.drawUpEncounters(this.encounterPool));
+    this.log(this.dracula.drawUpEncounters());
     this.log(this.shuffleEvents());
     this.timePhase = -1;
     this.vampireTrack = 0;
@@ -543,6 +546,15 @@ export class Game {
    */
   log(message: string) {
     this.logText += message ? `\n${message}` : '';
+    this.logVerboseText += message ? `\n${message}` : '';
+  }
+
+  /**
+   * Adds a message to the verbose log, which gives a full account of the game
+   * @param message the message to display
+   */
+  logVerbose(message: string) {
+    this.logVerboseText += message ? `\n${message}` : '';
   }
 
   /**
@@ -587,6 +599,7 @@ export class Game {
       if (canPlaceEncounter) {
         this.trail[0].encounter = this.dracula.chooseEncounterForTrail();
         this.log('Dracula placed an encounter');
+        this.logVerbose(`Dracula placed Encounter ${this.trail[0].encounter.name}`);
       }
     }
 
@@ -595,7 +608,7 @@ export class Game {
     }
 
     // Refill encounter hand
-    this.log(this.dracula.drawUpEncounters(this.encounterPool));
+    this.log(this.dracula.drawUpEncounters());
   }
 
   /**
@@ -609,7 +622,6 @@ export class Game {
       this.dracula.revealed = true;
       this.trail[0].revealed = true;
       this.log(this.dracula.chooseNextMove());
-      console.log(this.dracula.nextMove);
     }
 
     let doubleBackTrailIndex: number;
@@ -661,6 +673,7 @@ export class Game {
             this.dracula.revealed = true;
           } else {
             this.log('Dracula moved to a hidden location');
+            this.logVerbose('Dracula actually played power Hide');
             this.dracula.revealed = false;
           }
           break;
@@ -669,6 +682,7 @@ export class Game {
           break;
         case PowerName.WolfFormAndHide:
           this.log('Dracula played power Wolf Form');
+          this.logVerbose('Dracula played Wolf Form and Hide');
           break;
       }
       if (this.dracula.nextMove.power.cost !== 0) {
@@ -948,9 +962,9 @@ export class Game {
         break;
       case EncounterName.Ambush:
         this.dracula.encounterHandSize += 1;
-        this.log(this.dracula.drawUpEncounters(this.encounterPool));
+        this.log(this.dracula.drawUpEncounters());
         this.dracula.encounterHandSize -= 1;
-        this.log(this.dracula.discardDownEncounters(this.encounterPool));
+        this.log(this.dracula.discardDownEncounters());
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);
@@ -1141,6 +1155,7 @@ export class Game {
         this.dracula.revealed = false;
         this.log('Dracula escaped in the form of a Bat');
       }
+      this.logVerbose(`Dracula escaped to ${this.dracula.currentLocation.name}`);
     }
   }
 
@@ -1149,6 +1164,7 @@ export class Game {
    * @param locationNames The names of the Locations to query
    */
   resolveHiredScouts(locationNames: string[]) {
+    this.log(`Hired Scouts sent to ${locationNames[0]} and ${locationNames[1]}`);
     this.hiredScoutsInEffect = false;
     this.eventPendingResolution = null;
     let trailIndex = 0;
@@ -1423,6 +1439,7 @@ export class Game {
    * @param stormLocation The Location where Stormy Seas will take effect
    */
   setStormLocation(stormLocation: string) {
+    this.log(`Stormy Seas in ${stormLocation}`);
     this.stormLocation = this.map.locations.find(location => location.name == stormLocation);
     this.stormRounds = 3;
     this.eventPendingResolution = null;
@@ -1433,7 +1450,7 @@ export class Game {
    * @param opponentName The name of the opponent fighting the Hunter
    * @param hunter The Hunter fighting the opponent
    */
-  setUpCombat(opponentName: string, hunter: Hunter) {
+  setUpCombat(opponentName: string, hunter: Hunter) {    
     if (opponentName == 'None') {
       this.opponent = null;
       this.huntersInGroup(hunter).forEach(companion => {
@@ -1441,6 +1458,7 @@ export class Game {
         companion.inCombat = false;
       });
     } else {
+      this.log(`Entering combat with ${opponentName}`);
       this.opponent = opponentName;
       switch (opponentName) {
         case EncounterName.Assassin:
@@ -1627,7 +1645,7 @@ export class Game {
       case EventName.DraculasBrides:
         this.dracula.encounterHandSize = 7;
         this.log('Dracula\'s encounter hand size is 7')
-        this.log(this.dracula.drawUpEncounters(this.encounterPool));
+        this.log(this.dracula.drawUpEncounters());
         break;
       case EventName.ImmanuelHildesheim:
         this.dracula.eventHandSize = 6;
@@ -1637,8 +1655,8 @@ export class Game {
         this.log('Dracula can target one Hunter each turn for 1 Health loss');
         break;      
     }
-    this.log(this.dracula.discardDownEncounters(this.encounterPool));
-    this.log(this.dracula.discardDownEvents(this.eventDiscard));
+    this.log(this.dracula.discardDownEncounters());
+    this.log(this.dracula.discardDownEvents());
   }
 
   /**
