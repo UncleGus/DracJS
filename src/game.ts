@@ -1042,7 +1042,6 @@ export class Game {
         this.log(`${encounterName} resolved`);
         break;
       case EncounterName.Spy:
-        // TODO: integrate with Dracula's knowledge of Hunter's next move
         if (hunter.groupNumber == 0) {
           this.log(`${hunter.name} must show Dracula all items and events and declare next move`);
         } else {
