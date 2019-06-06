@@ -89,6 +89,8 @@ const stormySeasSelectors = document.getElementById('stormySeasSelectors');
 const sendScouts = document.getElementById('sendScouts');
 const stormySeasLocation = document.getElementById('stormySeasLocation') as HTMLSelectElement;
 const sendStorm = document.getElementById('sendStorm');
+const discardDraculaAllyButton = document.getElementById('discardDraculaAlly');
+const discardRoadblockButton = document.getElementById('discardRoadblock');
 
 // encounters
 const resolveEncounter = document.getElementById('resolveEncounter');
@@ -118,7 +120,6 @@ const hunterDetails = [godalming, seward, vanHelsing, mina];
 const timePhaseDescriptions = ['Dawn', 'Noon', 'Dusk', 'Twilight', 'Midnight', 'Small Hours'];
 let draculaSelected = false;
 let draculaAllySelected = false;
-let roadBlockSelected = false;
 let selectedEncounterName = '';
 let actingHunter = 0;
 
@@ -133,7 +134,6 @@ for (let i = 0; i < 6; i++) {
     game.selectedCatacombEncounterB = -1;
     draculaSelected = false;
     draculaAllySelected = false;
-    roadBlockSelected = false;
     game.selectedAmbushEncounter = false;
     selectedEncounterName = trailEncounter[i].value;
     updateSelectedEncounter();
@@ -149,7 +149,6 @@ for (let i = 0; i < 3; i++) {
     game.selectedCatacombEncounterB = -1;
     draculaSelected = false;
     draculaAllySelected = false;
-    roadBlockSelected = false;
     game.selectedAmbushEncounter = false;
     selectedEncounterName = catacombEncounterA[i].value;
     updateSelectedEncounter();
@@ -173,7 +172,6 @@ dracula.addEventListener('click', () => {
   game.selectedCatacombEncounterB = -1;
   draculaSelected = true;
   draculaAllySelected = false;
-  roadBlockSelected = false;
   game.selectedAmbushEncounter = false;
   selectedEncounterName = EncounterName.Dracula;
   updateSelectedEncounter();
@@ -189,7 +187,6 @@ draculaAlly.addEventListener('click', () => {
   game.selectedCatacombEncounterB = -1;
   draculaSelected = false;
   draculaAllySelected = true;
-  roadBlockSelected = false;
   game.selectedAmbushEncounter = false;
   selectedEncounterName = '';
   updateSelectedEncounter();
@@ -488,6 +485,14 @@ sendScouts.addEventListener('click', () => {
 sendStorm.addEventListener('click', () => {
   game.setStormLocation(stormySeasLocation.value);
 });
+discardDraculaAllyButton.addEventListener('click', () => {
+  game.discardDraculaAlly();
+  game.goodLuckInEffect = false;
+});
+discardRoadblockButton.addEventListener('click', () => {
+  game.roadBlock = [];
+  game.goodLuckInEffect = false;
+});
 
 // encounters
 console.log('Wiring up encounters');
@@ -505,7 +510,6 @@ ambushEncounter.addEventListener('click', () => {
   game.selectedCatacombEncounterB = -1;
   draculaSelected = false;
   draculaAllySelected = false;
-  roadBlockSelected = false;
   game.selectedAmbushEncounter = true;
   selectedEncounterName = ambushEncounter.value;
   updateSelectedEncounter();
@@ -830,6 +834,24 @@ function updateEvents() {
     }
   } else {
     approvalButton.style.setProperty('visibility', 'hidden');
+  }
+  if (game.goodLuckInEffect) {
+    if (game.draculaAlly && game.roadBlock.length == 2) {
+      discardDraculaAllyButton.style.setProperty('visibility', 'visible');
+      discardRoadblockButton.style.setProperty('visibility', 'visible');
+    } else {
+      discardDraculaAllyButton.style.setProperty('visibility', 'visible');
+      discardRoadblockButton.style.setProperty('visibility', 'visible');
+      if (game.draculaAlly) {
+        game.discardDraculaAlly();
+        game.goodLuckInEffect = false;
+        updateAllFields();
+      } else if (game.roadBlock.length == 2) {
+        game.roadBlock = [];
+        game.goodLuckInEffect = false;
+        updateAllFields();
+      }
+    }
   }
 }
 
