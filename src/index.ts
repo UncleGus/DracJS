@@ -896,7 +896,7 @@ function updateCombat() {
  */
 function updateMarkers() {
   consecratedGround.value = game.consecratedLocation ? game.consecratedLocation.name : '';
-  roadblock.value = game.roadBlock.length > 0 ? `${game.roadBlock[0]} <==> ${game.roadBlock[1]}` : '';
+  roadblock.value = game.roadBlock.length > 0 ? `${game.roadBlock[0].name} <==> ${game.roadBlock[1].name}` : '';
 }
 
 /**

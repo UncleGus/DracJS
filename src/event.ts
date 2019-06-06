@@ -297,7 +297,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
     //   break;
     case EventName.Roadblock:
       gameState.roadBlock = gameState.dracula.chooseRoadBlockTarget();
-      gameState.log(`Dracula chose to move the Roadblock to the road between ${gameState.roadBlock[0]} and ${gameState.roadBlock[1]}`);
+      gameState.log(`Dracula chose to move the Roadblock to the road between ${gameState.roadBlock[0].name} and ${gameState.roadBlock[1].name}`);
       break;
     // Ally
     // case EventName.RufusSmith:
