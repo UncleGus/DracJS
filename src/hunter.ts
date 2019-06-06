@@ -19,6 +19,8 @@ export class Hunter {
   knownItems: string[];
   knownEvents: string[];
   possibleItems: { item: string, chance: number }[];
+  mustDeclareNextMove: boolean;
+  committedMove: { moveMethod: string, destination: string };
 
   constructor(newName: string, maxHealth: number, bites: number = 0) {
     this.name = newName;

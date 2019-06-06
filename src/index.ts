@@ -203,47 +203,7 @@ draculaTurnButton.addEventListener('click', () => {
       }
       clearOptions(moveMethod);
       updateMovement();
-      moveMethod.addEventListener('change', () => {
-        clearOptions(destination);
-        switch (moveMethod.value) {
-          case TravelMethod.road:
-            hunters[actingHunter].currentLocation.roadConnections
-              .forEach(location => destination.options.add(new Option(location.name)));
-            break;
-          case TravelMethod.train:
-            if (game.draculaPlaysFalseTipoff(game.huntersInGroup(hunters[actingHunter]))) {
-              updateEvents();
-            }
 
-            let trainDestinations: Location[] = [hunters[actingHunter].currentLocation];
-            for (let i = 0; i < 3; i++) {
-              let newDestinations: Location[] = [];
-              trainDestinations.forEach(location => {
-                newDestinations = newDestinations.concat(location.trainConnections);
-              });
-              trainDestinations = trainDestinations.concat(newDestinations);
-            }
-            trainDestinations = _.uniq(trainDestinations);
-            trainDestinations.forEach(dest => destination.options.add(new Option(dest.name)));
-            break;
-          case TravelMethod.sea:
-            hunters[actingHunter].currentLocation.seaConnections
-              .forEach(location => destination.options.add(new Option(location.name)));
-            if (hunters[actingHunter].currentLocation.type == LocationType.sea) {
-              if (game.draculaChooseControlStormsDestination(game.huntersInGroup(hunters[actingHunter]))) {
-                updateAllFields();
-              };
-            }
-            break;
-          case TravelMethod.fastHorse:
-            game.getLocationsByFastHorse(hunters[actingHunter].currentLocation)
-              .forEach(location => destination.options.add(new Option(location.name)));
-            break;
-          case TravelMethod.senseOfEmergency:
-            game.map.locations.forEach(location => destination.options.add(new Option(location.name)));
-            break;
-        }
-      });
       travelButton.addEventListener('click', () => {
         if (destination.value) {
           clearOptions(destination);
@@ -343,8 +303,14 @@ for (let i = 0; i < 4; i++) {
 
 // movement
 console.log('Wiring up movement');
+moveMethod.addEventListener('change', () => {
+  updateDestinations();
+});
 travelButton.addEventListener('click', () => {
-  if (moveMethod.value == EncounterName.Bats) {
+  if (hunters[actingHunter].mustDeclareNextMove) {
+    game.declareHunterMove(hunters[actingHunter], moveMethod.value, destination.value);
+    updateMovement();
+  } else if (moveMethod.value == EncounterName.Bats) {
     game.setHunterLocation(hunters[actingHunter], game.dracula.decideBatsDestination(hunters[actingHunter]).name);
     let batsTile: Encounter;
     game.huntersInGroup(hunters[actingHunter]).forEach(companion => {
@@ -352,6 +318,7 @@ travelButton.addEventListener('click', () => {
     });
     game.encounterPool.push(batsTile);
     game.shuffleEncounters();
+    hunters[actingHunter].committedMove = null;
   } else if (moveMethod.value == EncounterName.Fog) {
     let fogTile: Encounter;
     game.huntersInGroup(hunters[actingHunter]).forEach(companion => {
@@ -359,6 +326,7 @@ travelButton.addEventListener('click', () => {
     });
     game.encounterPool.push(fogTile);
     game.shuffleEncounters();
+    hunters[actingHunter].committedMove = null;
   } else if (destination.value) {
     moveMethod.selectedIndex = 0;
     game.setHunterLocation(hunters[actingHunter], destination.value);
@@ -373,6 +341,7 @@ travelButton.addEventListener('click', () => {
     hunters[actingHunter].usingFastHorse = false;
     updateHunter();
     updateLog();
+    hunters[actingHunter].committedMove = null;
   }
 });
 
@@ -780,10 +749,92 @@ function updateMovement() {
         moveMethod.options.add(new Option(TravelMethod.senseOfEmergency));
       }
     }
+    if (hunters[actingHunter].mustDeclareNextMove) {
+      travelButton.textContent = 'Declare';
+    } else {
+      travelButton.textContent = 'Travel';
+    }
+    if (hunters[actingHunter].committedMove) {
+      let moveIsPossible = true;
+      let moveIndex = 0;
+      for (moveIndex; moveIndex < moveMethod.options.length; moveIndex++) {
+        if (moveMethod.options[moveIndex].text == hunters[actingHunter].committedMove.moveMethod) {
+          break;
+        }
+      }
+      if (moveIndex == moveMethod.options.length) {
+        moveIsPossible = false;
+      } else {
+        moveMethod.selectedIndex = moveIndex;
+        updateDestinations();
+      }
+      let destinationIndex = 0;
+      for (destinationIndex; destinationIndex < destination.options.length; destinationIndex++) {
+        if (destination.options[destinationIndex].text == hunters[actingHunter].committedMove.destination) {
+          break;
+        }
+      }
+      if (destinationIndex == destination.options.length) {
+        moveIsPossible = false;
+      } else {
+        destination.selectedIndex = destinationIndex;
+      }
+      if (!moveIsPossible) {
+        moveMethod.selectedIndex = 0;
+        destination.selectedIndex = 0;
+      }
+    }
   } else {
-    game.map.locations.filter(location => location.type == LocationType.largeCity || location.type == LocationType.smallCity).forEach(location => {
-      destination.options.add(new Option(location.name));
-    });
+    updateDestinations();
+  }
+}
+
+/**
+ * Updates the options in the destination dropdown
+ */
+function updateDestinations() {
+  switch (moveMethod.value) {
+    case 'Start Location':
+      game.map.locations.filter(location => location.type == LocationType.largeCity || location.type == LocationType.smallCity).forEach(location => {
+        destination.options.add(new Option(location.name));
+      });
+      break;
+    case TravelMethod.road:
+      hunters[actingHunter].currentLocation.roadConnections
+        .forEach(location => destination.options.add(new Option(location.name)));
+      break;
+    case TravelMethod.train:
+      if (game.draculaPlaysFalseTipoff(game.huntersInGroup(hunters[actingHunter]))) {
+        updateEvents();
+      }
+
+      let trainDestinations: Location[] = [hunters[actingHunter].currentLocation];
+      for (let i = 0; i < 3; i++) {
+        let newDestinations: Location[] = [];
+        trainDestinations.forEach(location => {
+          newDestinations = newDestinations.concat(location.trainConnections);
+        });
+        trainDestinations = trainDestinations.concat(newDestinations);
+      }
+      trainDestinations = _.uniq(trainDestinations);
+      trainDestinations.forEach(dest => destination.options.add(new Option(dest.name)));
+      break;
+    case TravelMethod.sea:
+      hunters[actingHunter].currentLocation.seaConnections
+        .forEach(location => destination.options.add(new Option(location.name)));
+      if (hunters[actingHunter].currentLocation.type == LocationType.sea) {
+        if (game.draculaChooseControlStormsDestination(game.huntersInGroup(hunters[actingHunter]))) {
+          updateAllFields();
+        };
+      }
+      break;
+    case TravelMethod.fastHorse:
+      game.getLocationsByFastHorse(hunters[actingHunter].currentLocation)
+        .forEach(location => destination.options.add(new Option(location.name)));
+      break;
+    case TravelMethod.senseOfEmergency:
+      game.map.locations.forEach(location => destination.options.add(new Option(location.name)));
+      break;
   }
 }
 

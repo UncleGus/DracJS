@@ -141,6 +141,16 @@ export class Game {
   }
 
   /**
+   * Captures a Hunter move declared to Dracula
+   * @param hunter The Hunter committing to the move
+   * @param moveMethod The method of travel
+   * @param destination The destination of the move
+   */
+  declareHunterMove(hunter: Hunter, moveMethod: string, destination: string) {
+    hunter.committedMove = { moveMethod, destination };
+  }
+
+  /**
    * Handles a Hunter's defeat
    * @param hunter The Hunter defeated
    */
@@ -1040,6 +1050,14 @@ export class Game {
         } else {
           this.log('The Hunter group must show Dracula all items and events and declare their next moves');
         }
+        this.huntersInGroup(hunter).forEach(companion => {
+          companion.knownItems = [];
+          companion.knownEvents = [];
+          companion.possibleItems = [];
+          companion.items.forEach(item => companion.knownItems.push(item.name));
+          companion.events.forEach(event => companion.knownEvents.push(event.name));
+          companion.mustDeclareNextMove = true;
+        });
         this.encounterPool.push(currentEncounter);
         this.log(this.shuffleEncounters());
         this.log(`${encounterName} resolved`);

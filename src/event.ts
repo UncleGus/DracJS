@@ -376,6 +376,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
       hunterToInfluence.possibleItems = [];
       hunterToInfluence.items.forEach(item => hunterToInfluence.knownItems.push(item.name));
       hunterToInfluence.events.forEach(event => hunterToInfluence.knownEvents.push(event.name));
+      hunterToInfluence.mustDeclareNextMove = true;
       break;
     case EventName.WildHorses:
       const wildHorsesLocation = gameState.dracula.chooseWildHorsesLocation();
