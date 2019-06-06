@@ -318,7 +318,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
         }
       }
       gameState.dracula.encounterHand.push(gameState.encounterPool.splice(vampireIndex, 1)[0]);
-      gameState.dracula.discardDownEncounters(gameState.encounterPool);
+      gameState.dracula.discardDownEncounters();
       break;
     case EventName.SensationalistPress:
       gameState.dracula.chooseLocationForSensationalistPress();

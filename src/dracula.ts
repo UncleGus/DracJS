@@ -16,7 +16,6 @@ export class Dracula {
   eventHandSize: number;
   droppedOffEncounters: Encounter[];
   ambushEncounter: Encounter;
-  ambushHunter: Hunter;
   seaBloodPaid: boolean;
   nextMove: PossibleMove;
   powers: Power[];
@@ -442,6 +441,8 @@ export class Dracula {
         this.droppedOffEncounters.push(droppedOffCard.encounter);
       }
       this.gameState.logVerbose(`${droppedOffCard.location.name} returned to the Location deck`);
+    } else {
+      this.gameState.logVerbose(`${droppedOffCard.power.name} returned to the Power deck`);
     }
     return 'Dracula returned the dropped off card to the Location deck';
   }
@@ -459,11 +460,14 @@ export class Dracula {
     for (let i = this.gameState.catacombs.length - 1; i >= 0; i--) {
       if (Math.random() < 0.2 || i == catacombToDiscard || (!this.gameState.catacombs[i].encounter && !this.gameState.catacombs[i].catacombEncounter)) {
         logMessage += logMessage ? ` and position ${i + 1}` : `Dracula discarded catacomb card from position ${i + 1}`;
+        this.gameState.logVerbose(`Dracula returned Location ${this.gameState.catacombs[i].location.name} to the Location deck`);
         if (this.gameState.catacombs[i].encounter) {
           this.gameState.encounterPool.push(this.gameState.catacombs[i].encounter);
+          this.gameState.logVerbose(`Dracula returned Encounter ${this.gameState.catacombs[i].encounter.name} to the Encounter pool`);
         }
         if (this.gameState.catacombs[i].catacombEncounter) {
           this.gameState.encounterPool.push(this.gameState.catacombs[i].catacombEncounter);
+          this.gameState.logVerbose(`Dracula returned Encounter ${this.gameState.catacombs[i].catacombEncounter.name} to the Encounter pool`);
         }
         this.gameState.catacombs.splice(i, 1);
         this.gameState.shuffleEncounters();
@@ -480,30 +484,26 @@ export class Dracula {
     let cardsCleared = 0;
     let encountersCleared = 0;
     let cardIndex = this.gameState.trail.length - 1;
-    console.log(this.gameState.trail);
     while (this.gameState.trail.length > remainingCards) {
-      console.log(`Looking at index ${cardIndex}`);
       if (this.gameState.trail[cardIndex].location !== this.currentLocation) {
         const cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
         if (cardToClear.location) {
-          console.log(`Removed location card ${cardToClear.location.name}`);
+          this.gameState.logVerbose(`${cardToClear.location.name} returned to Location deck`);
           cardsCleared++;
         }
         if (cardToClear.power) {
-          console.log(`Removed power card ${cardToClear.power.name}`);
+          this.gameState.logVerbose(`${cardToClear.power.name} returned to Power deck`);
           cardsCleared++;
         }
         if (cardToClear.encounter) {
-          console.log(`Removed encounter ${cardToClear.encounter.name}`);
           encountersCleared++;
+          this.gameState.logVerbose(`${cardToClear.encounter.name} returned to Encounter pool`);
           this.gameState.encounterPool.push(cardToClear.encounter);
           this.gameState.shuffleEncounters();
         }
       }
-      console.log(`${this.gameState.trail.length} cards left in trail`);
       cardIndex--;
     }
-    console.log('Done');
     return `Returned ${cardsCleared} cards and ${encountersCleared} encounters`;
   }
 
@@ -517,9 +517,9 @@ export class Dracula {
       switch (encounter.name) {
         case EncounterName.Ambush:
           if (this.willMatureAmbush()) {
-            this.chooseAmbushEncounter();
+            const ambushHunter = this.chooseAmbushEncounter();
             if (this.ambushEncounter) {
-              logMessage += `Dracula matured Ambush and played ${this.ambushEncounter.name} on ${this.ambushHunter.name}`;
+              logMessage += `Dracula matured Ambush and played ${this.ambushEncounter.name} on ${ambushHunter.name}`;
               this.clearTrail(3);
             }
           }
@@ -572,18 +572,17 @@ export class Dracula {
   /**
    * Chooses a Hunter and an Encounter to play when maturing an Ambush Encounter
    */
-  chooseAmbushEncounter() {
+  chooseAmbushEncounter(): Hunter {
     const validHunters = [this.gameState.godalming, this.gameState.seward, this.gameState.vanHelsing, this.gameState.mina]
       .filter(hunter => hunter.currentLocation.type !== LocationType.sea && hunter.currentLocation.type !== LocationType.hospital);
     if (validHunters.length == 0) {
       this.ambushEncounter = null;
-      this.ambushHunter = null;
-      return;
+      return null;
     }
     const encounterChoice = Math.floor(Math.random() * this.encounterHand.length);
     this.ambushEncounter = this.encounterHand.splice(encounterChoice, 1)[0];
     const hunterChoice = Math.floor(Math.random() * validHunters.length);
-    this.ambushHunter = validHunters[hunterChoice];
+    return validHunters[hunterChoice];
   }
 
   /**
