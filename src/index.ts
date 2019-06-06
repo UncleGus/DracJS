@@ -279,6 +279,7 @@ draculaTurnButton.addEventListener('click', () => {
       if (game.unearthlySwiftnessInEffect) {
         game.log(game.dracula.chooseNextMove());
         game.performDraculaMovementPhase();
+        game.unearthlySwiftnessInEffect = false;
       }
       updateAllFields();
       break;
