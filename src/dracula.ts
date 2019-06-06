@@ -123,19 +123,36 @@ export class Dracula {
   }
 
   /**
-   * Decides Dracula's next move based on the current state of the game
+   * Determines what moves are legal for Dracula at the present time
    */
-  chooseNextMove(): string {
-    if (!this.hypnosisInEffect) {
-      this.nextMove = null;
+  determineLegalMoves(): PossibleMove[] {
+    // assume that this move will be carried out after the Timekeeping phase
+    let newTimePhase = this.gameState.timePhase;
+    if (this.currentLocation.type !== LocationType.sea) {
+      newTimePhase = (newTimePhase + 1) % 6;
     }
-    this.possibleMoves = [];
+
+    const legalMoves: PossibleMove[] = [];
+    // start with all locations connected by road
     const connectedLocations = _.union(this.currentLocation.roadConnections, this.currentLocation.seaConnections);
+
+    // remove all locations already in the trail
     let invalidLocations = this.gameState.trail.filter(trail => trail.location).map(trail => trail.location);
+
+    // remove the hospital and the consecrated ground location
     invalidLocations.push(this.gameState.map.locations.find(location => location.type == LocationType.hospital), this.gameState.consecratedLocation);
+
+    // if Dracula does not have a Devilish Power to discard a Heavenly Host, then those locations are also invalid
+    if (!this.eventHand.find(event => event.name == EventName.DevilishPower)) {
+      invalidLocations.push(...this.gameState.heavenlyHostLocations);
+    }
+    
+    // if there is a Stormy Seas in effect, that location is also invalid
     if (this.gameState.stormRounds > 0) {
       invalidLocations.push(this.gameState.stormLocation);
     }
+    
+    // sea moves might be invalid if Dracula is on 1 blood
     let seaIsInvalid = false;
     if (this.blood == 1) {
       if (this.currentLocation.type !== LocationType.sea) {
@@ -148,7 +165,11 @@ export class Dracula {
     if (seaIsInvalid) {
       invalidLocations = invalidLocations.concat(connectedLocations.filter(location => location.type == LocationType.sea));
     }
+
+    // remove all invalid locations from the list of valid ones
     const validLocations = _.without(connectedLocations, ...invalidLocations, this.gameState.map.locations.find(location => location.type == LocationType.hospital));
+    
+    // each valid location is a valid move, but some may require discarding the corresponding catacomb card first before moving there
     validLocations.map(location => {
       let catacombIndex = this.gameState.catacombs.length - 1;
       for (catacombIndex; catacombIndex > -1; catacombIndex--) {
@@ -157,14 +178,17 @@ export class Dracula {
         }
       }
       if (catacombIndex > -1) {
-        this.possibleMoves.push({ location, value: 1, catacombToDiscard: catacombIndex });
+        legalMoves.push({ location, value: 1, catacombToDiscard: catacombIndex });
       } else {
-        this.possibleMoves.push({ location, value: 1 })
+        legalMoves.push({ location, value: 1 })
       }
     });
 
-    const possiblePowers = this.powers.slice(0, 5).filter(power => (power.nightOnly == false || this.gameState.timePhase > 2) && power.cost < this.blood && this.currentLocation.type !== LocationType.sea);
+    // start with all powers that can be played at the new time of day
+    const possiblePowers = this.powers.slice(0, 5).filter(power => (power.nightOnly == false || newTimePhase > 2) && power.cost < this.blood && this.currentLocation.type !== LocationType.sea);
     const invalidPowers: Power[] = [];
+
+    // remove all powers that are already in the trail
     this.gameState.trail.forEach(trailCard => {
       if (trailCard.power) {
         invalidPowers.push(trailCard.power);
@@ -193,20 +217,20 @@ export class Dracula {
       let secondLayerDestination: Location[] = [];
       switch (validPower.name) {
         case PowerName.DarkCall:
-          this.possibleMoves.push({ power: validPower, value: 1 });
+          legalMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.DoubleBack:
           this.gameState.trail.concat(this.gameState.catacombs).forEach(trailCard => {
             if (this.gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, [TravelMethod.road, TravelMethod.sea]) == 1) {
-              this.possibleMoves.push({ location: trailCard.location, power: validPower, value: 1 });
+              legalMoves.push({ location: trailCard.location, power: validPower, value: 1 });
             }
           });
           break;
         case PowerName.Feed:
-          this.possibleMoves.push({ power: validPower, value: 1 });
+          legalMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.Hide:
-          this.possibleMoves.push({ power: validPower, value: 1 });
+          legalMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.WolfForm:
           potentialDestinations = this.currentLocation.roadConnections.filter(road => !this.gameState.cityIsConsecrated(road));
@@ -215,7 +239,7 @@ export class Dracula {
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => !this.gameState.trailContains(dest) && !this.gameState.catacombsContains(dest) && !this.gameState.cityIsConsecrated(dest));
           potentialDestinations = _.without(potentialDestinations, this.currentLocation);
-          potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
+          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndDoubleBack:
           potentialDestinations = this.currentLocation.roadConnections;
@@ -223,20 +247,35 @@ export class Dracula {
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => (this.gameState.trailContains(dest) || this.gameState.catacombsContains(dest)) && !this.gameState.cityIsConsecrated(dest));
-          potentialDestinations.forEach(dest => this.possibleMoves.push({ power: validPower, location: dest, value: 1 }));
+          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndHide:
-          this.possibleMoves.push({ power: validPower, value: 1 });
+          legalMoves.push({ power: validPower, value: 1 });
           break;
       }
     });
+    return legalMoves;
+  }
+
+  /**
+   * Determines if a given move is legal at the present time
+   * @param move 
+   */
+  moveIsLegal(move: PossibleMove): boolean {
+    const legalMoves = this.determineLegalMoves();
+    return !!legalMoves.find(legalMove => legalMove.catacombToDiscard == move.catacombToDiscard &&
+      legalMove.location == move.location && legalMove.power == move.power);
+  }
+
+  /**
+   * Decides Dracula's next move based on the current state of the game
+   */
+  chooseNextMove(): string {
+    if (this.nextMove && this.moveIsLegal(this.nextMove)) {
+      return 'Dracula\'s next move is already determined' ;
+    }
+    this.possibleMoves = this.determineLegalMoves();
     if (this.possibleMoves.length > 0) {
-      if (this.hypnosisInEffect) {
-        if (this.possibleMoves.find(move => move.catacombToDiscard == this.nextMove.catacombToDiscard
-          && move.location == this.nextMove.location && move.power.name == this.nextMove.power.name)) {
-          return 'Dracula is bound by Hypnosis';
-        }
-      }
       this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
@@ -341,7 +380,7 @@ export class Dracula {
     let drawCount = 0;
     while (this.encounterHand.length < this.encounterHandSize) {
       this.encounterHand.push(this.gameState.encounterPool.pop());
-      this.gameState.logVerbose(`Dracula drew Encounter ${this.encounterHand[this.encounterHand.length -1].name}`);
+      this.gameState.logVerbose(`Dracula drew Encounter ${this.encounterHand[this.encounterHand.length - 1].name}`);
       drawCount++;
     }
     return drawCount > 0 ? `Dracula drew ${drawCount} encounter${drawCount > 1 ? 's' : ''}` : '';
@@ -356,7 +395,7 @@ export class Dracula {
     while (this.encounterHand.length > this.encounterHandSize) {
       const choice = Math.floor(Math.random() * this.encounterHand.length);
       this.gameState.encounterPool.push(this.encounterHand.splice(choice, 1)[0]);
-      this.gameState.logVerbose(`Dracula discarded ${this.gameState.encounterPool[this.gameState.encounterPool.length -1].name}`);
+      this.gameState.logVerbose(`Dracula discarded ${this.gameState.encounterPool[this.gameState.encounterPool.length - 1].name}`);
       discardCount++;
     }
     return discardCount > 0 ? `Dracula discarded ${discardCount} encounter${discardCount > 1 ? 's' : ''}` : '';
@@ -371,7 +410,7 @@ export class Dracula {
     while (this.eventHand.length > this.eventHandSize) {
       const choice = Math.floor(Math.random() * this.eventHand.length);
       this.gameState.eventDiscard.push(this.eventHand.splice(choice, 1)[0]);
-      this.gameState.logVerbose(`Dracula discarded ${this.gameState.eventDiscard[this.gameState.eventDiscard.length -1].name}`);
+      this.gameState.logVerbose(`Dracula discarded ${this.gameState.eventDiscard[this.gameState.eventDiscard.length - 1].name}`);
       discardCount++;
     }
     return discardCount > 0 ? `Dracula discarded ${discardCount} event${discardCount > 1 ? 's' : ''}` : '';
@@ -392,7 +431,7 @@ export class Dracula {
       return;
     }
     this.gameState.eventDiscard.push(this.eventHand.splice(eventIndex, 1)[0]);
-    this.gameState.logVerbose(`Dracula discarded ${this.gameState.eventDiscard[this.gameState.eventDiscard.length -1].name}`);
+    this.gameState.logVerbose(`Dracula discarded ${this.gameState.eventDiscard[this.gameState.eventDiscard.length - 1].name}`);
   }
 
   /**
@@ -698,7 +737,7 @@ export class Dracula {
   /**
    * Decides which Event, if any, to play at the start of Dracula's turn
    */
-  chooseStartOfTurnEvent(): string {
+  chooseStartOfTurnEvents(): string {
     // TODO: Make logical decision
     if (this.eventAwaitingApproval) {
       return;
@@ -719,6 +758,13 @@ export class Dracula {
     }
     if (potentialEvents.length == 0) {
       return null;
+    }
+    if (this.gameState.heavenlyHostLocations.find(location => location == this.nextMove.location)) {
+      // Dracula has decided to move to a Heavenly Host location, which is only possible if he plays Devilish Power
+      this.discardEvent(EventName.DevilishPower);
+      this.eventAwaitingApproval = EventName.DevilishPower;
+      this.gameState.eventPendingResolution = EventName.DevilishPower;
+      return `Dracula played ${EventName.DevilishPower}`;
     }
     if (Math.random() < 0.2) {
       const choice = Math.floor(Math.random() * potentialEvents.length);
@@ -743,6 +789,10 @@ export class Dracula {
     }
     if (this.gameState.heavenlyHostLocations.length > 1) {
       options.push(`discard the Heavenly Host in ${this.gameState.heavenlyHostLocations[1]}`);
+    }
+    if (this.gameState.heavenlyHostLocations.find(location => location == this.nextMove.location)) {
+      // Dracula has decided to move to a Heavenly Host location, which is only possible if he plays Devilish Power
+      return `Dracula played Devilish power to discard the Heavenly Host in ${this.nextMove.location.name}`;
     }
     const choice = Math.floor(Math.random() * options.length);
     this.eventAwaitingApproval = null;

@@ -277,26 +277,11 @@ export class Game {
   }
 
   /**
-   * Determines if Dracula will play a start of action Event
+   * Dracula works out what he will do this turn, including playing Events and discarding Catacombs cards
    */
-  draculaPlaysStartOfActionEvent(): boolean {
-    // TODO: this is a placeholder
-    return false;
-  }
-
-  /**
-   * Determines if Dracula will play a start of movement Event
-   */
-  draculaChooseStartOfMovementEvent() {
-    // TODO: this is a placeholder
-    return;
-  }
-
-  /**
-   * Determines if Dracula will play a start of turn Event
-   */
-  draculaChooseStartOfTurnEvent() {
-    let logMessage = this.dracula.chooseStartOfTurnEvent();
+  draculaDecideCourseOfAction() {
+    this.log(this.dracula.chooseNextMove());
+    let logMessage = this.dracula.chooseStartOfTurnEvents();
     if (logMessage) {
       this.log(logMessage);
       return true;
@@ -767,7 +752,6 @@ export class Game {
         this.log(this.dracula.chooseVictimForQuincey());
       }
     }
-    this.log(this.dracula.chooseNextMove());
 
     // evaluate catacombs
     this.log(this.dracula.evaluateCatacombs());

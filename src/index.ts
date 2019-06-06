@@ -220,7 +220,7 @@ draculaTurnButton.addEventListener('click', () => {
       updateLog();
       break;
     case 'Perform Timekeeping phase':
-      game.draculaChooseStartOfTurnEvent();
+      game.draculaDecideCourseOfAction();
       if (game.dracula.eventAwaitingApproval) {
         updateAllFields();
         return;
@@ -230,7 +230,6 @@ draculaTurnButton.addEventListener('click', () => {
       updateAllFields();
       break;
     case 'Perform Movement phase':
-      game.draculaChooseStartOfMovementEvent();
       if (game.dracula.eventAwaitingApproval) {
         updateAllFields();
         return;
@@ -245,7 +244,6 @@ draculaTurnButton.addEventListener('click', () => {
       updateAllFields();
       break;
     case 'Perform Action phase':
-      game.draculaPlaysStartOfActionEvent();
       if (game.dracula.eventAwaitingApproval) {
         updateAllFields();
         return;
