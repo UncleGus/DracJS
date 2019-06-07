@@ -637,6 +637,9 @@ export class Game {
           if (doubleBackTrailIndex) {
             this.log(`Dracula Doubled Back to the location in position ${doubleBackTrailIndex + 1} of the trail`);
             doubleBackedCard = this.trail.splice(doubleBackTrailIndex, 1)[0];
+            if (doubleBackTrailIndex == this.dracula.evasionSlot) {
+              this.dracula.evasionSlot--;
+            }
           }
           if (doubleBackCatacombIndex) {
             this.log(`Dracula Doubled Back to the location in position ${doubleBackCatacombIndex + 1} of the trail`);
@@ -670,6 +673,7 @@ export class Game {
           this.logVerbose('Dracula played Wolf Form and Hide');
           break;
       }
+      this.dracula.evasionSlot++;
       if (this.dracula.nextMove.power.cost !== 0) {
         // pay blood for power
         this.log(this.dracula.setBlood(this.dracula.blood - this.dracula.nextMove.power.cost));
@@ -1433,7 +1437,7 @@ export class Game {
    * @param opponentName The name of the opponent fighting the Hunter
    * @param hunter The Hunter fighting the opponent
    */
-  setUpCombat(opponentName: string, hunter: Hunter) {    
+  setUpCombat(opponentName: string, hunter: Hunter) {
     if (opponentName == 'None') {
       this.opponent = null;
       this.huntersInGroup(hunter).forEach(companion => {
@@ -1636,7 +1640,7 @@ export class Game {
         break;
       case EventName.QuinceyPMorris:
         this.log('Dracula can target one Hunter each turn for 1 Health loss');
-        break;      
+        break;
     }
     this.log(this.dracula.discardDownEncounters());
     this.log(this.dracula.discardDownEvents());

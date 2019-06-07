@@ -29,6 +29,8 @@ export class Dracula {
   potentialTargetHunters: Hunter[];
   hypnosisInEffect: boolean;
   gameState: Game;
+  evasionSlot: number;
+  trailHeat: number[];
 
   constructor() {
     this.blood = 15;
@@ -38,7 +40,9 @@ export class Dracula {
     this.eventHand = [];
     this.droppedOffEncounters = [];
     this.eventHandSize = 4;
+    this.evasionSlot = 8;
     this.seaBloodPaid = false;
+    this.trailHeat = [-1, -1, -1, -1, -1, -1];
     this.powers = [
       {
         name: PowerName.DarkCall,
@@ -88,6 +92,28 @@ export class Dracula {
     return this.revealed ? `Dracula moved to ${this.currentLocation.name}` : 'Dracula moved to a hidden location';
   }
 
+  calculateTrailHeat() {
+    for (let i = 0; i < this.gameState.trail.length; i++) {
+      if (this.gameState.trail[i].revealed) {
+        if (this.gameState.trail[i].location) {
+          // this slot is revealed, there is only one possible location it can be
+          this.trailHeat[i] = 1;
+        } else {
+          // this is a power card, so it doesn't count for trail heat
+          this.trailHeat[i] = -1;
+        }
+      }
+      let separationFromNearestKnownLocation = 1;
+      for (let j = 1; j < 6; j++) {
+        if (this.gameState.trail[i + j].revealed && this.gameState.trail[i + j].location ||
+          this.gameState.trail[i - j].revealed && this.gameState.trail[i - j].location) {
+            // found the nearest revealed slot
+            // need to account for Evasion here
+          }
+      }
+    }
+  }
+
   /**
    * Selects Dracula's first Location at the state of the game
    */
@@ -119,6 +145,7 @@ export class Dracula {
     while (currentValue < randomChoice) {
       currentValue += distances[index];
     }
+    this.evasionSlot = 0;
     return validLocations[index];
   }
 
