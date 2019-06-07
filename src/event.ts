@@ -231,9 +231,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
           }
         }
       });
-      gameState.timePhase = (gameState.timePhase + 1) % 6;
       gameState.dracula.chooseNextMove();
-      gameState.timePhase = (gameState.timePhase + 5) % 6;
       gameState.dracula.hypnosisInEffect = true;
       if (!gameState.dracula.nextMove) {
         gameState.log('Dracula has no legal next move');

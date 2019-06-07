@@ -146,12 +146,12 @@ export class Dracula {
     if (!this.eventHand.find(event => event.name == EventName.DevilishPower)) {
       invalidLocations.push(...this.gameState.heavenlyHostLocations);
     }
-    
+
     // if there is a Stormy Seas in effect, that location is also invalid
     if (this.gameState.stormRounds > 0) {
       invalidLocations.push(this.gameState.stormLocation);
     }
-    
+
     // sea moves might be invalid if Dracula is on 1 blood
     let seaIsInvalid = false;
     if (this.blood == 1) {
@@ -168,7 +168,7 @@ export class Dracula {
 
     // remove all invalid locations from the list of valid ones
     const validLocations = _.without(connectedLocations, ...invalidLocations, this.gameState.map.locations.find(location => location.type == LocationType.hospital));
-    
+
     // each valid location is a valid move, but some may require discarding the corresponding catacomb card first before moving there
     validLocations.map(location => {
       let catacombIndex = this.gameState.catacombs.length - 1;
@@ -272,7 +272,7 @@ export class Dracula {
    */
   chooseNextMove(): string {
     if (this.nextMove && this.moveIsLegal(this.nextMove)) {
-      return 'Dracula\'s next move is already determined' ;
+      return 'Dracula\'s next move is already determined';
     }
     this.possibleMoves = this.determineLegalMoves();
     if (this.possibleMoves.length > 0) {
@@ -301,6 +301,107 @@ export class Dracula {
     // Things to consider:
     // how warm the trail is
     // if there are any Encounters about to mature that would clear this Encounter off the trail
+    let rightmostClearedTrailSpace = 5;
+    for (let i = this.gameState.trail.length - 1; i > -1; i--) {
+      if (this.gameState.trail[i].encounter) {
+        if (this.gameState.trail[i].encounter.name == EncounterName.NewVampire) {
+          rightmostClearedTrailSpace = i - 6;
+        } else if (this.gameState.trail[i].encounter.name == EncounterName.Ambush ||
+          this.gameState.trail[i].encounter.name == EncounterName.DesecratedSoil) {
+          rightmostClearedTrailSpace = i - 3;
+        }
+      }
+    }
+    const encountersValued: { name: string, value: number }[] = [];
+    this.encounterHand.forEach(enc => {
+      switch (enc.name) {
+        case EncounterName.Plague:
+          encountersValued.push({ name: enc.name, value: 1 });
+          break;
+        case EncounterName.Rats:
+          encountersValued.push({ name: enc.name, value: 2 });
+          break;
+        case EncounterName.Peasants:
+          if (this.currentLocation.domain == LocationDomain.west) {
+            encountersValued.push({ name: enc.name, value: 3 });
+          } else {
+            encountersValued.push({ name: enc.name, value: 9 });
+          }
+          break;
+        case EncounterName.Thief:
+          encountersValued.push({ name: enc.name, value: 4 });
+          break;
+        case EncounterName.Hoax:
+          if (this.currentLocation.domain == LocationDomain.east) {
+            encountersValued.push({ name: enc.name, value: 5 });
+          } else {
+            encountersValued.push({ name: enc.name, value: 11 });
+          }
+          break;
+        case EncounterName.MinionWithKnife:
+          encountersValued.push({ name: enc.name, value: 6 });
+          break;
+        case EncounterName.MinionWithKnifeAndPistol:
+          encountersValued.push({ name: enc.name, value: 7 });
+          break;
+        case EncounterName.MinionWithKnifeAndRifle:
+          encountersValued.push({ name: enc.name, value: 8 });
+          break;
+        case EncounterName.Saboteur:
+          encountersValued.push({ name: enc.name, value: 10 });
+          break;
+        case EncounterName.Wolves:
+          encountersValued.push({ name: enc.name, value: 12 });
+          break;
+        case EncounterName.Lightning:
+          encountersValued.push({ name: enc.name, value: 13 });
+          break;
+        case EncounterName.Assassin:
+          encountersValued.push({ name: enc.name, value: 14 });
+          break;
+        case EncounterName.Fog:
+          encountersValued.push({ name: enc.name, value: 15 });
+          break;
+        case EncounterName.Bats:
+          encountersValued.push({ name: enc.name, value: 16 });
+          break;
+        case EncounterName.Spy:
+          encountersValued.push({ name: enc.name, value: 17 });
+          break;
+        case EncounterName.DesecratedSoil:
+          if (rightmostClearedTrailSpace > 0) {
+            encountersValued.push({ name: enc.name, value: 18 });
+          } else {
+            encountersValued.push({ name: enc.name, value: -1 });
+          }
+          break;
+        case EncounterName.Ambush:
+          if (rightmostClearedTrailSpace > 0) {
+            encountersValued.push({ name: enc.name, value: 19 });
+          } else {
+            encountersValued.push({ name: enc.name, value: -2 });
+          }
+          break;
+        case EncounterName.NewVampire:
+          if (rightmostClearedTrailSpace > 0) {
+            encountersValued.push({ name: enc.name, value: 20 });
+          } else {
+            encountersValued.push({ name: enc.name, value: -3 });
+          }
+          break;
+      }
+    });
+    encountersValued.sort((a, b) => b.value - a.value);
+
+    encountersValued.forEach(enc => {
+      for (let i = 0; i < this.encounterHand.length; i++) {
+        if (this.encounterHand[i].name == enc.name) {
+          return this.encounterHand.splice(i, 1)[0];
+        }
+      }
+    });
+
+    // if something goes horrible wrong, choose one at random
     const randomChoice = Math.floor(Math.random() * this.encounterHand.length);
     return this.encounterHand.splice(randomChoice, 1)[0];
   }
