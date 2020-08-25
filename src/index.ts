@@ -894,6 +894,7 @@ function updateEvents() {
     } else {
       approvalButton.style.setProperty('visibility', 'hidden');
       game.resolveApprovedEvent();
+      updateAllFields();
     }
   } else {
     approvalButton.style.setProperty('visibility', 'hidden');

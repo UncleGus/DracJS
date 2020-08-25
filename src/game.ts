@@ -1578,7 +1578,7 @@ export class Game {
     const startLocation = this.dracula.chooseStartLocation();
     this.log(this.dracula.setLocation(startLocation));
     this.pushToTrail({ location: startLocation, revealed: false });
-    this.log('It is now Dracula\'s turn');
+    this.log('It is now Godalming\'s turn');
   }
 
   /**
