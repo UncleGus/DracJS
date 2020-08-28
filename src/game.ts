@@ -1577,6 +1577,7 @@ export class Game {
   startGame() {
     const startLocation = this.dracula.chooseStartLocation();
     this.log(this.dracula.setLocation(startLocation));
+    this.dracula.initialisePossibleTrails();
     this.pushToTrail({ location: startLocation, revealed: false });
     this.log('It is now Godalming\'s turn');
   }

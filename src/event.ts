@@ -323,6 +323,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
       break;
     case EventName.SenseofEmergency:
       gameState.log(`Lose ${6 - gameState.vampireTrack} Health and move to your chosen destination`);
+      gameState.resolveTrack++;
       break;
     // Ally
     // case EventName.SisterAgatha:
