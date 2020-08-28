@@ -104,20 +104,71 @@ export class Dracula {
     });
   }
 
+  updatePossibleTrailsWithUnknown(type: LocationType) {
+    const newPossibleTrails: TrailCard[][] = [];
+    if (type == LocationType.largeCity || type == LocationType.smallCity) {
+      this.possibleTrails.forEach(trail => {
+        trail[0].location.roadConnections.filter(location => !this.possibleTrailContainsLocation(trail, location)).forEach(newPossibleLocation => {
+          const newPossibleCard: TrailCard = {
+            revealed: false,
+            location: newPossibleLocation
+          }
+          newPossibleTrails.push(_.concat([newPossibleCard], trail));
+          if (!this.possibleTrailContainsHide(trail)) {
+            const newPossibleCardHide: TrailCard = {
+              revealed: false,
+              power: this.powers.find(power => power.name == PowerName.Hide)
+            };
+            newPossibleTrails.push(_.concat([newPossibleCardHide], trail));
+          }
+        });
+      });
+    } else if (type == LocationType.sea) {
+      this.possibleTrails.forEach(trail => {
+        trail[0].location.seaConnections.filter(location => !this.possibleTrailContainsLocation(trail, location)).forEach(newPossibleLocation => {
+          const newPossibleCard: TrailCard = {
+            revealed: false,
+            location: newPossibleLocation
+          }
+          newPossibleTrails.push(_.concat([newPossibleCard], trail));
+        });
+      });
+    }
+  }
+
+  possibleTrailContainsLocation(trail: TrailCard[], location: Location): boolean {
+    trail.forEach(trailCard => {
+      if (trailCard.location == location) {
+        return true;
+      }
+    });
+    return false;
+  }
+
+  possibleTrailContainsHide(trail: TrailCard[]): boolean {
+    trail.forEach(trailCard => {
+      if (trailCard.power && trailCard.power.name == PowerName.Hide) {
+        return true;
+      }
+    });
+    return false;
+  }
+
   /**
    * Selects Dracula's first Location at the state of the game
    */
   chooseStartLocation(): Location {
     const validLocations = this.gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
-    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }));
-    const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
-    const randomChoice = Math.random() * totalValue;
-    let currentValue = 0;
-    let index = 0;
-    while (currentValue < randomChoice) {
-      currentValue += distances[index];
-    }
-    return validLocations[index];
+    // const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }));
+    // const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
+    // const randomChoice = Math.random() * totalValue;
+    // let currentValue = 0;
+    // let index = 0;
+    // while (currentValue < randomChoice) {
+    //   currentValue += distances[index];
+    // }
+    // return validLocations[index];
+    return validLocations[Math.floor(Math.random() * validLocations.length)];
   }
 
   /**
