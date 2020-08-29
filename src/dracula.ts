@@ -104,36 +104,154 @@ export class Dracula {
     });
   }
 
-  updatePossibleTrailsWithUnknown(type: LocationType) {
+  updatePossibleTrailsWithUnknown(travelType: TravelMethod, locationType: LocationType) {
     const newPossibleTrails: TrailCard[][] = [];
-    if (type == LocationType.largeCity || type == LocationType.smallCity) {
+    if (travelType == TravelMethod.road) {
       this.possibleTrails.forEach(trail => {
-        trail[0].location.roadConnections.filter(location => !this.possibleTrailContainsLocation(trail, location)).forEach(newPossibleLocation => {
+        // get the current location of this trail
+        let index = 0;
+        while (!trail[index].location) {
+          index++;
+        }
+        // get all locations connected to the current location by road
+        // filter out any locations that are already in this trail
+        let validLocations = trail[index].location.roadConnections.filter(location => !this.possibleTrailContainsLocation(trail, location));
+        // filter out any that the Hunters are currently in
+        _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
+        // filter out any that are in the catacombs
+        _.remove(validLocations, location => this.gameState.catacombsContains(location));
+        // for each of the remaining locations,
+        validLocations.forEach(newPossibleLocation => {
+          // create a new TrailCard
           const newPossibleCard: TrailCard = {
             revealed: false,
             location: newPossibleLocation
           }
-          newPossibleTrails.push(_.concat([newPossibleCard], trail));
+          // add it to the front of the trail
+          trail.unshift(newPossibleCard);
+          //  trim it to length 6
+          _.dropRight(trail, trail.length - 6);
+          // put that in the list of possible trails
+          newPossibleTrails.push();
+          // if hide hasn't been used in this possible trail, it could be used now
           if (!this.possibleTrailContainsHide(trail)) {
+            // create a Hide TrailCard
             const newPossibleCardHide: TrailCard = {
               revealed: false,
               power: this.powers.find(power => power.name == PowerName.Hide)
             };
-            newPossibleTrails.push(_.concat([newPossibleCardHide], trail));
+            // add it to the front of the trail
+            trail.unshift(newPossibleCardHide);
+            //  trim it to length 6
+            _.dropRight(trail, trail.length - 6);
+            // put that in the list of possible trails
+            newPossibleTrails.push(trail);
           }
         });
       });
-    } else if (type == LocationType.sea) {
+    } else if (travelType == TravelMethod.sea) {
       this.possibleTrails.forEach(trail => {
-        trail[0].location.seaConnections.filter(location => !this.possibleTrailContainsLocation(trail, location)).forEach(newPossibleLocation => {
+        // get the current location of this trail
+        let index = 0;
+        while (!trail[index].location) {
+          index++;
+        }
+        // get all locations connected to the current location by sea
+        let validLocations = trail[index].location.seaConnections;
+        // filter out any locations that are not of the right type
+        if (locationType == LocationType.largeCity || LocationType.smallCity) {
+          // filter out any non-land type locations
+          _.remove(validLocations, location => location.type !== LocationType.smallCity && location.type !== LocationType.largeCity);
+          // filter out any that the Hunters are currently in
+          _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
+          // filter out any that are in the catacombs
+          _.remove(validLocations, location => this.gameState.catacombsContains(location));
+        } else {
+          // filter out any non-sea type locations
+          _.remove(validLocations, location => location.type !== LocationType.sea);
+          // don't filter out the Hunters' locations because this is a sea location
+          // don't worry about the catacombs because they can't contain sea locations
+        }
+        // filter out any locations that are already in this trail
+        _.remove(validLocations, location => this.possibleTrailContainsLocation(trail, location));
+        // for each of the remaining locations,
+        validLocations.forEach(newPossibleLocation => {
+          // create a new TrailCard
           const newPossibleCard: TrailCard = {
             revealed: false,
             location: newPossibleLocation
           }
-          newPossibleTrails.push(_.concat([newPossibleCard], trail));
+          // add it to the front of the trail
+          trail.unshift(newPossibleCard);
+          //  trim it to length 6
+          _.dropRight(trail, trail.length - 6);
+          // put that in the list of possible trails
+          newPossibleTrails.push();
+          // hide can't be used at sea
         });
       });
     }
+    this.possibleTrails = newPossibleTrails;
+  }
+
+  cleanUpDuplicatePossibleTrails() {
+    const uniquePossibleTrails: TrailCard[][] = [];
+    // check each possibleTrail against each unique possible trail
+    this.possibleTrails.forEach(trail => {
+      // assume the trail has no match in the unique trails until proven otherwise
+      let trailAlreadyRepresented = false;
+      uniquePossibleTrails.forEach(uniqueTrail => {
+        // if we've already found a match, we don't need to bother checking the rest of the unique trails
+        if (trailAlreadyRepresented) {
+          return;
+        }
+        // assume this trail matches this unique trail until proven otherwise
+        let mismatch = false;
+        for (let index = 0; index < trail.length; index++) {
+          if ((!!trail[index].location !== !!uniqueTrail[index].location) ||
+            (trail[index].location && uniqueTrail[index].location && trail[index].location.name !== uniqueTrail[index].location.name) ||
+            (!!trail[index].power !== !!uniqueTrail[index].power) ||
+            (trail[index].power && uniqueTrail[index].power && trail[index].power.name !== uniqueTrail[index].power.name)) {
+            // there is a mismatch, these are not identical trails
+            mismatch = true;
+            // we don't need to check any more of these trails against each other
+            break;
+          }
+        }
+        // if we got all the way through the two trails being compared without finding a mismatch
+        if (!mismatch) {
+          // then we have an identical trail
+          trailAlreadyRepresented = true;
+        }
+      });
+      // if we have not found this trail already represented
+      if (!trailAlreadyRepresented) {
+        // we add it to the unique list
+        uniquePossibleTrails.push(trail);
+      }
+    });
+    // set the possible trails to this new unique list
+    this.possibleTrails = uniquePossibleTrails;
+  }
+
+  cullPossibleTrailsAfterLocationRevealed(revealedLocation: Location, trailPosition: number) {
+    let validTrails: TrailCard[][] = [];
+    this.possibleTrails.forEach(trail => {
+      if (trail[trailPosition].location && trail[trailPosition].location.name == revealedLocation.name) {
+        validTrails.push(trail);
+      }
+    });
+    this.possibleTrails = validTrails;
+  }
+
+  cullPossibleTrailsAfterLocationRuledOut(searchLocation: Location) {
+    let validTrails: TrailCard[][] = [];
+    this.possibleTrails.forEach(trail => {
+      if (!this.possibleTrailContainsLocation(trail, searchLocation)) {
+        validTrails.push(trail);
+      }
+    });
+    this.possibleTrails = validTrails;
   }
 
   possibleTrailContainsLocation(trail: TrailCard[], location: Location): boolean {
@@ -246,9 +364,15 @@ export class Dracula {
         }
       }
       if (catacombIndex > -1) {
-        legalMoves.push({ location, value: 1, catacombToDiscard: catacombIndex });
+        legalMoves.push({ location, travelMethod: TravelMethod.road, value: 1, catacombToDiscard: catacombIndex });
       } else {
-        legalMoves.push({ location, value: 1 })
+        if (location.roadConnections.includes(this.currentLocation)) {
+          legalMoves.push({ location, travelMethod: TravelMethod.road, value: 1 });
+        } else if (location.seaConnections.includes(this.currentLocation)) {
+          legalMoves.push({ location, travelMethod: TravelMethod.sea, value: 1 });
+        } else {
+          // TODO: make sure there are no other possibilities here
+        }
       }
     });
 
@@ -290,7 +414,13 @@ export class Dracula {
         case PowerName.DoubleBack:
           this.gameState.trail.concat(this.gameState.catacombs).forEach(trailCard => {
             if (this.gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, [TravelMethod.road, TravelMethod.sea]) == 1) {
-              legalMoves.push({ location: trailCard.location, power: validPower, value: 1 });
+              if (trailCard.location.roadConnections.includes(this.currentLocation)) {
+                legalMoves.push({ location: trailCard.location, travelMethod: TravelMethod.road, power: validPower, value: 1 });
+              } else if (trailCard.location.seaConnections.includes(this.currentLocation)) {
+                legalMoves.push({ location: trailCard.location, travelMethod: TravelMethod.sea, power: validPower, value: 1 });
+              } else {
+                // TODO: Make sure there are no other options here
+              }
             }
           });
           break;
@@ -307,7 +437,7 @@ export class Dracula {
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => !this.gameState.trailContains(dest) && !this.gameState.catacombsContains(dest) && !this.gameState.cityIsConsecrated(dest));
           potentialDestinations = _.without(potentialDestinations, this.currentLocation);
-          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, location: dest, value: 1 }));
+          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndDoubleBack:
           potentialDestinations = this.currentLocation.roadConnections;
@@ -315,10 +445,10 @@ export class Dracula {
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => (this.gameState.trailContains(dest) || this.gameState.catacombsContains(dest)) && !this.gameState.cityIsConsecrated(dest));
-          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, location: dest, value: 1 }));
+          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, location: dest, value: 1 }));
           break;
         case PowerName.WolfFormAndHide:
-          legalMoves.push({ power: validPower, value: 1 });
+          legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, value: 1 });
           break;
       }
     });
@@ -1398,6 +1528,7 @@ export interface TrailCard {
 }
 
 interface PossibleMove {
+  travelMethod?: TravelMethod;
   location?: Location;
   power?: Power;
   value: number;

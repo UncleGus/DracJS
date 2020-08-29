@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { GameMap, LocationType, Location, LocationName, LocationDomain } from "./map";
+import { GameMap, LocationType, Location, LocationName, LocationDomain, TravelMethod } from "./map";
 import { Dracula, TrailCard, PowerName, Attack } from "./dracula";
 import { Hunter, HunterName } from "./hunter";
 import { Encounter, initialiseEncounterPool, EncounterName } from "./encounter";
@@ -603,9 +603,10 @@ export class Game {
     if (!this.dracula.nextMove) {
       this.log('Dracula has no valid moves');
       this.log(this.dracula.die());
+      // TODO: I think this should actually clear down to his current location, which might not be the first card in the trail
       this.log(this.dracula.clearTrail(1));
       this.dracula.revealed = true;
-      this.trail[0].revealed = true;
+      this.trail[0].revealed = true; // ^
       this.log(this.dracula.chooseNextMove());
     }
 
@@ -682,12 +683,17 @@ export class Game {
     let nextLocation: Location;
     if (this.dracula.nextMove.location) {
       nextLocation = this.dracula.nextMove.location;
+      this.dracula.updatePossibleTrailsWithUnknown(this.dracula.nextMove.travelMethod, this.dracula.nextMove.location.type);
       // check if new location causes Dracula to be revealed
       if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
         nextLocation == this.vanHelsing.currentLocation || nextLocation == this.mina.currentLocation))) {
         this.dracula.revealed = true;
+        this.dracula.cullPossibleTrailsAfterLocationRevealed(this.dracula.nextMove.location, 0);
       } else {
         this.dracula.revealed = false;
+        if (this.trail.length > 5 && this.trail[5].revealed) {
+          this.dracula.cleanUpDuplicatePossibleTrails();
+        }
       }
 
       // move to new location
