@@ -664,6 +664,7 @@ export class Game {
             this.log('Dracula moved to a hidden location');
             this.logVerbose('Dracula actually played power Hide');
             this.dracula.revealed = false;
+            this.dracula.updatePossibleTrailsWithUnknown(TravelMethod.road, LocationType.smallCity);
           }
           break;
         case PowerName.WolfForm:
@@ -683,6 +684,7 @@ export class Game {
     let nextLocation: Location;
     if (this.dracula.nextMove.location) {
       nextLocation = this.dracula.nextMove.location;
+      // TODO: need special case to handle double back and/or wolf form
       this.dracula.updatePossibleTrailsWithUnknown(this.dracula.nextMove.travelMethod, this.dracula.nextMove.location.type);
       // check if new location causes Dracula to be revealed
       if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
