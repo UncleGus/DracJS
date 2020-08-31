@@ -107,6 +107,12 @@ export class Dracula {
     });
   }
 
+  trimTrailsToLength(length: number) {
+    this.possibleTrails.forEach(possibleTrail => {
+      _.dropRight(possibleTrail.trail, possibleTrail.trail.length - length);
+    });
+  }
+
   updatePossibleTrailsWithUnknown(travelType: TravelMethod, locationType: LocationType) {
     const newPossibleTrails: PossibleTrail[] = [];
     if (travelType == TravelMethod.road) {
@@ -224,6 +230,7 @@ export class Dracula {
     }
     // console.log(newPossibleTrails.map(possibleTrail => possibleTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name)));
     this.possibleTrails = newPossibleTrails;
+    this.trimTrailsToLength(6);
   }
 
   updatePossibleTrailsAfterDoubleBackToTrail(position: number, locationType: LocationType) {
@@ -266,11 +273,12 @@ export class Dracula {
         possibleTrail.catacombs[index].location.roadConnections.includes(possibleTrail.catacombs[position].location)) {
         // this is a valid trail, update it and add it to the new trails
         possibleTrail.trail.unshift(possibleTrail.catacombs.splice(position, 1)[0]);
-        possibleTrail.trail[0].power == this.powers.find(power => power.name == PowerName.DoubleBack);        
+        possibleTrail.trail[0].power == this.powers.find(power => power.name == PowerName.DoubleBack);
         newPossibleTrails.push(possibleTrail);
       }
     });
     this.possibleTrails = newPossibleTrails;
+    this.trimTrailsToLength(6);
   }
 
   updatePossibleTrailsWithRevealedPower(powerName: PowerName) {
@@ -281,6 +289,7 @@ export class Dracula {
       }
       possibleTrail.trail.push(trailCard);
     });
+    this.trimTrailsToLength(6);
   }
 
   updatePossibleTrailsAfterPlayingFaceUpHide() {
@@ -353,6 +362,7 @@ export class Dracula {
       };
     });
     this.possibleTrails = newPossibleTrails;
+    this.trimTrailsToLength(6);
   }
 
   updatePossibleTrailsAfterWolfFormAndDoubleBackToTrail(position: number) {
@@ -406,9 +416,10 @@ export class Dracula {
         newPossibleTrails.push(possibleTrail);
       }
     });
+    this.trimTrailsToLength(6);
   }
 
-  updatePossibleTrailsAfterHideLocationDropsOff(position: number) {
+  updatePossibleTrailsAfterHideIsRevealed(position: number) {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
       // if this trail has hide at the right place
@@ -474,6 +485,77 @@ export class Dracula {
     });
     // set the possible trails to this new unique list
     this.possibleTrails = uniquePossibleTrails;
+  }
+
+  updateTrailsAfterEscapeAsBat(position: number) {
+    const newPossibleTrails: PossibleTrail[] = [];
+    this.possibleTrails.forEach(possibleTrail => {
+      // get the current location of this trail
+      let index = 0;
+      while (!possibleTrail.trail[index].location) {
+        index++;
+      }
+      // get all locations connected by a single road to this current location
+      let validLocations: Location[] = possibleTrail.trail[index].location.roadConnections;
+      // get all locations connected to those connections by a single road
+      possibleTrail.trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      // remove duplicates
+      _.uniq(validLocations);
+      // remove any already in the trail (not using doubleback)
+      _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
+      // remove any that are in the catacombs (not using doubleback)
+      _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
+      // filter out any that the Hunters are currently in
+      _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
+      // for each of the remaining locations,
+      validLocations.forEach(newPossibleLocation => {
+        // replace the current location card with the new location
+        possibleTrail.trail[position].location = newPossibleLocation;
+        // put that in the list of possible trails
+        newPossibleTrails.push(possibleTrail);
+      });
+    });
+  }
+
+  updateTrailsAfterEscapeAsBatCardAdded() {
+    const newPossibleTrails: PossibleTrail[] = [];
+    this.possibleTrails.forEach(possibleTrail => {
+      // get the current location of this trail
+      let index = 0;
+      while (!possibleTrail.trail[index].location) {
+        index++;
+      }
+      // get all locations connected by a single road to this current location
+      let validLocations: Location[] = possibleTrail.trail[index].location.roadConnections;
+      // get all locations connected to those connections by a single road
+      possibleTrail.trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      // remove duplicates
+      _.uniq(validLocations);
+      // remove any already in the trail (not using doubleback)
+      _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
+      // remove any that are in the catacombs (not using doubleback)
+      _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
+      // filter out any that the Hunters are currently in
+      _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
+      // for each of the remaining locations,
+      validLocations.forEach(newPossibleLocation => {
+        // copy the trail
+        const newTrail = _.cloneDeep(possibleTrail);
+        // console.log('The copy of the trail is:');
+        // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+        // create a new TrailCard
+        const newPossibleCard: TrailCard = {
+          revealed: false,
+          location: newPossibleLocation
+        }
+        // add it to the front of the trail
+        newTrail.trail.unshift(newPossibleCard);
+        // console.log('After adding the new possible location, the new trail is:');
+        // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+        // put that in the list of possible trails
+        newPossibleTrails.push(newTrail);
+      });
+    });
   }
 
   cullPossibleTrailsAfterLocationRevealedInTrail(revealedLocation: Location, trailPosition: number) {
@@ -1124,6 +1206,7 @@ export class Dracula {
       }
       cardIndex--;
     }
+    this.trimTrailsToLength(remainingCards);
     return `Returned ${cardsCleared} cards and ${encountersCleared} encounters`;
   }
 

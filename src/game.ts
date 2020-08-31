@@ -549,8 +549,13 @@ export class Game {
     let i = this.trail.length - 1;
     for (i; i > 0; i--) {
       if (!this.trail[i].revealed) {
-        this.trail[i].revealed = true;
-        break;
+        if (this.trail[i].location !== this.dracula.currentLocation) {
+          this.trail[i].revealed = true;
+          this.dracula.cullPossibleTrailsAfterLocationRevealedInTrail(this.trail[i].location, i);
+          break;
+        } else {
+          this.log('Cannot reveal Dracula\'s current location');
+        }
       }
     }
   }
@@ -760,7 +765,7 @@ export class Game {
           }
           this.dracula.hideLocation = null;
           this.trail.splice(hideIndex, 1);
-          this.dracula.updatePossibleTrailsAfterHideLocationDropsOff(hideIndex);
+          this.dracula.updatePossibleTrailsAfterHideIsRevealed(hideIndex);
         }
       }
       if (droppedOffCard.power) {
@@ -879,9 +884,15 @@ export class Game {
     this.trail.unshift(newTrailCard);
     this.log('Dracula added a card to the trail');
     if (this.hunterAlly) {
-      if (this.hunterAlly.name == EventName.JonathanHarker && this.trail.length > 5) {
+      if (this.hunterAlly.name == EventName.JonathanHarker && this.trail.length > 5 && !this.trail[5].revealed) {
         this.trail[5].revealed = true;
         this.log('Jonathan Harker revealed the last card in Dracula\'s trail');
+        if (this.trail[5].location) {
+          this.dracula.cullPossibleTrailsAfterLocationRevealedInTrail(this.trail[5].location, 5);
+        } else if (this.trail[5].power) {
+          // assuming the only power that can be unrevealed is Hide          
+          this.dracula.updatePossibleTrailsAfterHideIsRevealed(5);
+        }
       }
     }
   }
@@ -1163,13 +1174,17 @@ export class Game {
       }
       if (trailIndex > this.trail.length) {
         this.log('Dracula\'s current location card is not in the trail, adding it');
-        this.trail[0].location = destination;
-        this.trail[0].revealed = true;
+        this.trail.unshift({
+          location: destination,
+          revealed: true
+        });
         this.dracula.revealed = true;
+        this.dracula.updateTrailsAfterEscapeAsBatCardAdded();
       } else {
         this.trail[trailIndex].location = destination;
         this.trail[trailIndex].revealed = false;
         this.dracula.revealed = false;
+        this.dracula.updateTrailsAfterEscapeAsBat(trailIndex);
         this.log('Dracula escaped in the form of a Bat');
       }
       this.logVerbose(`Dracula escaped to ${this.dracula.currentLocation.name}`);
@@ -1262,7 +1277,8 @@ export class Game {
     }
     this.catacombCardsToBeRevealed.forEach(index => {
       this.catacombs[index].revealed = true;
-      this.log(`${this.catacombs[index].location.name} is revealed`)
+      this.log(`${this.catacombs[index].location.name} is revealed`);
+      this.dracula.cullPossibleTrailsAfterLocationRevealedInCatacombs(this.catacombs[index].location, index);
     });
     this.catacombCardsToBeRevealed = [];
   }
@@ -1282,8 +1298,10 @@ export class Game {
       this.trail[index].revealed = true;
       if (this.trail[index].location) {
         this.log(`${this.trail[index].location.name} is revealed`);
+        this.dracula.cullPossibleTrailsAfterLocationRevealedInTrail(this.trail[index].location, index);
       } else if (this.trail[index].power) {
         this.log(`${this.trail[index].power.name} is revealed`);
+        this.dracula.updatePossibleTrailsAfterHideIsRevealed(index);
       }
     });
     this.trailCardsToBeRevealed = [];
@@ -1304,11 +1322,12 @@ export class Game {
       this.dracula.revealed = true;
       this.log(`${hunter.name} has found Dracula at ${hunter.currentLocation.name}`);
     }
-    this.trail.forEach(trailCard => {
-      if (hunter.currentLocation == trailCard.location) {
+    for (let i = 0; i < this.trail.length; i++) {
+      if (hunter.currentLocation == this.trail[i].location) {
         foundSomething = true;
-        trailCard.revealed = true;
+        this.trail[i].revealed = true;
         this.log(`${hunter.name} has found Dracula's trail at ${hunter.currentLocation.name}`);
+        this.dracula.cullPossibleTrailsAfterLocationRevealedInTrail(hunter.currentLocation, i);
         if (hunter.currentLocation == this.dracula.hideLocation) {
           this.log('Dracula hid at this location');
           let hideIndex = 0;
@@ -1320,6 +1339,7 @@ export class Game {
             }
           }
           this.trail[hideIndex].revealed = true;
+          this.dracula.updatePossibleTrailsAfterHideIsRevealed(hideIndex);
           if (this.trail[hideIndex].encounter) {
             this.trail[hideIndex].encounter.revealed = true;
             this.log(`${hunter.name} has encountered ${this.trail[hideIndex].encounter.name} at ${hunter.currentLocation.name}`);
@@ -1327,20 +1347,21 @@ export class Game {
             encountersToResolve.push(this.trail[hideIndex].encounter);
           }
         }
-        if (trailCard.encounter) {
-          trailCard.encounter.revealed = true;
-          this.log(`${hunter.name} has encountered ${trailCard.encounter.name} at ${hunter.currentLocation.name}`);
-          trailCard.encounter.revealed = true;
-          encountersToResolve.push(trailCard.encounter);
+        if (this.trail[i].encounter) {
+          this.trail[i].encounter.revealed = true;
+          this.log(`${hunter.name} has encountered ${this.trail[i].encounter.name} at ${hunter.currentLocation.name}`);
+          this.trail[i].encounter.revealed = true;
+          encountersToResolve.push(this.trail[i].encounter);
         }
       }
-    });
+    };
     for (let i = 0; i < this.catacombs.length; i++) {
       const catacomb = this.catacombs[i];
       if (hunter.currentLocation == catacomb.location) {
         foundSomething = true;
         catacomb.revealed = true;
         this.log(`${hunter.name} has found Dracula's catacomb at ${hunter.currentLocation.name}`);
+        this.dracula.cullPossibleTrailsAfterLocationRevealedInCatacombs(this.catacombs[i].location, i)
         if (catacomb.encounter) {
           catacomb.encounter.revealed = true;
           this.log(`${hunter.name} has encountered ${catacomb.encounter.name} at ${hunter.currentLocation.name}`);
@@ -1356,6 +1377,7 @@ export class Game {
     }
     if (!foundSomething) {
       this.log(`${hunter.name} found nothing at ${hunter.currentLocation.name}`);
+      this.dracula.cullPossibleTrailsAfterLocationRuledOut(hunter.currentLocation);
     }
     if (encountersToResolve.length > 0) {
       this.log(this.dracula.chooseEncounterResolutionOrder(encountersToResolve));
@@ -1678,7 +1700,7 @@ export class Game {
   }
 
   /**
-   * Updates Dracula's revealed status based on the status of the card in the first trail slot
+   * Updates Dracula's revealed status based on the status of the card corresponding to Dracula's current location
    * TODO: test
    */
   updateDraculaRevealed() {

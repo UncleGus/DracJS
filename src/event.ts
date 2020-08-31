@@ -272,8 +272,12 @@ export function resolveEvent(eventName: string, gameState: Game) {
       let i = gameState.trail.length - 1;
       for (i; i > 0; i--) {
         if (!gameState.trail[i].revealed) {
-          gameState.trailCardsToBeRevealed.push(i);
-          break;
+          if (gameState.trail[i].location !== gameState.dracula.currentLocation) {
+            gameState.trailCardsToBeRevealed.push(i);
+            break;
+          } else {
+            gameState.log('Cannot reveal Dracula\'s current location');
+          }
         }
       }
       break;
