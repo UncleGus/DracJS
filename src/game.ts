@@ -603,10 +603,15 @@ export class Game {
     if (!this.dracula.nextMove) {
       this.log('Dracula has no valid moves');
       this.log(this.dracula.die());
+      let index = 0;
+      while (!this.trail[index].location || this.trail[index].location !== this.dracula.currentLocation) {
+        index++;
+      }
       // TODO: I think this should actually clear down to his current location, which might not be the first card in the trail
-      this.log(this.dracula.clearTrail(1));
+      // test
+      this.log(this.dracula.clearTrail(index + 1));
       this.dracula.revealed = true;
-      this.trail[0].revealed = true; // ^
+      this.trail[index].revealed = true; // ^
       this.log(this.dracula.chooseNextMove());
     }
 
@@ -619,6 +624,7 @@ export class Game {
           this.log('Dracula played power Dark Call');
           this.log(this.dracula.executeDarkCall());
           this.log(this.shuffleEncounters());
+          this.dracula.updatePossibleTrailsWithRevealedPower(PowerName.DarkCall);
           break;
         case PowerName.DoubleBack:
         case PowerName.WolfFormAndDoubleBack:
@@ -641,16 +647,27 @@ export class Game {
             if (doubleBackTrailIndex == this.dracula.evasionSlot) {
               this.dracula.evasionSlot--;
             }
+            if (this.dracula.nextMove.power.name == PowerName.DoubleBack) {
+              this.dracula.updatePossibleTrailsAfterDoubleBack(doubleBackTrailIndex, doubleBackedCard.location.type);
+            } else {
+              this.dracula.updatePossibleTrailsAfterWolfFormAndDoubleBack(doubleBackTrailIndex);
+            }
           }
           if (doubleBackCatacombIndex) {
-            this.log(`Dracula Doubled Back to the location in position ${doubleBackCatacombIndex + 1} of the trail`);
+            this.log(`Dracula Doubled Back to the location in position ${doubleBackCatacombIndex + 1} of the catacombs`);
             const doubleBackedCard = this.catacombs.splice(doubleBackCatacombIndex, 1)[0];
             this.pushToTrail(doubleBackedCard);
             this.log(this.dracula.decideWhichEncounterToKeep(this.trail[0]));
+            if (this.dracula.nextMove.power.name == PowerName.DoubleBack) {
+              // update trails and remove any that aren't connected to this catacomb
+            } else {
+              // update trails after doubleback and wolf form for catacombs
+            }
           }
           break;
         case PowerName.Feed:
           this.log('Dracula played power Feed');
+          this.dracula.updatePossibleTrailsWithRevealedPower(PowerName.Feed);
           break;
         case PowerName.Hide:
           this.dracula.hideLocation = this.dracula.currentLocation;
@@ -660,6 +677,7 @@ export class Game {
             this.dracula.currentLocation == this.mina.currentLocation) {
             this.log('Dracula played power Hide');
             this.dracula.revealed = true;
+            this.dracula.updatePossibleTrailsAfterPlayingFaceUpHide();
           } else {
             this.log('Dracula moved to a hidden location');
             this.logVerbose('Dracula actually played power Hide');
@@ -669,10 +687,12 @@ export class Game {
           break;
         case PowerName.WolfForm:
           this.log('Dracula played power Wolf Form');
+          this.dracula.updatePossibleTrailsAfterPlayingWolfFormNoDoubleBackHiddenLocation();
           break;
         case PowerName.WolfFormAndHide:
           this.log('Dracula played power Wolf Form');
           this.logVerbose('Dracula played Wolf Form and Hide');
+          this.dracula.updatePossibleTrailsAfterPlayingWolfFormNoDoubleBackHiddenLocation();
           break;
       }
       this.dracula.evasionSlot++;
@@ -684,8 +704,9 @@ export class Game {
     let nextLocation: Location;
     if (this.dracula.nextMove.location) {
       nextLocation = this.dracula.nextMove.location;
-      // TODO: need special case to handle double back and/or wolf form
-      this.dracula.updatePossibleTrailsWithUnknown(this.dracula.nextMove.travelMethod, this.dracula.nextMove.location.type);
+      if (!this.dracula.nextMove.power) {
+        this.dracula.updatePossibleTrailsWithUnknown(this.dracula.nextMove.travelMethod, this.dracula.nextMove.location.type);
+      }
       // check if new location causes Dracula to be revealed
       if (nextLocation.type == LocationType.castle || (nextLocation.type !== LocationType.sea && (nextLocation == this.godalming.currentLocation || nextLocation == this.seward.currentLocation ||
         nextLocation == this.vanHelsing.currentLocation || nextLocation == this.mina.currentLocation))) {
@@ -739,6 +760,7 @@ export class Game {
           }
           this.dracula.hideLocation = null;
           this.trail.splice(hideIndex, 1);
+          this.dracula.updatePossibleTrailsAfterHideLocationDropsOff(hideIndex);
         }
       }
       if (droppedOffCard.power) {
@@ -1623,11 +1645,11 @@ export class Game {
    * @param location The Location to look for
    */
   trailContains(location: Location): boolean {
-    this.trail.forEach(card => {
-      if (card.location == location) {
+    for (let i = 0; i < this.trail.length; i++) {
+      if (this.trail[i].location == location) {
         return true;
       }
-    });
+    };
     return false;
   }
 
@@ -1657,6 +1679,7 @@ export class Game {
 
   /**
    * Updates Dracula's revealed status based on the status of the card in the first trail slot
+   * TODO: The first card might be a power or something, which doesn't mean he is or isn't revealed
    */
   updateDraculaRevealed() {
     if (this.trail[0]) {

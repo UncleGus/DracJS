@@ -113,30 +113,30 @@ export class Dracula {
         while (!trail[index].location) {
           index++;
         }
-        console.log(`In this trail, Dracula is in ${trail[index].location.name}`);
+        // console.log(`In this trail, Dracula is in ${trail[index].location.name}`);
         // get all locations connected to the current location by road
         // filter out any locations that are already in this trail
         let validLocations = trail[index].location.roadConnections.filter(location => !this.possibleTrailContainsLocation(trail, location));
-        console.log(`The places he could move that he hasn't already been to are:`);
-        console.log(validLocations.map(location => location.name));
+        // console.log(`The places he could move that he hasn't already been to are:`);
+        // console.log(validLocations.map(location => location.name));
         // filter out any that the Hunters are currently in
         _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
-        console.log('After removing Hunters\' locations, he could move to:');
-        console.log(validLocations.map(location => location.name));
+        // console.log('After removing Hunters\' locations, he could move to:');
+        // console.log(validLocations.map(location => location.name));
         // filter out any that are in the catacombs
-        _.remove(validLocations, location => this.gameState.catacombsContains(location));
-        console.log('After removing locations in the catacombs, he could move to:');
-        console.log(validLocations.map(location => location.name));
+        // TODO: needs to be the possible trails' catacombs, not the actual ones
+        // console.log('After removing locations in the catacombs, he could move to:');
+        // console.log(validLocations.map(location => location.name));
         // filter out hospital and castle
         _.remove(validLocations, location => location.type == LocationType.hospital || location.type == LocationType.castle);
-        console.log('After removing the castle and the hospital, he could move to:');
-        console.log(validLocations.map(location => location.name));
+        // console.log('After removing the castle and the hospital, he could move to:');
+        // console.log(validLocations.map(location => location.name));
         // for each of the remaining locations,
         validLocations.forEach(newPossibleLocation => {
           // copy the trail
           const newTrail = _.clone(trail);
-          console.log('The copy of the trail is:');
-          console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+          // console.log('The copy of the trail is:');
+          // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
           // create a new TrailCard
           const newPossibleCard: TrailCard = {
             revealed: false,
@@ -144,8 +144,8 @@ export class Dracula {
           }
           // add it to the front of the trail
           newTrail.unshift(newPossibleCard);
-          console.log('After adding the new possible location, the new trail is:');
-          console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+          // console.log('After adding the new possible location, the new trail is:');
+          // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
           //  trim it to length 6
           _.dropRight(newTrail, newTrail.length - 6);
           // put that in the list of possible trails
@@ -153,11 +153,11 @@ export class Dracula {
         });
         // if hide hasn't been used in this possible trail, it could be used now
         if (!this.possibleTrailContainsHide(trail)) {
-          console.log('He could also hide');
+          // console.log('He could also hide');
           // copy the trail
           const newTrail = _.clone(trail);
-          console.log('The copy of the trail is:');
-          console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+          // console.log('The copy of the trail is:');
+          // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
           // create a new TrailCard
           const newPossibleCard: TrailCard = {
             revealed: false,
@@ -165,10 +165,8 @@ export class Dracula {
           }
           // add it to the front of the trail
           newTrail.unshift(newPossibleCard);
-          console.log('After adding the new possible location, the new trail is:');
-          console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
-          //  trim it to length 6
-          _.dropRight(newTrail, newTrail.length - 6);
+          // console.log('After adding the new possible location, the new trail is:');
+          // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
           // put that in the list of possible trails
           newPossibleTrails.push(newTrail);
         };
@@ -180,12 +178,12 @@ export class Dracula {
         while (!trail[index].location) {
           index++;
         }
-        console.log(`In this trail, Dracula is in ${trail[index].location.name}`);
+        // console.log(`In this trail, Dracula is in ${trail[index].location.name}`);
         // get all locations connected to the current location by sea
         // filter out any locations that are already in this trail
         let validLocations = trail[index].location.seaConnections.filter(location => !this.possibleTrailContainsLocation(trail, location));
-        console.log(`The places he could move that he hasn't already been to are:`);
-        console.log(validLocations.map(location => location.name));
+        // console.log(`The places he could move that he hasn't already been to are:`);
+        // console.log(validLocations.map(location => location.name));
         // filter out any locations that are not of the right type
         if (locationType == LocationType.largeCity || LocationType.smallCity) {
           // filter out any non-land type locations
@@ -193,21 +191,21 @@ export class Dracula {
           // filter out any that the Hunters are currently in
           _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
           // filter out any that are in the catacombs
-          _.remove(validLocations, location => this.gameState.catacombsContains(location));
+          // TODO: needs to be the possible trails' catacombs, not the actual ones
         } else {
           // filter out any non-sea type locations
           _.remove(validLocations, location => location.type !== LocationType.sea);
           // don't filter out the Hunters' locations because this is a sea location
           // don't worry about the catacombs because they can't contain sea locations
         }
-        console.log(`After removing locations of the wrong type, the places he could move are:`);
-        console.log(validLocations.map(location => location.name));
+        // console.log(`After removing locations of the wrong type, the places he could move are:`);
+        // console.log(validLocations.map(location => location.name));
         // for each of the remaining locations,
         validLocations.forEach(newPossibleLocation => {
           // copy the trail
           const newTrail = _.clone(trail);
-          console.log('The copy of the trail is:');
-          console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+          // console.log('The copy of the trail is:');
+          // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
           // create a new TrailCard
           const newPossibleCard: TrailCard = {
             revealed: false,
@@ -215,17 +213,168 @@ export class Dracula {
           }
           // add it to the front of the trail
           newTrail.unshift(newPossibleCard);
-          console.log('After adding the new possible location, the new trail is:');
-          console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
-          //  trim it to length 6
-          _.dropRight(newTrail, newTrail.length - 6);
+          // console.log('After adding the new possible location, the new trail is:');
+          // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
           // put that in the list of possible trails
           newPossibleTrails.push(newTrail);
           // hide can't be used at sea
         });
       });
     }
-    console.log(newPossibleTrails.map(possibleTrail => possibleTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name)));
+    // console.log(newPossibleTrails.map(possibleTrail => possibleTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name)));
+    this.possibleTrails = newPossibleTrails;
+  }
+
+  updatePossibleTrailsAfterDoubleBack(position: number, locationType: LocationType) {
+    const newPossibleTrails: TrailCard[][] = [];
+    this.possibleTrails.forEach(trail => {
+      // get the current location of this trail
+      let index = 0;
+      while (!trail[index].location) {
+        index++;
+      }
+      // check if the indicated position's location is connected by the relevant method
+      if ((locationType == LocationType.sea && trail[index].location.seaConnections.includes(trail[position].location)) ||
+        trail[index].location.roadConnections.includes(trail[position].location)) {
+        // this is a valid trail, update it and add it to the new trails
+        const newTrail: TrailCard[] = [trail[position]];
+        newTrail[0].power == this.powers.find(power => power.name == PowerName.DoubleBack);
+        for (let i = 0; i < position; i++) {
+          newTrail.push(trail[i]);
+        }
+        for (let i = position + 1; i < trail.length; i++) {
+          newTrail.push(trail[i]);
+        }
+        newPossibleTrails.push(newTrail);
+      }
+    });
+    this.possibleTrails = newPossibleTrails;
+  }
+
+  updatePossibleTrailsWithRevealedPower(powerName: PowerName) {
+    this.possibleTrails.forEach(trail => {
+      const trailCard: TrailCard = {
+        power: this.powers.find(power => power.name == powerName),
+        revealed: true
+      }
+      trail.push(trailCard);
+    });
+  }
+
+  updatePossibleTrailsAfterPlayingFaceUpHide() {
+    const newPossibleTrails: TrailCard[][] = [];
+    this.possibleTrails.forEach(trail => {
+      if (!this.possibleTrailContainsHide(trail)) {
+        // the trails themselves don't need to change because the Hide card is removed from the trail instantly
+        newPossibleTrails.push(trail);
+      }
+    });
+    this.possibleTrails = newPossibleTrails;
+  }
+
+  updatePossibleTrailsAfterPlayingWolfFormNoDoubleBackHiddenLocation() {
+    const newPossibleTrails: TrailCard[][] = [];
+    this.possibleTrails.forEach(trail => {
+      // get the current location of this trail
+      let index = 0;
+      while (!trail[index].location) {
+        index++;
+      }
+      // get all locations connected by a single road to this current location
+      let validLocations: Location[] = trail[index].location.roadConnections;
+      // get all locations connected to those connections by a single road
+      trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      // remove duplicates
+      _.uniq(validLocations);
+      // remove any already in the trail (not using doubleback)
+      _.remove(validLocations, location => this.possibleTrailContainsLocation(trail, location));
+      // remove any that are in the catacombs (not using doubleback)
+      // TODO: possible catacombs functionality
+      // filter out any that the Hunters are currently in
+      _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
+      // for each of the remaining locations,
+      validLocations.forEach(newPossibleLocation => {
+        // copy the trail
+        const newTrail = _.clone(trail);
+        // console.log('The copy of the trail is:');
+        // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+        // create a new TrailCard
+        const newPossibleCard: TrailCard = {
+          revealed: false,
+          location: newPossibleLocation
+        }
+        // add it to the front of the trail
+        newTrail.unshift(newPossibleCard);
+        // console.log('After adding the new possible location, the new trail is:');
+        // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+        //  trim it to length 6
+        _.dropRight(newTrail, newTrail.length - 6);
+        // put that in the list of possible trails
+        newPossibleTrails.push(newTrail);
+      });
+      // if hide hasn't been used in this possible trail, it could be used now
+      if (!this.possibleTrailContainsHide(trail)) {
+        // console.log('He could also hide');
+        // copy the trail
+        const newTrail = _.clone(trail);
+        // console.log('The copy of the trail is:');
+        // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+        // create a new TrailCard
+        const newPossibleCard: TrailCard = {
+          revealed: false,
+          power: this.powers.find(power => power.name == PowerName.Hide)
+        }
+        // add it to the front of the trail
+        newTrail.unshift(newPossibleCard);
+        // console.log('After adding the new possible location, the new trail is:');
+        // console.log(newTrail.map(trailCard => trailCard.location ? trailCard.location.name : trailCard.power.name));
+        // put that in the list of possible trails
+        newPossibleTrails.push(newTrail);
+      };
+    });
+    this.possibleTrails = newPossibleTrails;
+  }
+
+  updatePossibleTrailsAfterWolfFormAndDoubleBack(position: number) {
+    const newPossibleTrails: TrailCard[][] = [];
+    this.possibleTrails.forEach(trail => {
+      // get the current location of this trail
+      let index = 0;
+      while (!trail[index].location) {
+        index++;
+      }
+      // get all locations connected by a single road to this current location
+      let validLocations: Location[] = trail[index].location.roadConnections;
+      // get all locations connected to those connections by a single road
+      trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      // remove duplicates
+      _.uniq(validLocations);
+      if (validLocations.includes(trail[position].location)) {
+        // this is a valid trail, update it and add it to the new trails
+        const newTrail: TrailCard[] = [trail[position]];
+        newTrail[0].power == this.powers.find(power => power.name == PowerName.WolfFormAndDoubleBack);
+        for (let i = 0; i < position; i++) {
+          newTrail.push(trail[i]);
+        }
+        for (let i = position + 1; i < trail.length; i++) {
+          newTrail.push(trail[i]);
+        }
+        newPossibleTrails.push(newTrail);
+      }
+    });
+  }
+
+  updatePossibleTrailsAfterHideLocationDropsOff(position: number) {
+    const newPossibleTrails: TrailCard[][] = [];
+    this.possibleTrails.forEach(trail => {
+      // if this trail has hide at the right place
+      if (trail[position].power && trail[position].power.name == PowerName.Hide) {
+        // take the hide out of this trail
+        _.remove(trail, card => card.power && card.power.name == PowerName.Hide);
+        // and put it into the list of new trails
+        newPossibleTrails.push(trail);
+      }
+    });
     this.possibleTrails = newPossibleTrails;
   }
 
@@ -290,7 +439,7 @@ export class Dracula {
   }
 
   possibleTrailContainsLocation(trail: TrailCard[], location: Location): boolean {
-    for (let i = 0; i < trail.length; i++) {
+    for (let i = 0; i < Math.min(trail.length, 6); i++) {
       if (trail[i].location == location) {
         return true;
       }
@@ -299,7 +448,7 @@ export class Dracula {
   }
 
   possibleTrailContainsHide(trail: TrailCard[]): boolean {
-    for (let i = 0; i < trail.length; i++) {
+    for (let i = 0; i < Math.min(trail.length, 6); i++) {
       if (trail[i].power && trail[i].power.name == PowerName.Hide) {
         return true;
       }
@@ -509,6 +658,7 @@ export class Dracula {
     }
     this.possibleMoves = this.determineLegalMoves();
     if (this.possibleMoves.length > 0) {
+      /* will revisit
       this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
@@ -519,6 +669,8 @@ export class Dracula {
         index++;
       }
       this.nextMove = this.possibleMoves[index];
+      */
+      this.nextMove = this.possibleMoves[Math.floor(Math.random() * this.possibleMoves.length)];
     } else {
       return 'Dracula has no legal moves available';
     }
@@ -536,7 +688,6 @@ export class Dracula {
     // Things to consider:
     // how warm the trail is
     // if there are any Encounters about to mature that would clear this Encounter off the trail
-    /* Will revisit
     let rightmostClearedTrailSpace = 5;
     for (let i = this.gameState.trail.length - 1; i > -1; i--) {
       if (this.gameState.trail[i].encounter) {
@@ -629,14 +780,13 @@ export class Dracula {
     });
     encountersValued.sort((a, b) => b.value - a.value);
 
-    encountersValued.forEach(enc => {
+    for (let j = 0; j < encountersValued.length; j++) {
       for (let i = 0; i < this.encounterHand.length; i++) {
-        if (this.encounterHand[i].name == enc.name) {
+        if (this.encounterHand[i].name == encountersValued[j].name) {
           return this.encounterHand.splice(i, 1)[0];
         }
       }
-    });
-    */
+    };
     const randomChoice = Math.floor(Math.random() * this.encounterHand.length);
     return this.encounterHand.splice(randomChoice, 1)[0];
   }
