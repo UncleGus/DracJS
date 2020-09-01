@@ -182,6 +182,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
       const evasionDestination = gameState.dracula.chooseEvasionDestination();
       gameState.dracula.currentLocation = evasionDestination;
       gameState.pushToTrail({ revealed: false, location: evasionDestination, encounter: gameState.dracula.chooseEncounterForTrail() });
+      gameState.dracula.updatePossibleTrailsAfterEvasion();
       break;
     case EventName.ExcellentWeather:
       gameState.log(`${gameState.hunterWhoPlayedEvent.name} may make up to four sea moves`);
@@ -292,7 +293,7 @@ export function resolveEvent(eventName: string, gameState: Game) {
       gameState.rageRounds = 3;
       break;
     case EventName.ReEquip:
-      gameState.log('Discard one item and drew a new one from the deck');
+      gameState.log('Discard one item and draw a new one from the deck');
       break;
     // Handled in game.handleCombatEffect()
     // case EventName.RelentlessMinion:

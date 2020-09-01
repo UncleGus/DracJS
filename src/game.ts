@@ -132,7 +132,6 @@ export class Game {
     return false;
   }
 
-
   /**
    * Determines if a Location is blocked to Dracula due to Consecrated Ground or one of the Heavenly Hosts or by being the Hospital
    * @param location The Location to check
@@ -682,7 +681,7 @@ export class Game {
             this.dracula.currentLocation == this.mina.currentLocation) {
             this.log('Dracula played power Hide');
             this.dracula.revealed = true;
-            this.dracula.updatePossibleTrailsAfterPlayingFaceUpHide();
+            this.dracula.updatePossibleTrailsWithRevealedPower(PowerName.Hide);
           } else {
             this.log('Dracula moved to a hidden location');
             this.logVerbose('Dracula actually played power Hide');
@@ -692,12 +691,12 @@ export class Game {
           break;
         case PowerName.WolfForm:
           this.log('Dracula played power Wolf Form');
-          this.dracula.updatePossibleTrailsAfterPlayingWolfFormNoDoubleBackHiddenLocation();
+          this.dracula.updatePossibleTrailsAfterPlayingStandardWolfForm();
           break;
         case PowerName.WolfFormAndHide:
           this.log('Dracula played power Wolf Form');
           this.logVerbose('Dracula played Wolf Form and Hide');
-          this.dracula.updatePossibleTrailsAfterPlayingWolfFormNoDoubleBackHiddenLocation();
+          this.dracula.updatePossibleTrailsAfterPlayingStandardWolfForm();
           break;
       }
       this.dracula.evasionSlot++;
@@ -1585,7 +1584,6 @@ export class Game {
   showEventToDracula(hunter: Hunter, eventName: string) {
     this.dracula.updateEventTrackingFromShown(hunter, eventName);
   }
-
 
   /**
    * Shows Dracula an Item in a Hunter's hand
