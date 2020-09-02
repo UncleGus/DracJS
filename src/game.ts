@@ -148,6 +148,7 @@ export class Game {
    */
   declareHunterMove(hunter: Hunter, moveMethod: string, destination: string) {
     hunter.committedMove = { moveMethod, destination };
+    hunter.mustDeclareNextMove = false;
   }
 
   /**

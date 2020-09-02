@@ -205,13 +205,6 @@ draculaTurnButton.addEventListener('click', () => {
       clearOptions(moveMethod);
       updateMovement();
 
-      travelButton.addEventListener('click', () => {
-        if (destination.value) {
-          clearOptions(destination);
-          game.searchWithHunter(hunters[actingHunter]);
-        }
-        updateAllFields();
-      });
       actingHunter = 0;
       draculaTurnButton.textContent = 'Perform Timekeeping phase';
       updateSelectedHunter();
@@ -309,6 +302,8 @@ travelButton.addEventListener('click', () => {
   if (hunters[actingHunter].mustDeclareNextMove) {
     game.declareHunterMove(hunters[actingHunter], moveMethod.value, destination.value);
     updateMovement();
+    travelButton.textContent = 'Travel';
+    travelButton.addEventListener('click', doTravel);
   } else if (moveMethod.value == EncounterName.Bats) {
     game.setHunterLocation(hunters[actingHunter], game.dracula.decideBatsDestination(hunters[actingHunter]).name);
     let batsTile: Encounter;
@@ -762,8 +757,10 @@ function updateMovement() {
     }
     if (hunters[actingHunter].mustDeclareNextMove) {
       travelButton.textContent = 'Declare';
+      travelButton.removeEventListener('click', doTravel);
     } else {
       travelButton.textContent = 'Travel';
+      travelButton.addEventListener('click', doTravel);
     }
     if (hunters[actingHunter].committedMove) {
       let moveIsPossible = true;
@@ -804,6 +801,7 @@ function updateMovement() {
  * Updates the options in the destination dropdown
  */
 function updateDestinations() {
+  clearOptions(destination);
   switch (moveMethod.value) {
     case 'Start Location':
       game.map.locations.filter(location => location.type == LocationType.largeCity || location.type == LocationType.smallCity).forEach(location => {
@@ -1189,4 +1187,15 @@ function clearOptions(element: HTMLSelectElement) {
   for (let i = element.options.length - 1; i >= 0; i--) {
     element.options.remove(i);
   }
+}
+
+/**
+ * Performs the movement and search with a Hunter
+ */
+function doTravel () {
+  if (destination.value) {
+    clearOptions(destination);
+    game.searchWithHunter(hunters[actingHunter]);
+  }
+  updateAllFields();
 }

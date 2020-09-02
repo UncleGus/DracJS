@@ -182,7 +182,7 @@ export class Dracula {
           });
           newPossibleTrails.push(newPossibleTrail);
         });
-        if (!this.possibleTrailContainsHide(possibleTrail)) {
+        if (!this.possibleTrailContainsHide(possibleTrail) && possibleTrail.currentLocation.type !== LocationType.castle && !this.gameState.hunterIsIn(possibleTrail.currentLocation)) {
           const newPossibleTrail: PossibleTrail = {
             trail: _.clone(possibleTrail.trail),
             catacombs: _.clone(possibleTrail.catacombs),
@@ -350,8 +350,7 @@ export class Dracula {
         });
         newPossibleTrails.push(newPossibleTrail);
       });
-      if (!this.possibleTrailContainsHide(possibleTrail)) {
-        const newPossibleTrail: PossibleTrail = {
+      if (!this.possibleTrailContainsHide(possibleTrail) && possibleTrail.currentLocation.type !== LocationType.castle && !this.gameState.hunterIsIn(possibleTrail.currentLocation)) {        const newPossibleTrail: PossibleTrail = {
           trail: _.clone(possibleTrail.trail),
           catacombs: _.clone(possibleTrail.catacombs),
           currentLocation: possibleTrail.currentLocation
@@ -1245,6 +1244,9 @@ export class Dracula {
    * @param remainingCards The number of cards to leave behind in the trail
    */
   clearTrail(remainingCards: number): string {
+    // special case if Hide is in the trail
+    // either the hide location could be cleared without the Hide itself
+    // or Hide could be at the head of the trail
     let cardsCleared = 0;
     let encountersCleared = 0;
     let cardIndex = this.gameState.trail.length - 1;
