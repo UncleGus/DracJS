@@ -546,6 +546,10 @@ heavenlyHost2.addEventListener('change', () => {
 console.log('Wiring up debug button');
 debugGameStateButton.addEventListener('click', () => {
   console.log(game);
+  // game.dracula.possibleTrails.forEach(possibleTrail => {
+  //   console.log(possibleTrail.trail.map(card => `${card.location ? card.location.name : ''}${card.location && card.power ? ' with ' : ''}${card.power ? card.power.name : ''}`));
+  // });
+  console.log(`${game.dracula.possibleLocations.length} locations, trail length ${game.dracula.possibleTrails[0].trail.length}, ${game.dracula.possibleTrails.length} possible trails`);
 });
 debugLogButton.addEventListener('click', () => {
   if (debugLogButton.textContent == 'Show full log') {

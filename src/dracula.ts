@@ -29,8 +29,8 @@ export class Dracula {
   potentialTargetHunters: Hunter[];
   hypnosisInEffect: boolean;
   gameState: Game;
-  evasionSlot: number;
   possibleTrails: PossibleTrail[];
+  possibleLocations: Location[];
 
   constructor() {
     this.blood = 15;
@@ -40,7 +40,6 @@ export class Dracula {
     this.eventHand = [];
     this.droppedOffEncounters = [];
     this.eventHandSize = 4;
-    this.evasionSlot = 8;
     this.seaBloodPaid = false;
     this.powers = [
       {
@@ -105,9 +104,11 @@ export class Dracula {
           revealed: false,
           location
         }],
-        catacombs: []
+        catacombs: [],
+        currentLocation: location
       });
     });
+    this.updatePossibleLocations();
   }
 
   /**
@@ -120,9 +121,13 @@ export class Dracula {
       _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
       _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
       _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
-      // TODO heavenly host and consecrated ground
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
       validLocations.forEach(location => {
-        const newPossibleTrail = _.cloneDeep(possibleTrail);
+        const newPossibleTrail: PossibleTrail = {
+          trail: _.clone(possibleTrail.trail),
+          catacombs: _.clone(possibleTrail.catacombs),
+          currentLocation: location
+        }
         newPossibleTrail.trail.unshift({
           location,
           revealed: false
@@ -131,7 +136,8 @@ export class Dracula {
       });
     });
     this.possibleTrails = newPossibleTrails;
-    this.trimTrailsToLength(7);
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
   }
 
   /**
@@ -139,9 +145,14 @@ export class Dracula {
    * @param length The length of the trail to retain
    */
   trimTrailsToLength(length: number) {
+    if (this.possibleTrails[0].trail.length <= length) {
+      return;
+    }
+    const dropCount = this.possibleTrails[0].trail.length - length;
     this.possibleTrails.forEach(possibleTrail => {
-      _.dropRight(possibleTrail.trail, possibleTrail.trail.length - length);
+      possibleTrail.trail = _.dropRight(possibleTrail.trail, dropCount);
     });
+    this.cleanUpDuplicatePossibleTrails();
   }
 
   /**
@@ -153,59 +164,100 @@ export class Dracula {
     const newPossibleTrails: PossibleTrail[] = [];
     if (travelType == TravelMethod.road) {
       this.possibleTrails.forEach(possibleTrail => {
-        let index = 0;
-        while (!possibleTrail.trail[index].location) {
-          index++;
-        }
-        let validLocations = possibleTrail.trail[index].location.roadConnections.filter(location => !this.possibleTrailContainsLocationInTrail(possibleTrail, location));
-        _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
+        let validLocations: Location[] = _.clone(possibleTrail.currentLocation.roadConnections);
+        _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
         _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
+        _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
         _.remove(validLocations, location => location.type == LocationType.hospital || location.type == LocationType.castle);
-        // TODO: heavenly host and consecrated ground
+        _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
         validLocations.forEach(newPossibleLocation => {
-          const newTrail = _.cloneDeep(possibleTrail);
-          newTrail.trail.unshift({
+          const newPossibleTrail: PossibleTrail = {
+            trail: _.clone(possibleTrail.trail),
+            catacombs: _.clone(possibleTrail.catacombs),
+            currentLocation: newPossibleLocation
+          }
+          newPossibleTrail.trail.unshift({
             revealed: false,
             location: newPossibleLocation
           });
-          newPossibleTrails.push(newTrail);
+          newPossibleTrails.push(newPossibleTrail);
         });
         if (!this.possibleTrailContainsHide(possibleTrail)) {
-          const newTrail = _.clone(possibleTrail);
-          newTrail.trail.unshift({
+          const newPossibleTrail: PossibleTrail = {
+            trail: _.clone(possibleTrail.trail),
+            catacombs: _.clone(possibleTrail.catacombs),
+            currentLocation: possibleTrail.currentLocation
+          }
+          newPossibleTrail.trail.unshift({
             revealed: false,
             power: this.powers.find(power => power.name == PowerName.Hide)
           });
-          newPossibleTrails.push(newTrail);
+          newPossibleTrails.push(newPossibleTrail);
         };
       });
     } else if (travelType == TravelMethod.sea) {
       this.possibleTrails.forEach(possibleTrail => {
-        let index = 0;
-        while (!possibleTrail.trail[index].location) {
-          index++;
-        }
-        let validLocations = possibleTrail.trail[index].location.seaConnections.filter(location => !this.possibleTrailContainsLocationInTrail(possibleTrail, location));
-        if (locationType == LocationType.largeCity || LocationType.smallCity) {
+        let validLocations = possibleTrail.currentLocation.seaConnections.filter(location => !this.possibleTrailContainsLocationInTrail(possibleTrail, location));
+        if (locationType == LocationType.largeCity || locationType == LocationType.smallCity) {
           _.remove(validLocations, location => location.type !== LocationType.smallCity && location.type !== LocationType.largeCity);
-          _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
+          _.remove(validLocations, location => this.gameState.hunterIsIn(location));
           _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
-          // TODO heavenly host and consecrated ground
+          _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
         } else {
           _.remove(validLocations, location => location.type !== LocationType.sea);
         }
         validLocations.forEach(newPossibleLocation => {
-          const newTrail = _.clone(possibleTrail);
-          newTrail.trail.unshift({
+          const newPossibleTrail: PossibleTrail = {
+            trail: _.clone(possibleTrail.trail),
+            catacombs: _.clone(possibleTrail.catacombs),
+            currentLocation: newPossibleLocation
+          }
+          newPossibleTrail.trail.unshift({
             revealed: false,
             location: newPossibleLocation
           });
-          newPossibleTrails.push(newTrail);
+          newPossibleTrails.push(newPossibleTrail);
         });
       });
     }
     this.possibleTrails = newPossibleTrails;
-    this.trimTrailsToLength(7);
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
+  }
+
+  /**
+   * Calculates a new set of possible trails based on the current set and adding a new revealed location to the head
+   * @param travelType The method by which Dracula has travelled to the new location
+   * @param newLocation The new location
+   */
+  updatePossibleTrailsWithKnown(travelType: TravelMethod, newLocation: Location) {
+    const newPossibleTrails: PossibleTrail[] = [];
+    if (travelType == TravelMethod.road) {
+      this.possibleTrails.forEach(possibleTrail => {
+        if (possibleTrail.currentLocation.roadConnections.includes(newLocation)) {
+          possibleTrail.trail.unshift({
+            location: newLocation,
+            revealed: true
+          });
+          possibleTrail.currentLocation = newLocation;
+          newPossibleTrails.push(possibleTrail);
+        }
+      });
+    } else if (travelType == TravelMethod.sea) {
+      this.possibleTrails.forEach(possibleTrail => {
+        if (possibleTrail.currentLocation.seaConnections.includes(newLocation)) {
+          possibleTrail.trail.unshift({
+            location: newLocation,
+            revealed: true
+          });
+          possibleTrail.currentLocation = newLocation;
+          newPossibleTrails.push(possibleTrail);
+        }
+      });
+    }
+    this.possibleTrails = newPossibleTrails;
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
   }
 
   /**
@@ -216,12 +268,8 @@ export class Dracula {
   updatePossibleTrailsAfterDoubleBackToTrail(position: number, locationType: LocationType) {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
-      let index = 0;
-      while (!possibleTrail.trail[index].location) {
-        index++;
-      }
-      if ((locationType == LocationType.sea && possibleTrail.trail[index].location.seaConnections.includes(possibleTrail.trail[position].location)) ||
-        possibleTrail.trail[index].location.roadConnections.includes(possibleTrail.trail[position].location)) {
+      if ((locationType == LocationType.sea && possibleTrail.currentLocation.seaConnections.includes(possibleTrail.trail[position].location)) ||
+        possibleTrail.currentLocation.roadConnections.includes(possibleTrail.trail[position].location)) {
         const newTrail: TrailCard[] = [possibleTrail.trail[position]];
         newTrail[0].power == this.powers.find(power => power.name == PowerName.DoubleBack);
         for (let i = 0; i < position; i++) {
@@ -231,10 +279,12 @@ export class Dracula {
           newTrail.push(possibleTrail.trail[i]);
         }
         possibleTrail.trail = newTrail;
+        possibleTrail.currentLocation = possibleTrail.trail[0].location;
         newPossibleTrails.push(possibleTrail);
       }
     });
     this.possibleTrails = newPossibleTrails;
+    this.updatePossibleLocations();
   }
 
   /**
@@ -245,19 +295,17 @@ export class Dracula {
   updatePossibleTrailsAfterDoubleBackToCatacombs(position: number, locationType: LocationType) {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
-      let index = 0;
-      while (!possibleTrail.trail[index].location) {
-        index++;
-      }
-      if ((locationType == LocationType.sea && possibleTrail.catacombs[index].location.seaConnections.includes(possibleTrail.catacombs[position].location)) ||
-        possibleTrail.catacombs[index].location.roadConnections.includes(possibleTrail.catacombs[position].location)) {
+      if ((locationType == LocationType.sea && possibleTrail.currentLocation.seaConnections.includes(possibleTrail.catacombs[position].location)) ||
+        possibleTrail.currentLocation.roadConnections.includes(possibleTrail.catacombs[position].location)) {
         possibleTrail.trail.unshift(possibleTrail.catacombs.splice(position, 1)[0]);
         possibleTrail.trail[0].power == this.powers.find(power => power.name == PowerName.DoubleBack);
+        possibleTrail.currentLocation = possibleTrail.trail[0].location;
         newPossibleTrails.push(possibleTrail);
       }
     });
     this.possibleTrails = newPossibleTrails;
-    this.trimTrailsToLength(7);
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
   }
 
   /** Calculates a new set of possible trails based on the existing set after Dracula plays a power face up
@@ -265,50 +313,88 @@ export class Dracula {
    */
   updatePossibleTrailsWithRevealedPower(powerName: PowerName) {
     this.possibleTrails.forEach(possibleTrail => {
-      possibleTrail.trail.push({
+      possibleTrail.trail.unshift({
         power: this.powers.find(power => power.name == powerName),
         revealed: true
       });
     });
-    this.trimTrailsToLength(7);
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
   }
 
   /** Calculates a new set of possible trails based on the existing set after Dracula plays Wolf Form with no other powers
    * and moves to a hidden location
    */
-  updatePossibleTrailsAfterPlayingStandardWolfForm() {
+  updatePossibleTrailsAfterPlayingStandardWolfFormToUnknown() {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
-      let index = 0;
-      while (!possibleTrail.trail[index].location) {
-        index++;
-      }
-      // TODO heavenly host and consecrated ground
-      let validLocations: Location[] = possibleTrail.trail[index].location.roadConnections;
-      possibleTrail.trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      let validLocations: Location[] = _.clone(possibleTrail.currentLocation.roadConnections);
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
+      let firstTierConnections = _.clone(validLocations);
+      firstTierConnections.map(road => validLocations.concat(road.roadConnections));
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
       _.uniq(validLocations);
       _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
       _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
       _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
       validLocations.forEach(newPossibleLocation => {
-        const newTrail = _.cloneDeep(possibleTrail);
-        newTrail.trail.unshift({
+        const newPossibleTrail: PossibleTrail = {
+          trail: _.clone(possibleTrail.trail),
+          catacombs: _.clone(possibleTrail.catacombs),
+          currentLocation: newPossibleLocation
+        }
+        newPossibleTrail.trail.unshift({
           revealed: false,
-          location: newPossibleLocation
+          location: newPossibleLocation,
+          power: this.powers.find(power => power.name == PowerName.WolfForm)
         });
-        newPossibleTrails.push(newTrail);
+        newPossibleTrails.push(newPossibleTrail);
       });
       if (!this.possibleTrailContainsHide(possibleTrail)) {
-        const newTrail = _.cloneDeep(possibleTrail);
-        newTrail.trail.unshift({
+        const newPossibleTrail: PossibleTrail = {
+          trail: _.clone(possibleTrail.trail),
+          catacombs: _.clone(possibleTrail.catacombs),
+          currentLocation: possibleTrail.currentLocation
+        }
+        newPossibleTrail.trail.unshift({
           revealed: false,
-          power: this.powers.find(power => power.name == PowerName.Hide)
+          power: this.powers.find(power => power.name == PowerName.WolfFormAndHide)
         });
-        newPossibleTrails.push(newTrail);
+        newPossibleTrails.push(newPossibleTrail);
       };
     });
     this.possibleTrails = newPossibleTrails;
-    this.trimTrailsToLength(7);
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
+  }
+
+  /** Calculates a new set of possible trails based on the existing set after Dracula plays Wolf Form with no other powers
+ * and moves to a revealed location
+ * @param newLocation The new location
+ */
+  updatePossibleTrailsAfterPlayingStandardWolfFormToKnown(newLocation: Location) {
+    const newPossibleTrails: PossibleTrail[] = [];
+    this.possibleTrails.forEach(possibleTrail => {
+      let validLocations: Location[] = _.clone(possibleTrail.currentLocation.roadConnections);
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
+      let firstTierConnections = _.clone(validLocations);
+      firstTierConnections.map(road => validLocations.concat(road.roadConnections));
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
+      _.uniq(validLocations);
+      _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
+      _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
+      if (validLocations.includes(newLocation)) {
+        possibleTrail.trail.unshift({
+          location: newLocation,
+          power: this.powers.find(power => power.name == PowerName.WolfForm),
+          revealed: true
+        });
+        possibleTrail.currentLocation = newLocation;
+        newPossibleTrails.push(possibleTrail);
+      }
+    });
+    this.possibleTrails = newPossibleTrails;
+    this.trimTrailsToLength(6);
   }
 
   /** Calculates a new set of possible trails based on the existing set after Dracula plays Wolf Form along
@@ -318,13 +404,11 @@ export class Dracula {
   updatePossibleTrailsAfterWolfFormAndDoubleBackToTrail(position: number) {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
-      let index = 0;
-      while (!possibleTrail.trail[index].location) {
-        index++;
-      }
-      // TODO Heavenly host and consecrated ground
-      let validLocations: Location[] = possibleTrail.trail[index].location.roadConnections;
-      possibleTrail.trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      let validLocations: Location[] = _.clone(possibleTrail.currentLocation.roadConnections);
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
+      let firstTierConnections = _.clone(validLocations);
+      firstTierConnections.map(road => validLocations.concat(road.roadConnections));
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
       _.uniq(validLocations);
       if (validLocations.includes(possibleTrail.trail[position].location)) {
         const newTrail: TrailCard[] = [possibleTrail.trail[position]];
@@ -336,9 +420,11 @@ export class Dracula {
           newTrail.push(possibleTrail.trail[i]);
         }
         possibleTrail.trail = newTrail;
+        possibleTrail.currentLocation = possibleTrail.trail[0].location;
         newPossibleTrails.push(possibleTrail);
       }
     });
+    this.updatePossibleLocations();
   }
 
   /** Calculates a new set of possible trails based on the existing set after Dracula plays Wolf Form along
@@ -348,21 +434,21 @@ export class Dracula {
   updatePossibleTrailsAfterWolfFormAndDoubleBackToCatacombs(position: number) {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
-      let index = 0;
-      while (!possibleTrail.trail[index].location) {
-        index++;
-      }
-      // TODO heavenly host and consecrated ground
-      let validLocations: Location[] = possibleTrail.trail[index].location.roadConnections;
-      possibleTrail.trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      let validLocations: Location[] = _.clone(possibleTrail.currentLocation.roadConnections);
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
+      let firstTierConnections = _.clone(validLocations);
+      firstTierConnections.map(road => validLocations.concat(road.roadConnections));
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
       _.uniq(validLocations);
       if (validLocations.includes(possibleTrail.catacombs[position].location)) {
         possibleTrail.trail.unshift(possibleTrail.catacombs.splice(position, 1)[0]);
         possibleTrail.trail[0].power == this.powers.find(power => power.name == PowerName.WolfFormAndDoubleBack);
+        possibleTrail.currentLocation = possibleTrail.trail[0].location;
         newPossibleTrails.push(possibleTrail);
       }
     });
-    this.trimTrailsToLength(7);
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
   }
 
   /**
@@ -384,6 +470,12 @@ export class Dracula {
    * Checks all possible trails and removes any duplicates
    */
   cleanUpDuplicatePossibleTrails() {
+    const complexity = Math.pow(this.possibleTrails[0].trail.length, 2) * this.possibleTrails.length;
+    console.log(`Complexity: ${complexity}`);
+    if (this.possibleTrails[0].trail.length > 5 && complexity > 1500000) {
+      console.log('Too complex');
+      // return;
+    }
     const uniquePossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
       let trailAlreadyRepresented = false;
@@ -430,13 +522,11 @@ export class Dracula {
   updateTrailsAfterEscapeAsBat(position: number) {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
-      let index = 0;
-      while (!possibleTrail.trail[index].location) {
-        index++;
-      }
-      // TODO heavenly host and consecrated ground
-      let validLocations: Location[] = possibleTrail.trail[index].location.roadConnections;
-      possibleTrail.trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      let validLocations: Location[] = possibleTrail.currentLocation.roadConnections;
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
+      let firstTierConnections = _.clone(validLocations);
+      firstTierConnections.map(road => validLocations.concat(road.roadConnections));
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
       _.uniq(validLocations);
       _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
       _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
@@ -444,9 +534,11 @@ export class Dracula {
       _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
       validLocations.forEach(newPossibleLocation => {
         possibleTrail.trail[position].location = newPossibleLocation;
+        possibleTrail.currentLocation = possibleTrail.trail[0].location;
         newPossibleTrails.push(possibleTrail);
       });
     });
+    this.updatePossibleLocations();
   }
 
   /**
@@ -456,27 +548,28 @@ export class Dracula {
   updateTrailsAfterEscapeAsBatCardAdded() {
     const newPossibleTrails: PossibleTrail[] = [];
     this.possibleTrails.forEach(possibleTrail => {
-      let index = 0;
-      while (!possibleTrail.trail[index].location) {
-        index++;
-      }
-      let validLocations: Location[] = possibleTrail.trail[index].location.roadConnections;
-      possibleTrail.trail[index].location.roadConnections.map(road => validLocations.concat(road.roadConnections))
+      let validLocations: Location[] = possibleTrail.currentLocation.roadConnections;
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
+      let firstTierConnections = _.clone(validLocations);
+      firstTierConnections.map(road => validLocations.concat(road.roadConnections));
+      _.remove(validLocations, location => this.gameState.cityIsConsecrated(location));
       _.uniq(validLocations);
       _.remove(validLocations, location => this.possibleTrailContainsLocationInTrail(possibleTrail, location));
       _.remove(validLocations, location => this.possibleTrailContainsLocationInCatacombs(possibleTrail, location));
       // TODO he could escape to a city containing another Hunter
       _.remove(validLocations, location => location == this.gameState.godalming.currentLocation || location == this.gameState.seward.currentLocation || location == this.gameState.vanHelsing.currentLocation || location == this.gameState.mina.currentLocation);
       validLocations.forEach(newPossibleLocation => {
-        const newTrail = _.cloneDeep(possibleTrail);
+        const newTrail = _.clone(possibleTrail);
         newTrail.trail.unshift({
           revealed: false,
           location: newPossibleLocation
         });
+        possibleTrail.currentLocation = possibleTrail.trail[0].location;
         newPossibleTrails.push(newTrail);
       });
     });
-    this.trimTrailsToLength(7);
+    this.trimTrailsToLength(6);
+    this.updatePossibleLocations();
   }
 
   /**
@@ -492,6 +585,7 @@ export class Dracula {
       }
     });
     this.possibleTrails = validTrails;
+    this.updatePossibleLocations();
   }
 
   /**
@@ -507,6 +601,7 @@ export class Dracula {
       }
     });
     this.possibleTrails = validTrails;
+    this.updatePossibleLocations();
   }
 
   /**
@@ -522,6 +617,7 @@ export class Dracula {
       }
     });
     this.possibleTrails = validTrails;
+    this.updatePossibleLocations();
   }
 
   /**
@@ -566,6 +662,16 @@ export class Dracula {
   }
 
   /**
+   * Updates the list of possible locations Dracula could be in based on the possible trails he has taken
+   */
+  updatePossibleLocations() {
+    this.possibleLocations = _.uniq(this.possibleTrails.map(possibleTrail => possibleTrail.currentLocation));
+    if (this.possibleLocations.length == 0) {
+      console.log('NO TRAILS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    }
+  }
+
+  /**
    * Selects Dracula's first Location at the state of the game
    */
   chooseStartLocation(): Location {
@@ -597,7 +703,6 @@ export class Dracula {
     while (currentValue < randomChoice) {
       currentValue += distances[index];
     }
-    this.evasionSlot = 0;
     return validLocations[index];
   }
 
@@ -712,6 +817,8 @@ export class Dracula {
       let secondLayerDestination: Location[] = [];
       switch (validPower.name) {
         case PowerName.DarkCall:
+        case PowerName.Feed:
+        case PowerName.Hide:
           legalMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.DoubleBack:
@@ -726,12 +833,6 @@ export class Dracula {
               }
             }
           });
-          break;
-        case PowerName.Feed:
-          legalMoves.push({ power: validPower, value: 1 });
-          break;
-        case PowerName.Hide:
-          legalMoves.push({ power: validPower, value: 1 });
           break;
         case PowerName.WolfForm:
           potentialDestinations = this.currentLocation.roadConnections.filter(road => !this.gameState.cityIsConsecrated(road));
@@ -1098,7 +1199,9 @@ export class Dracula {
         delete droppedOffCard.power;
         return 'Dracula moved the card to the catacombs with an additional encounter on it'
       } else {
-        this.droppedOffEncounters.push(droppedOffCard.encounter);
+        if (droppedOffCard.encounter) {
+          this.droppedOffEncounters.push(droppedOffCard.encounter);
+        }
       }
       this.gameState.logVerbose(`${droppedOffCard.location.name} returned to the Location deck`);
     } else {
@@ -1146,22 +1249,20 @@ export class Dracula {
     let encountersCleared = 0;
     let cardIndex = this.gameState.trail.length - 1;
     while (this.gameState.trail.length > remainingCards) {
-      if (this.gameState.trail[cardIndex].location !== this.currentLocation) {
-        const cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
-        if (cardToClear.location) {
-          this.gameState.logVerbose(`${cardToClear.location.name} returned to Location deck`);
-          cardsCleared++;
-        }
-        if (cardToClear.power) {
-          this.gameState.logVerbose(`${cardToClear.power.name} returned to Power deck`);
-          cardsCleared++;
-        }
-        if (cardToClear.encounter) {
-          encountersCleared++;
-          this.gameState.logVerbose(`${cardToClear.encounter.name} returned to Encounter pool`);
-          this.gameState.encounterPool.push(cardToClear.encounter);
-          this.gameState.shuffleEncounters();
-        }
+      const cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
+      if (cardToClear.location) {
+        this.gameState.logVerbose(`${cardToClear.location.name} returned to Location deck`);
+        cardsCleared++;
+      }
+      if (cardToClear.power) {
+        this.gameState.logVerbose(`${cardToClear.power.name} returned to Power deck`);
+        cardsCleared++;
+      }
+      if (cardToClear.encounter) {
+        encountersCleared++;
+        this.gameState.logVerbose(`${cardToClear.encounter.name} returned to Encounter pool`);
+        this.gameState.encounterPool.push(cardToClear.encounter);
+        this.gameState.shuffleEncounters();
       }
       cardIndex--;
     }
@@ -1187,6 +1288,7 @@ export class Dracula {
             if (this.ambushEncounter) {
               logMessage += `Dracula matured Ambush and played ${this.ambushEncounter.name} on ${ambushHunter.name}`;
               this.clearTrail(3);
+              this.trimTrailsToLength(3);
             }
           }
           break;
@@ -1200,6 +1302,7 @@ export class Dracula {
           logMessage += 'Dracula matured New Vampire';
           this.gameState.setVampireTrack(this.gameState.vampireTrack + 2);
           this.clearTrail(1);
+          this.trimTrailsToLength(1);
           break;
         default:
           logMessage += 'Dracula returned the dropped off encounter to the encounter pool';
@@ -1850,7 +1953,8 @@ interface Power {
 
 interface PossibleTrail {
   trail: TrailCard[],
-  catacombs: TrailCard[]
+  catacombs: TrailCard[],
+  currentLocation: Location
 }
 
 export enum PowerName {
