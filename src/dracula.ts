@@ -31,6 +31,7 @@ export class Dracula {
   gameState: Game;
   possibleTrails: PossibleTrail[];
   possibleLocations: Location[];
+  mood: Mood;
 
   constructor() {
     this.blood = 15;
@@ -79,6 +80,76 @@ export class Dracula {
       },
     ];
     this.possibleTrails = [];
+    this.mood = {
+      stalk: 100,
+      hide: 100,
+      avoid: 100,
+      fight: 100,
+      flee: 100,
+      retreat: 100
+    }
+    this.adjustMood(MoodAspect.Retreat, -18);
+    this.adjustMood(MoodAspect.Flee, -18);
+    this.adjustMood(MoodAspect.Fight, -25);
+    this.adjustMood(MoodAspect.Stalk, -10);
+  }
+
+  /**
+   * Adjusts a given mood aspect in a balanced way by spreading the change's opposite across the other aspects
+   * @param aspect The aspect to increase/decrease
+   * @param count The multiplier, default +1
+   */
+  adjustMood(aspect: MoodAspect, count: number = 1) {
+    switch (aspect) {
+      case MoodAspect.Avoid:
+        this.mood.avoid = Math.max(1, this.mood.avoid + count * 5);
+        this.mood.fight = Math.max(1, this.mood.fight - count);
+        this.mood.flee = Math.max(1, this.mood.flee - count);
+        this.mood.hide = Math.max(1, this.mood.hide - count);
+        this.mood.retreat = Math.max(1, this.mood.retreat - count);
+        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        break;
+      case MoodAspect.Fight:
+        this.mood.avoid = Math.max(1, this.mood.avoid - count);
+        this.mood.fight = Math.max(1, this.mood.fight + count * 5);
+        this.mood.flee = Math.max(1, this.mood.flee - count);
+        this.mood.hide = Math.max(1, this.mood.hide - count);
+        this.mood.retreat = Math.max(1, this.mood.retreat - count);
+        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        break;
+      case MoodAspect.Flee:
+        this.mood.avoid = Math.max(1, this.mood.avoid - count);
+        this.mood.fight = Math.max(1, this.mood.fight - count);
+        this.mood.flee = Math.max(1, this.mood.flee + count * 5);
+        this.mood.hide = Math.max(1, this.mood.hide - count);
+        this.mood.retreat = Math.max(1, this.mood.retreat - count);
+        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        break;
+      case MoodAspect.Hide:
+        this.mood.avoid = Math.max(1, this.mood.avoid - count);
+        this.mood.fight = Math.max(1, this.mood.fight - count);
+        this.mood.flee = Math.max(1, this.mood.flee - count);
+        this.mood.hide = Math.max(1, this.mood.hide + count * 5);
+        this.mood.retreat = Math.max(1, this.mood.retreat - count);
+        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        break;
+      case MoodAspect.Retreat:
+        this.mood.avoid = Math.max(1, this.mood.avoid - count);
+        this.mood.fight = Math.max(1, this.mood.fight - count);
+        this.mood.flee = Math.max(1, this.mood.flee - count);
+        this.mood.hide = Math.max(1, this.mood.hide - count);
+        this.mood.retreat = Math.max(1, this.mood.retreat + count * 5);
+        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        break;
+      case MoodAspect.Stalk:
+        this.mood.avoid = Math.max(1, this.mood.avoid - count);
+        this.mood.fight = Math.max(1, this.mood.fight - count);
+        this.mood.flee = Math.max(1, this.mood.flee - count);
+        this.mood.hide = Math.max(1, this.mood.hide - count);
+        this.mood.retreat = Math.max(1, this.mood.retreat - count);
+        this.mood.stalk = Math.max(1, this.mood.stalk + count * 5);
+        break;
+    }
   }
 
   /**
@@ -153,6 +224,12 @@ export class Dracula {
       possibleTrail.trail = _.dropRight(possibleTrail.trail, dropCount);
     });
     this.cleanUpDuplicatePossibleTrails();
+  }
+
+  spliceTrails(position: number) {
+    this.possibleTrails.forEach(possibleTrail => {
+      possibleTrail.trail.splice(position, 1);
+    });
   }
 
   /**
@@ -350,7 +427,8 @@ export class Dracula {
         });
         newPossibleTrails.push(newPossibleTrail);
       });
-      if (!this.possibleTrailContainsHide(possibleTrail) && possibleTrail.currentLocation.type !== LocationType.castle && !this.gameState.hunterIsIn(possibleTrail.currentLocation)) {        const newPossibleTrail: PossibleTrail = {
+      if (!this.possibleTrailContainsHide(possibleTrail) && possibleTrail.currentLocation.type !== LocationType.castle && !this.gameState.hunterIsIn(possibleTrail.currentLocation)) {
+        const newPossibleTrail: PossibleTrail = {
           trail: _.clone(possibleTrail.trail),
           catacombs: _.clone(possibleTrail.catacombs),
           currentLocation: possibleTrail.currentLocation
@@ -693,16 +771,18 @@ export class Dracula {
   chooseEvasionDestination(): Location {
     const validLocations = this.gameState.map.locations.filter(location =>
       (location.type == LocationType.smallCity || location.type == LocationType.largeCity) && !this.gameState.trailContains(location)
+      && !this.gameState.catacombsContains(location)
+      && !this.gameState.cityIsConsecrated(location)
       && !this.gameState.hunterIsIn(location));
-    const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }));
-    const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
-    const randomChoice = Math.random() * totalValue;
-    let currentValue = 0;
-    let index = 0;
-    while (currentValue < randomChoice) {
-      currentValue += distances[index];
-    }
-    return validLocations[index];
+    // const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }));
+    // const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
+    // const randomChoice = Math.random() * totalValue;
+    // let currentValue = 0;
+    // let index = 0;
+    // while (currentValue < randomChoice) {
+    //   currentValue += distances[index];
+    // }
+    return validLocations[Math.floor(Math.random() * validLocations.length)];
   }
 
   /**
@@ -877,7 +957,7 @@ export class Dracula {
     }
     this.possibleMoves = this.determineLegalMoves();
     if (this.possibleMoves.length > 0) {
-      /* will revisit
+      /* will revisit TODO
       this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
@@ -1244,14 +1324,23 @@ export class Dracula {
    * @param remainingCards The number of cards to leave behind in the trail
    */
   clearTrail(remainingCards: number): string {
-    // special case if Hide is in the trail
-    // either the hide location could be cleared without the Hide itself
-    // or Hide could be at the head of the trail
     let cardsCleared = 0;
     let encountersCleared = 0;
     let cardIndex = this.gameState.trail.length - 1;
     while (this.gameState.trail.length > remainingCards) {
-      const cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
+      let cardToClear: TrailCard;
+      if (this.gameState.trail[cardIndex].location && this.gameState.trail[cardIndex].location == this.currentLocation) {
+        this.gameState.log(`The card in position ${cardIndex + 1} of the trail is Dracula's current location. Removing the next card instead.`);
+        cardToClear = this.gameState.trail.splice(cardIndex - 1, 1)[0];
+        if (cardToClear.power && (cardToClear.power.name == PowerName.Hide || cardToClear.power.name == PowerName.WolfFormAndHide)) {
+          this.gameState.log(`The next card is actually Hide`);
+          this.updatePossibleTrailsAfterHideIsRevealed(cardIndex - 1);
+        }
+        this.spliceTrails(cardIndex - 1);
+      } else {
+        cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
+        this.trimTrailsToLength(this.possibleTrails[0].trail.length - 1);
+      }
       if (cardToClear.location) {
         this.gameState.logVerbose(`${cardToClear.location.name} returned to Location deck`);
         cardsCleared++;
@@ -1268,7 +1357,21 @@ export class Dracula {
       }
       cardIndex--;
     }
-    this.trimTrailsToLength(remainingCards);
+    if (this.gameState.trail[cardIndex].power && (this.gameState.trail[cardIndex].power.name == PowerName.Hide || this.gameState.trail[cardIndex].power.name == PowerName.WolfFormAndHide)) {
+      this.gameState.log(`The location where Dracula hid has been removed from the trail, so Hide is also being removed from position ${cardIndex}`);
+      this.updatePossibleTrailsAfterHideIsRevealed(cardIndex);
+      this.trimTrailsToLength(this.possibleTrails[0].trail.length - 1);
+      const cardToClear = this.gameState.trail.splice(cardIndex, 1)[0];
+      this.gameState.logVerbose(`${cardToClear.power.name} returned to Power deck`);
+      cardsCleared++;
+      if (cardToClear.encounter) {
+        encountersCleared++;
+        this.gameState.logVerbose(`${cardToClear.encounter.name} returned to Encounter pool`);
+        this.gameState.encounterPool.push(cardToClear.encounter);
+        this.gameState.shuffleEncounters();
+      }
+    }
+    this.cleanUpDuplicatePossibleTrails();
     return `Returned ${cardsCleared} cards and ${encountersCleared} encounters`;
   }
 
@@ -1959,6 +2062,15 @@ interface PossibleTrail {
   currentLocation: Location
 }
 
+interface Mood {
+  stalk: number, // follow the same trail as a Hunter
+  hide: number, // reduce movement
+  avoid: number, // move away from Hunters
+  flee: number, // move as quickly as possible away from Hunters and try to lose them
+  fight: number, // attack a Hunter
+  retreat: number // move towards Castle Dracula
+}
+
 export enum PowerName {
   DarkCall = 'Dark Call',
   DoubleBack = 'Double Back',
@@ -1983,4 +2095,13 @@ export enum Attack {
   Knife = 'Knife',
   Pistol = 'Pistol',
   Rifle = 'Rifle'
+}
+
+export enum MoodAspect {
+  Stalk,
+  Hide,
+  Avoid,
+  Flee,
+  Fight,
+  Retreat
 }
