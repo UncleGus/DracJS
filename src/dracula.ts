@@ -961,13 +961,12 @@ export class Dracula {
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
       let index = 0;
-      let cumulativeValue = 0;
+      let cumulativeValue = this.possibleMoves[index].value;
       while (cumulativeValue < randomChoice) {
         cumulativeValue += this.possibleMoves[index].value;
         index++;
-      }
-      this.nextMove = this.possibleMoves[index];
-      // this.nextMove = this.possibleMoves[Math.floor(Math.random() * this.possibleMoves.length)];
+      }      
+      this.nextMove = this.possibleMoves[index];      
     } else {
       return 'Dracula has no legal moves available';
     }
