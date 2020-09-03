@@ -92,6 +92,9 @@ export class Dracula {
     this.adjustMood(MoodAspect.Flee, -18);
     this.adjustMood(MoodAspect.Fight, -25);
     this.adjustMood(MoodAspect.Stalk, -10);
+    for (let i = 0; i < 24; i++) {
+      this.adjustMood(Math.floor(Math.random() * 6), Math.random() < 0.5 ? 1 : -1);
+    }
   }
 
   /**
@@ -99,55 +102,56 @@ export class Dracula {
    * @param aspect The aspect to increase/decrease
    * @param count The multiplier, default +1
    */
-  adjustMood(aspect: MoodAspect, count: number = 1) {
+  adjustMood(aspect: MoodAspect, count: number = 1, mood?: Mood) {
+    const moodToAdjust = mood || this.mood;
     switch (aspect) {
       case MoodAspect.Avoid:
-        this.mood.avoid = Math.max(1, this.mood.avoid + count * 5);
-        this.mood.fight = Math.max(1, this.mood.fight - count);
-        this.mood.flee = Math.max(1, this.mood.flee - count);
-        this.mood.hide = Math.max(1, this.mood.hide - count);
-        this.mood.retreat = Math.max(1, this.mood.retreat - count);
-        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        moodToAdjust.avoid = Math.max(1, moodToAdjust.avoid + count * 5);
+        moodToAdjust.fight = Math.max(1, moodToAdjust.fight - count);
+        moodToAdjust.flee = Math.max(1, moodToAdjust.flee - count);
+        moodToAdjust.hide = Math.max(1, moodToAdjust.hide - count);
+        moodToAdjust.retreat = Math.max(1, moodToAdjust.retreat - count);
+        moodToAdjust.stalk = Math.max(1, moodToAdjust.stalk - count);
         break;
       case MoodAspect.Fight:
-        this.mood.avoid = Math.max(1, this.mood.avoid - count);
-        this.mood.fight = Math.max(1, this.mood.fight + count * 5);
-        this.mood.flee = Math.max(1, this.mood.flee - count);
-        this.mood.hide = Math.max(1, this.mood.hide - count);
-        this.mood.retreat = Math.max(1, this.mood.retreat - count);
-        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        moodToAdjust.avoid = Math.max(1, moodToAdjust.avoid - count);
+        moodToAdjust.fight = Math.max(1, moodToAdjust.fight + count * 5);
+        moodToAdjust.flee = Math.max(1, moodToAdjust.flee - count);
+        moodToAdjust.hide = Math.max(1, moodToAdjust.hide - count);
+        moodToAdjust.retreat = Math.max(1, moodToAdjust.retreat - count);
+        moodToAdjust.stalk = Math.max(1, moodToAdjust.stalk - count);
         break;
       case MoodAspect.Flee:
-        this.mood.avoid = Math.max(1, this.mood.avoid - count);
-        this.mood.fight = Math.max(1, this.mood.fight - count);
-        this.mood.flee = Math.max(1, this.mood.flee + count * 5);
-        this.mood.hide = Math.max(1, this.mood.hide - count);
-        this.mood.retreat = Math.max(1, this.mood.retreat - count);
-        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        moodToAdjust.avoid = Math.max(1, moodToAdjust.avoid - count);
+        moodToAdjust.fight = Math.max(1, moodToAdjust.fight - count);
+        moodToAdjust.flee = Math.max(1, moodToAdjust.flee + count * 5);
+        moodToAdjust.hide = Math.max(1, moodToAdjust.hide - count);
+        moodToAdjust.retreat = Math.max(1, moodToAdjust.retreat - count);
+        moodToAdjust.stalk = Math.max(1, moodToAdjust.stalk - count);
         break;
       case MoodAspect.Hide:
-        this.mood.avoid = Math.max(1, this.mood.avoid - count);
-        this.mood.fight = Math.max(1, this.mood.fight - count);
-        this.mood.flee = Math.max(1, this.mood.flee - count);
-        this.mood.hide = Math.max(1, this.mood.hide + count * 5);
-        this.mood.retreat = Math.max(1, this.mood.retreat - count);
-        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        moodToAdjust.avoid = Math.max(1, moodToAdjust.avoid - count);
+        moodToAdjust.fight = Math.max(1, moodToAdjust.fight - count);
+        moodToAdjust.flee = Math.max(1, moodToAdjust.flee - count);
+        moodToAdjust.hide = Math.max(1, moodToAdjust.hide + count * 5);
+        moodToAdjust.retreat = Math.max(1, moodToAdjust.retreat - count);
+        moodToAdjust.stalk = Math.max(1, moodToAdjust.stalk - count);
         break;
       case MoodAspect.Retreat:
-        this.mood.avoid = Math.max(1, this.mood.avoid - count);
-        this.mood.fight = Math.max(1, this.mood.fight - count);
-        this.mood.flee = Math.max(1, this.mood.flee - count);
-        this.mood.hide = Math.max(1, this.mood.hide - count);
-        this.mood.retreat = Math.max(1, this.mood.retreat + count * 5);
-        this.mood.stalk = Math.max(1, this.mood.stalk - count);
+        moodToAdjust.avoid = Math.max(1, moodToAdjust.avoid - count);
+        moodToAdjust.fight = Math.max(1, moodToAdjust.fight - count);
+        moodToAdjust.flee = Math.max(1, moodToAdjust.flee - count);
+        moodToAdjust.hide = Math.max(1, moodToAdjust.hide - count);
+        moodToAdjust.retreat = Math.max(1, moodToAdjust.retreat + count * 5);
+        moodToAdjust.stalk = Math.max(1, moodToAdjust.stalk - count);
         break;
       case MoodAspect.Stalk:
-        this.mood.avoid = Math.max(1, this.mood.avoid - count);
-        this.mood.fight = Math.max(1, this.mood.fight - count);
-        this.mood.flee = Math.max(1, this.mood.flee - count);
-        this.mood.hide = Math.max(1, this.mood.hide - count);
-        this.mood.retreat = Math.max(1, this.mood.retreat - count);
-        this.mood.stalk = Math.max(1, this.mood.stalk + count * 5);
+        moodToAdjust.avoid = Math.max(1, moodToAdjust.avoid - count);
+        moodToAdjust.fight = Math.max(1, moodToAdjust.fight - count);
+        moodToAdjust.flee = Math.max(1, moodToAdjust.flee - count);
+        moodToAdjust.hide = Math.max(1, moodToAdjust.hide - count);
+        moodToAdjust.retreat = Math.max(1, moodToAdjust.retreat - count);
+        moodToAdjust.stalk = Math.max(1, moodToAdjust.stalk + count * 5);
         break;
     }
   }
@@ -753,7 +757,7 @@ export class Dracula {
    */
   chooseStartLocation(): Location {
     const validLocations = this.gameState.map.locations.filter(location => location.type == LocationType.smallCity || location.type == LocationType.largeCity);
-    // const distances = validLocations.map(location => this.evaluateMove({ location, value: 1 }));
+    // const distances = validLocations.map(location => this.evaluateMove());
     // const totalValue = distances.reduce((prev, curr) => prev + curr, 0);
     // const randomChoice = Math.random() * totalValue;
     // let currentValue = 0;
@@ -841,14 +845,12 @@ export class Dracula {
         }
       }
       if (catacombIndex > -1) {
-        legalMoves.push({ location, travelMethod: TravelMethod.road, value: 1, catacombToDiscard: catacombIndex });
+        legalMoves.push({ location, travelMethod: TravelMethod.road, value: 1, catacombToDiscard: catacombIndex, mood: _.cloneDeep(blankMood) });
       } else {
         if (location.roadConnections.includes(this.currentLocation)) {
-          legalMoves.push({ location, travelMethod: TravelMethod.road, value: 1 });
+          legalMoves.push({ location, travelMethod: TravelMethod.road, value: 1, mood: _.cloneDeep(blankMood) });
         } else if (location.seaConnections.includes(this.currentLocation)) {
-          legalMoves.push({ location, travelMethod: TravelMethod.sea, value: 1 });
-        } else {
-          // TODO: make sure there are no other possibilities here
+          legalMoves.push({ location, travelMethod: TravelMethod.sea, value: 1, mood: _.cloneDeep(blankMood) });
         }
       }
     });
@@ -898,17 +900,15 @@ export class Dracula {
         case PowerName.DarkCall:
         case PowerName.Feed:
         case PowerName.Hide:
-          legalMoves.push({ power: validPower, value: 1 });
+          legalMoves.push({ power: validPower, value: 1, mood: _.cloneDeep(blankMood) });
           break;
         case PowerName.DoubleBack:
           this.gameState.trail.concat(this.gameState.catacombs).forEach(trailCard => {
             if (this.gameState.map.distanceBetweenLocations(this.currentLocation, trailCard.location, [TravelMethod.road, TravelMethod.sea]) == 1) {
               if (trailCard.location.roadConnections.includes(this.currentLocation)) {
-                legalMoves.push({ location: trailCard.location, travelMethod: TravelMethod.road, power: validPower, value: 1 });
+                legalMoves.push({ location: trailCard.location, travelMethod: TravelMethod.road, power: validPower, value: 1, mood: _.cloneDeep(blankMood) });
               } else if (trailCard.location.seaConnections.includes(this.currentLocation)) {
-                legalMoves.push({ location: trailCard.location, travelMethod: TravelMethod.sea, power: validPower, value: 1 });
-              } else {
-                // TODO: Make sure there are no other options here
+                legalMoves.push({ location: trailCard.location, travelMethod: TravelMethod.sea, power: validPower, value: 1, mood: _.cloneDeep(blankMood) });
               }
             }
           });
@@ -920,7 +920,7 @@ export class Dracula {
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => !this.gameState.trailContains(dest) && !this.gameState.catacombsContains(dest) && !this.gameState.cityIsConsecrated(dest));
           potentialDestinations = _.without(potentialDestinations, this.currentLocation);
-          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, location: dest, value: 1 }));
+          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, location: dest, value: 1, mood: _.cloneDeep(blankMood) }));
           break;
         case PowerName.WolfFormAndDoubleBack:
           potentialDestinations = this.currentLocation.roadConnections;
@@ -928,10 +928,10 @@ export class Dracula {
           potentialDestinations = _.union(potentialDestinations, secondLayerDestination);
           potentialDestinations = _.uniq(potentialDestinations);
           potentialDestinations = potentialDestinations.filter(dest => (this.gameState.trailContains(dest) || this.gameState.catacombsContains(dest)) && !this.gameState.cityIsConsecrated(dest));
-          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, location: dest, value: 1 }));
+          potentialDestinations.forEach(dest => legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, location: dest, value: 1, mood: _.cloneDeep(blankMood) }));
           break;
         case PowerName.WolfFormAndHide:
-          legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, value: 1 });
+          legalMoves.push({ power: validPower, travelMethod: TravelMethod.road, value: 1, mood: _.cloneDeep(blankMood) });
           break;
       }
     });
@@ -957,7 +957,6 @@ export class Dracula {
     }
     this.possibleMoves = this.determineLegalMoves();
     if (this.possibleMoves.length > 0) {
-      /* will revisit TODO
       this.possibleMoves.forEach(move => move.value = this.evaluateMove(move));
       const valueSum = this.possibleMoves.reduce((sum, curr) => sum += curr.value, 0);
       const randomChoice = Math.floor(Math.random() * valueSum);
@@ -968,8 +967,7 @@ export class Dracula {
         index++;
       }
       this.nextMove = this.possibleMoves[index];
-      */
-      this.nextMove = this.possibleMoves[Math.floor(Math.random() * this.possibleMoves.length)];
+      // this.nextMove = this.possibleMoves[Math.floor(Math.random() * this.possibleMoves.length)];
     } else {
       return 'Dracula has no legal moves available';
     }
@@ -1904,14 +1902,10 @@ export class Dracula {
     // Feed and Hide are brilliant for staying put, which is especially good when the trail is cold
     // if a Hunter's next move is known, it should be considered here
 
-    const location = possibleMove.location || this.currentLocation;
-    const distanceToNearestHunter = Math.min(
-      this.gameState.map.distanceBetweenLocations(location, this.gameState.godalming.currentLocation),
-      this.gameState.map.distanceBetweenLocations(location, this.gameState.seward.currentLocation),
-      this.gameState.map.distanceBetweenLocations(location, this.gameState.vanHelsing.currentLocation),
-      this.gameState.map.distanceBetweenLocations(location, this.gameState.mina.currentLocation)
-    );
-    return Math.pow(possibleMove.value * distanceToNearestHunter / 3, 1.2);
+    this.adjustMood(Math.floor(Math.random() * 6), Math.random() < 0.5 ? 1 : -1, possibleMove.mood);
+
+    return possibleMove.mood.avoid * this.mood.avoid + possibleMove.mood.fight * this.mood.fight + possibleMove.mood.flee * this.mood.flee +
+      possibleMove.mood.hide * this.mood.hide + possibleMove.mood.retreat * this.mood.retreat + possibleMove.mood.stalk * this.mood.stalk
   }
 
   /**
@@ -2048,6 +2042,7 @@ interface PossibleMove {
   power?: Power;
   value: number;
   catacombToDiscard?: number;
+  mood: Mood;
 }
 
 interface Power {
@@ -2104,4 +2099,13 @@ export enum MoodAspect {
   Flee,
   Fight,
   Retreat
+}
+
+const blankMood: Mood = {
+  avoid: 100,
+  fight: 100,
+  flee: 100,
+  hide: 100,
+  retreat: 100,
+  stalk: 100
 }

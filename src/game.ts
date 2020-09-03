@@ -657,7 +657,7 @@ export class Game {
             this.pushToTrail(doubleBackedCard);
             this.log(this.dracula.decideWhichEncounterToKeep(this.trail[0]));
             if (this.dracula.nextMove.power.name == PowerName.DoubleBack) {
-              this.dracula.updatePossibleTrailsAfterDoubleBackToCatacombs(doubleBackCatacombIndex, this.dracula.nextMove.location.type);
+              this.dracula.updatePossibleTrailsAfterDoubleBackToCatacombs(doubleBackCatacombIndex, nextLocation.type);
             } else {
               this.dracula.updatePossibleTrailsAfterWolfFormAndDoubleBackToCatacombs(doubleBackCatacombIndex);
             }
